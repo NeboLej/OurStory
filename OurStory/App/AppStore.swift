@@ -5,4 +5,14 @@
 //  Created by Nebo on 30.08.2026.
 //
 
-import Foundation
+import SwiftUI
+
+@Observable
+final class AppStore {
+    
+    
+    func send(_ action: AppAction) {
+        
+    }
+    
+}
