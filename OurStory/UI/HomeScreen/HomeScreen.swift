@@ -23,9 +23,8 @@ struct HomeScreen: View {
             Rectangle()
                 .frame(height: 100)
                 .foregroundStyle(Color.myPrimary)
-            
             screenBuilder.getComponent(type: .horizontalCalendar)
-                .padding(.top, 16)    
+                .padding(.top, 16)
                 
             ScrollView(.vertical) {
 

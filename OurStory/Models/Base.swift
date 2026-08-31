@@ -13,9 +13,11 @@ struct Story {
     let title: String
     let isUserTitle: Bool
     
+    lazy var baseDate: BaseDate = { BaseDate(date: date) }()
+    
     let notes: [Note]
     
-    static var example: Story {
+    static var example1: Story {
         Story(date: Date(), title: "Салки и шишки были славные но я облажался ", isUserTitle: true, notes: [Note.example1, Note.example2, Note.example3])
     }
 }
@@ -50,7 +52,27 @@ protocol User {
     var color: String { get }
 }
 
-struct Friend: User  {
+struct Friend: User, Hashable  {
     let name: String
     let color: String
+    
+    
+    static var mock: [Friend] = [
+        Friend(name: "Олег", color: "470736"),
+        Friend(name: "Стас", color: "1560BD"),
+        Friend(name: "Настя", color: "B57281"),
+        Friend(name: "Вероника", color: "D1E231"),
+        Friend(name: "Виктор Сергеевич", color: "808080")
+    ]
+    
+    
+    static func getRandomFriends() -> [Friend] {
+        let count = (0...3).randomElement()!
+        var friends: Set<Friend> = []
+        (0...count).forEach { _ in
+            let random = mock.randomElement()!
+            friends.insert(random)
+        }
+        return friends.map { $0 }
+    }
 }

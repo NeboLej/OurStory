@@ -88,6 +88,7 @@ struct HorizontalCalendar: View {
         }
         .frame(width: 50, height: 60)
         .background(isSelected ? .black.opacity(0.6) : isCurrenDay ? Color.myPrimary : Color.clear)
+        .animation(.linear(duration: 0.4), value: isSelected)
         .cornerRadius(20)
         .overlay {
             RoundedRectangle(cornerSize: CGSize(width: 20, height: 20), style: .circular)
