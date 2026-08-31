@@ -8,6 +8,6 @@
 import Foundation
 
 enum AppAction {
-    
+    case selectedDate(Date)
 }
 

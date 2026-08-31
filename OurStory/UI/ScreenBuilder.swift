@@ -18,6 +18,10 @@ enum ScreenType: Identifiable, Hashable {
     }
 }
 
+enum ComponentType: Hashable {
+    case horizontalCalendar
+}
+
 
 final class ScreenBuilder {
     
@@ -35,7 +39,14 @@ final class ScreenBuilder {
     @ViewBuilder
     func getScreen(type: ScreenType) -> some View {
         switch type {
-        case .home: HomeScreen(store: HomeScreenStore(appStore: appStore))
+        case .home: HomeScreen(store: HomeScreenStore(appStore: appStore), screenBuilder: self)
+        }
+    }
+    
+    @ViewBuilder
+    func getComponent(type: ComponentType) -> some View {
+        switch type {
+        case .horizontalCalendar: HorizontalCalendar(store: HorizontalCalendarStore(appStore: appStore))
         }
     }
 }

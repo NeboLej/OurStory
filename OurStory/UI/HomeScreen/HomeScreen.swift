@@ -10,10 +10,12 @@ import SwiftUI
 struct HomeScreen: View {
     
     @State private var store: HomeScreenStore
+    @State private var screenBuilder: ScreenBuilder
     @State var selectionDate: Date = .now
     
-    init(store: HomeScreenStore) {
+    init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
+        self.screenBuilder = screenBuilder
     }
     
     var body: some View {
@@ -22,15 +24,8 @@ struct HomeScreen: View {
                 .frame(height: 100)
                 .foregroundStyle(Color.myPrimary)
             
-            HorizontalCalendar(date: $selectionDate)
-                .padding(.top, 16)
-//            { day in
-//                VStack {
-//                    Text("\(day.value)")
-//                    Text(day.weekdaySymbol)
-//                }
-//            }
-//                
+            screenBuilder.getComponent(type: .horizontalCalendar)
+                .padding(.top, 16)    
                 
             ScrollView(.vertical) {
 

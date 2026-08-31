@@ -9,30 +9,22 @@ import SwiftUI
 
 struct HorizontalCalendar: View {
     
-    var updatesDateFromScroll = true
-    @Binding var date: Date
-//    var content: (HCDay) -> Content
+    @State private var store: HorizontalCalendarStore
     
-    @State private var weeks: [HCWeek]
     @State private var scrollPosition: ScrollPosition = .init()
-    private let calendar = Calendar.current
-    private var currentDay: Date = .now.getOffsetDate(-3, component: .day)
+    @State private var isLocked: Bool = false
+    @State private var containerSize: CGSize = .zero
     
-    init(updatesDateFromScroll: Bool = true,
-         date: Binding<Date>) {
-        self.updatesDateFromScroll = updatesDateFromScroll
-        self._date = date
-        
-        let weeks: [HCWeek] = (-1...0).compactMap {
-            HCWeek.load(from: date.wrappedValue, value: $0)
-        }
-        self.weeks = weeks
+    private let calendar = Calendar.current
+    
+    init(store: HorizontalCalendarStore) {
+        self.store = store
     }
     
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 0) {
-                ForEach(weeks) { week in
+                ForEach(store.state.weeks) { week in
                     HStack(spacing: 0) {
                         ForEach(week.days) { day in
                             dayCellContent(day)
@@ -44,15 +36,47 @@ struct HorizontalCalendar: View {
         }
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.paging)
-        .defaultScrollAnchor(.trailing, for: .initialOffset)
+        .scrollPosition($scrollPosition)
+        .defaultScrollAnchor(.center, for: .initialOffset)
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { newValue in
+            containerSize = newValue
+        }
+        .onScrollGeometryChange(for: CGFloat.self) { proxy in
+            proxy.contentOffset.x + proxy.contentInsets.leading
+        } action: { oldValue, newValue in
+            guard containerSize.width != .zero else { return }
+            
+            let isAddPreviousWeeks = newValue < 0
+            let isAddNextWeeks = newValue > (containerSize.width * 2)
+            
+            
+            if (isAddPreviousWeeks || isAddNextWeeks) && !isLocked {
+                isLocked = true
+                store.send(isAddPreviousWeeks ? .addPreviousTwoWeeks : .addNextTwoWeeks, animation: nil)
+            } else {
+                if isLocked {
+                    var transaction = Transaction()
+                    transaction.scrollPositionUpdatePreservesVelocity = true
+                    withTransaction(transaction) {
+                        if isAddPreviousWeeks {
+                            scrollPosition.scrollTo(x: containerSize.width * 2)
+                        } else {
+                            scrollPosition.scrollTo(x: -containerSize.width * 2)
+                        }
+                    }
+                    
+                    isLocked = false
+                }
+            }
+        }
     }
-    
-    
     
     @ViewBuilder
     private func dayCellContent(_ day: HCDay) -> some View {
-        let isSelected = calendar.isDate(date, inSameDayAs: day.date)
-        let isCurrenDay = calendar.isDate(day.date, inSameDayAs: currentDay)
+        let isSelected = calendar.isDate(store.state.selectionDate, inSameDayAs: day.date)
+        let isCurrenDay = calendar.isDate(day.date, inSameDayAs: Date.now)
         
         VStack {
             Text("\(day.value)")
@@ -70,6 +94,9 @@ struct HorizontalCalendar: View {
                 .stroke(lineWidth: 1)
                 .foregroundStyle(.black)
                 .padding(1)
+        }
+        .onTapGesture {
+            store.send(.selectedDate(day.date))
         }
     }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 @Observable
 final class AppStore {
     
+    var selectionDate: Date = .now
     var currentStory: Story?
     
     init() {
@@ -17,6 +18,9 @@ final class AppStore {
     }
     
     func send(_ action: AppAction) {
-        
+        switch action {
+        case .selectedDate(let date):
+            selectionDate = date
+        }
     }
 }
