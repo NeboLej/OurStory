@@ -10,9 +10,13 @@ import SwiftUI
 @Observable
 final class AppStore {
     
+    var currentStory: Story?
+    
+    init() {
+        currentStory = Story.example
+    }
     
     func send(_ action: AppAction) {
         
     }
-    
 }
