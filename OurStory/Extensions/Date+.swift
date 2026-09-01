@@ -15,6 +15,14 @@ extension Date {
         return formatter.string(from: self)
     }
     
+    func toReadable() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "d MMMM / EEEE"
+        
+        return formatter.string(from: self)
+    }
+    
     func toMonthYearDate() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "LLLL yyyy"

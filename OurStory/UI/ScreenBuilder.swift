@@ -9,11 +9,12 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home
+    case home, createNote
     
     var id: String {
         switch self {
         case .home: "home"
+        case .createNote: "createNote"
         }
     }
 }
@@ -40,6 +41,7 @@ final class ScreenBuilder {
     func getScreen(type: ScreenType) -> some View {
         switch type {
         case .home: HomeScreen(store: HomeScreenStore(appStore: appStore), screenBuilder: self)
+        case .createNote: NewNoteScreen()
         }
     }
     

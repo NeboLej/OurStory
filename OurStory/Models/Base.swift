@@ -69,10 +69,11 @@ struct Friend: User, Hashable  {
     static func getRandomFriends() -> [Friend] {
         let count = (0...3).randomElement()!
         var friends: Set<Friend> = []
-        (0...count).forEach { _ in
+        (0..<count).forEach { _ in
             let random = mock.randomElement()!
             friends.insert(random)
         }
+        print(count)
         return friends.map { $0 }
     }
 }

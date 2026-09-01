@@ -11,3 +11,6 @@ enum AppAction {
     case selectedDate(Date)
 }
 
+enum NavigateAction {
+    case toCreateNote
+}

@@ -38,6 +38,17 @@ struct HomeScreen: View {
 
         .background(.backgroundFill)
         .ignoresSafeArea()
+        .overlay(alignment: .bottomTrailing) {
+            Button {
+                store.send(.createNewNote)
+            } label: {
+                Circle()
+                    .frame(width: 60, height: 60)
+                    .padding(.trailing)
+            }
+            .buttonStyle(.plain)
+
+        }
         
     }
     
@@ -51,7 +62,7 @@ struct HomeScreen: View {
                     .foregroundStyle(.titleDark)
                     .padding(.bottom, 4)
                     .padding(.top, 20)
-                Text(story.date.description)
+                Text(story.date.toReadable())
                     .font(.myItalic(size: 14))
                     .foregroundStyle(.titleDark.opacity(0.6))
                     .padding(.bottom, 36)
@@ -84,6 +95,7 @@ struct HomeScreen: View {
                         .font(.myRegular(size: 16))
                         .foregroundStyle(.titleDark)
                 }
+                Spacer()
             }
         } else {
             friendNoteView(note)

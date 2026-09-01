@@ -16,6 +16,7 @@ final class HomeScreenStore: BaseStore {
         withAnimation {
             switch action {
             case .openScreen: print("OpenScreen")
+            case .createNewNote: appStore.send(.toCreateNote)
             }
         }
     }
