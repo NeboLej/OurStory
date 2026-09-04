@@ -7,12 +7,65 @@
 
 import SwiftUI
 
-import SwiftUI
+
+struct KeyboardToolbar: View {
+    let onAddFriend: () -> Void
+    let onCalendar: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        GlassEffectContainer(spacing: 12) {
+            HStack(spacing: 12) {
+                    Button(action: onAddFriend) {
+                        Label("Добавить друга", systemImage: "person.badge.plus")
+                            .font(.system(size: 14, weight: .medium))
+                            .padding(.horizontal, 12)
+                            .frame(height: 36)
+                        HStack(spacing: -4) {
+                            ForEach(0..<2) { _ in
+                                Circle()
+                                    .frame(width: 20, height: 20)
+                                    .foregroundStyle(.red)
+                            }
+                        }
+
+                       
+                    }
+                    .buttonStyle(.glass)
+
+                
+                Button(action: onCalendar) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 14, weight: .medium))
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.glass)
+                
+//                Spacer()
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .preferredColorScheme(colorScheme)
+    }
+}
 
 struct NewNoteScreen: View {
+    
+    @State private var store: NewNoteScreenStore
+    
     @State private var title = ""
     @State private var story = ""
+    
+    @State private var selectedDate = Date()
+    @State private var showCalendar = false
+    
+    @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
+    
+    init(store: NewNoteScreenStore) {
+        self.store = store
+    }
     
     enum Field {
         case title
@@ -27,10 +80,16 @@ struct NewNoteScreen: View {
     @ViewBuilder
     private func header() -> some View {
         HStack {
-            Text("НОВАЯ ИСТОРИЯ")
-                .font(.mySemiBold(size: 14))
-                .tracking(2)
-                .foregroundStyle(.titleDark)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("НОВАЯ ИСТОРИЯ")
+                    .font(.mySemiBold(size: 14))
+                    .tracking(2)
+                    .foregroundStyle(.titleDark)
+                Text(store.state.date.toReadableDate())
+                    .font(.myRegular(size: 12))
+                    .tracking(2)
+                    .foregroundStyle(.titleDark.opacity(0.7))
+            }
             
             Spacer()
             
@@ -109,6 +168,7 @@ struct NewNoteScreen: View {
             .scrollContentBackground(.hidden)
             .foregroundStyle(.titleDark.opacity(0.7))
             .focused($focusedField, equals: .story)
+        //            .focused($isTextEditorFocused)
             .overlay(alignment: .topLeading) {
                 if story.isEmpty {
                     Text("Начните писать свою историю...")
@@ -120,6 +180,43 @@ struct NewNoteScreen: View {
                 }
             }
             .padding(.leading, -5)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                
+                VStack(spacing: 8) {
+                    if showCalendar {
+                        DatePicker(
+                            "",
+                            selection: $selectedDate,
+                            displayedComponents: [.date]
+                        )
+                        .datePickerStyle(.graphical)
+                        .labelsHidden()
+                        .padding(12)
+                        .background(.regularMaterial)
+                        .clipShape(
+                            RoundedRectangle(
+                                cornerRadius: 22,
+                                style: .continuous
+                            )
+                        )
+                        .transition(
+                            .scale(scale: 0.95)
+                            .combined(with: .opacity)
+                        )
+                    }
+                    
+                    KeyboardToolbar(
+                        onAddFriend: {
+                            print("Добавить друга")
+                        },
+                        onCalendar: {
+                            withAnimation(.spring(response: 0.3)) {
+                                showCalendar.toggle()
+                            }
+                        }
+                    )
+                }
+            }
     }
     
     var body: some View {
@@ -138,6 +235,20 @@ struct NewNoteScreen: View {
                 
                 Spacer(minLength: 0)
             }.padding(.horizontal, 24)
+                .onChange(of: focusedField) { oldValue, newValue in
+                    if newValue != nil, showCalendar {
+                        withAnimation {
+                            showCalendar = false
+                        }
+                    }
+                }
+                .onChange(of: showCalendar) { oldValue, newValue in
+                    if showCalendar {
+                        withAnimation {
+                            focusedField = nil
+                        }
+                    }
+                }
         }
         //        .toolbar {
         //            ToolbarItemGroup(placement: .keyboard) {
@@ -163,10 +274,12 @@ struct NewNoteScreen: View {
         print("Title: \(title)")
         print("Story: \(story)")
         
+        store.send(.saveNote(title: title, text: story))
         focusedField = nil
+        dismiss()
     }
 }
 
 #Preview {
-    NewNoteScreen()
+    ScreenBuilder.previewBuilder.getScreen(type: .createNote)
 }

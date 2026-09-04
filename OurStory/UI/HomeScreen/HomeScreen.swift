@@ -47,9 +47,7 @@ struct HomeScreen: View {
                     .padding(.trailing)
             }
             .buttonStyle(.plain)
-
         }
-        
     }
     
     
@@ -75,6 +73,7 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 12)
+//        .frame(maxWidth: .infinity)
     }
     
     

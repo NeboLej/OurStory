@@ -9,6 +9,7 @@ import Foundation
 
 enum AppAction {
     case selectedDate(Date)
+    case addNewNote(Note)
 }
 
 enum NavigateAction {

@@ -9,16 +9,22 @@ import Foundation
 
 
 struct Story {
-    let date: Date
-    let title: String
-    let isUserTitle: Bool
+    var date: Date
+    var title: String = "Title 1"
+    var isUserTitle: Bool = false
     
     lazy var baseDate: BaseDate = { BaseDate(date: date) }()
     
-    let notes: [Note]
+    var notes: [Note]
     
     static var example1: Story {
         Story(date: Date(), title: "Салки и шишки были славные но я облажался ", isUserTitle: true, notes: [Note.example1, Note.example2, Note.example3])
+    }
+    
+    func addNewNote(_ note: Note) -> Self {
+        var copy = self
+        copy.notes.insert(note, at: 0)
+        return copy
     }
 }
 

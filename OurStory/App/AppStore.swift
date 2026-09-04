@@ -13,6 +13,7 @@ final class AppStore {
     var selectionDate: Date = .now
     var currentStory: Story?
     var stories: [BaseDate: Story] = [:]
+    var allFriends: [Friend] = []
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
@@ -25,6 +26,16 @@ final class AppStore {
         case .selectedDate(let date):
             selectionDate = date
             currentStory = self.stories[BaseDate(date: selectionDate)]
+        case .addNewNote(let newNote):
+            if let story = stories[BaseDate(date: newNote.date)] {
+                let updatedStory = story.addNewNote(newNote)
+                stories[BaseDate(date: newNote.date)] = updatedStory
+                if story.date == currentStory?.date {
+                    currentStory = updatedStory
+                }
+            } else {
+                stories[BaseDate(date: newNote.date)] = Story(date: newNote.date, notes: [newNote])
+            }
         }
     }
     
@@ -52,6 +63,8 @@ final class AppStore {
             }
             
             currentStory = self.stories[BaseDate(date: selectionDate)]
+            
+            allFriends = Friend.mock
         }
     }
     
