@@ -58,7 +58,9 @@ protocol User {
     var color: String { get }
 }
 
-struct Friend: User, Hashable  {
+struct Friend: User, Hashable, Identifiable  {
+    
+    let id: UUID = UUID()
     let name: String
     let color: String
     

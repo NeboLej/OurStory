@@ -8,7 +8,7 @@
 import SwiftUI
 
 
-struct KeyboardToolbar: View {
+struct NoteKeyboardToolbar: View {
     let onAddFriend: () -> Void
     let onCalendar: () -> Void
     @Environment(\.colorScheme) private var colorScheme
@@ -16,23 +16,20 @@ struct KeyboardToolbar: View {
     var body: some View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
-                    Button(action: onAddFriend) {
-                        Label("Добавить друга", systemImage: "person.badge.plus")
-                            .font(.system(size: 14, weight: .medium))
-                            .padding(.horizontal, 12)
-                            .frame(height: 36)
-                        HStack(spacing: -4) {
-                            ForEach(0..<2) { _ in
-                                Circle()
-                                    .frame(width: 20, height: 20)
-                                    .foregroundStyle(.red)
-                            }
+                Button(action: onAddFriend) {
+                    Label("Добавить друга", systemImage: "person.badge.plus")
+                        .font(.system(size: 14, weight: .medium))
+                        .padding(.horizontal, 12)
+                        .frame(height: 36)
+                    HStack(spacing: -4) {
+                        ForEach(0..<2) { _ in
+                            Circle()
+                                .frame(width: 20, height: 20)
+                                .foregroundStyle(.red)
                         }
-
-                       
                     }
-                    .buttonStyle(.glass)
-
+                }
+                .buttonStyle(.glass)
                 
                 Button(action: onCalendar) {
                     Image(systemName: "calendar")
@@ -40,8 +37,6 @@ struct KeyboardToolbar: View {
                         .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.glass)
-                
-//                Spacer()
             }
         }
         .padding(.horizontal, 12)
@@ -58,7 +53,8 @@ struct NewNoteScreen: View {
     @State private var story = ""
     
     @State private var selectedDate = Date()
-    @State private var showCalendar = false
+    @State private var isShowCalendar = false
+    @State private var isShowFriendsList = true
     
     @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
@@ -145,6 +141,14 @@ struct NewNoteScreen: View {
     }
     
     @ViewBuilder
+    private func friendsIndicatorView(_ friends: [Friend]) -> some View {
+        let colors = friends.map {  Color(hex: $0.color) }
+        Rectangle()
+            .fill(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+            .frame(height: 16)
+    }
+    
+    @ViewBuilder
     private func storyTextEditor() -> some View {
         HStack {
             Text("ТЕКСТ")
@@ -162,6 +166,7 @@ struct NewNoteScreen: View {
         }
         .padding(.top, 18)
         .padding(.bottom, 8)
+        
         
         TextEditor(text: $story)
             .font(.myMedium(size: 16))
@@ -183,40 +188,66 @@ struct NewNoteScreen: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 
                 VStack(spacing: 8) {
-                    if showCalendar {
-                        DatePicker(
-                            "",
-                            selection: $selectedDate,
-                            displayedComponents: [.date]
-                        )
-                        .datePickerStyle(.graphical)
-                        .labelsHidden()
-                        .padding(12)
-                        .background(.regularMaterial)
-                        .clipShape(
-                            RoundedRectangle(
-                                cornerRadius: 22,
-                                style: .continuous
+                    if isShowCalendar {
+                        DatePicker("",selection: $selectedDate, displayedComponents: [.date , .hourAndMinute])
+                            .datePickerStyle(.graphical)
+                            .labelsHidden()
+                            .padding(12)
+                            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                            .transition(
+                                .scale(scale: 0.75)
+                                .combined(with: .opacity)
                             )
-                        )
-                        .transition(
-                            .scale(scale: 0.95)
-                            .combined(with: .opacity)
-                        )
+                    } else if isShowFriendsList {
+                        friendsList()
                     }
                     
-                    KeyboardToolbar(
+                    NoteKeyboardToolbar(
                         onAddFriend: {
-                            print("Добавить друга")
+                            withAnimation(.spring(response: 0.3)) {
+                                isShowFriendsList.toggle()
+                            }
                         },
                         onCalendar: {
                             withAnimation(.spring(response: 0.3)) {
-                                showCalendar.toggle()
+                                isShowCalendar.toggle()
                             }
                         }
                     )
                 }
             }
+    }
+    
+    @ViewBuilder
+    private func friendsList() -> some View {
+        VStack(spacing: 0) {
+            ForEach(store.state.allFriends) { friend in
+                Button {
+                    store.send(.selectFriend(friend))
+                } label: {
+                    HStack {
+                        Circle()
+                            .foregroundStyle(Color(hex: friend.color))
+                            .frame(height: 24)
+                        Text(friend.name)
+                            .font(.myRegular(size: 18))
+                            .foregroundStyle(.white)
+                        Spacer()
+                        if store.state.selectedFriends.contains(friend) {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                }
+            }
+        }
+        .padding()
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .transition(
+            .scale(scale: 0.75)
+            .combined(with: .opacity)
+        )
     }
     
     var body: some View {
@@ -230,22 +261,34 @@ struct NewNoteScreen: View {
                 Divider()
                     .overlay(Color.titleDark.opacity(0.15))
                 
+                friendsIndicatorView(store.state.selectedFriends)
+                
                 titleTextField()
                 storyTextEditor()
                 
                 Spacer(minLength: 0)
             }.padding(.horizontal, 24)
                 .onChange(of: focusedField) { oldValue, newValue in
-                    if newValue != nil, showCalendar {
+                    if newValue != nil {
                         withAnimation {
-                            showCalendar = false
+                            isShowCalendar = false
+                            isShowFriendsList = false
                         }
                     }
                 }
-                .onChange(of: showCalendar) { oldValue, newValue in
-                    if showCalendar {
+                .onChange(of: isShowCalendar) { oldValue, newValue in
+                    if isShowCalendar {
                         withAnimation {
                             focusedField = nil
+                            isShowFriendsList = false
+                        }
+                    }
+                }
+                .onChange(of: isShowFriendsList) { oldValue, newValue in
+                    if isShowFriendsList {
+                        withAnimation {
+                            focusedField = nil
+                            isShowCalendar = false
                         }
                     }
                 }
@@ -263,7 +306,7 @@ struct NewNoteScreen: View {
         //            }
         //        }
         .onAppear {
-            focusedField = .story
+            //            focusedField = .story
         }
     }
     

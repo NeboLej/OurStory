@@ -8,6 +8,6 @@
 import Foundation
 
 enum NewNoteScreenAction {
-    case selectFriends([Friend])
+    case selectFriend(Friend)
     case saveNote(title: String?, text: String)
 }

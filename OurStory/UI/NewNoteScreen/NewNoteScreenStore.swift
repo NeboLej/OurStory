@@ -34,8 +34,12 @@ final class NewNoteScreenStore: BaseStore {
     func send(_ action: NewNoteScreenAction, animation: Animation? = .default) {
         withAnimation(animation) {
             switch action {
-            case .selectFriends(let friends):
-                selectedFriends = friends
+            case .selectFriend(let friend):
+                if selectedFriends.contains(friend) {
+                    selectedFriends.removeAll { $0 == friend }
+                } else {
+                    selectedFriends.append(friend)
+                }
             case .saveNote(title: let title, text: let text):
                 let newNote = Note(title: title, date: date, text: text, friends: selectedFriends, owner: nil)
                 appStore.send(.addNewNote(newNote))
