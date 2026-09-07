@@ -7,10 +7,12 @@
 
 import SwiftUI
 
-
 struct NoteKeyboardToolbar: View {
+    
+    let circleColors: [Color]
     let onAddFriend: () -> Void
     let onCalendar: () -> Void
+    
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
@@ -22,10 +24,10 @@ struct NoteKeyboardToolbar: View {
                         .padding(.horizontal, 12)
                         .frame(height: 36)
                     HStack(spacing: -4) {
-                        ForEach(0..<2) { _ in
+                        ForEach(circleColors.prefix(4), id: \.self) { color in
                             Circle()
                                 .frame(width: 20, height: 20)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(color)
                         }
                     }
                 }
@@ -194,15 +196,16 @@ struct NewNoteScreen: View {
                             .labelsHidden()
                             .padding(12)
                             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-                            .transition(
-                                .scale(scale: 0.75)
-                                .combined(with: .opacity)
-                            )
+                            .transition(.scale(scale: 0.75).combined(with: .opacity))
+                            .onChange(of: selectedDate) { oldValue, newValue in
+                                store.send(.selectDate(newValue))
+                            }
                     } else if isShowFriendsList {
                         friendsList()
                     }
                     
                     NoteKeyboardToolbar(
+                        circleColors: store.state.selectedFriends.map { Color(hex: $0.color) },
                         onAddFriend: {
                             withAnimation(.spring(response: 0.3)) {
                                 isShowFriendsList.toggle()
@@ -231,11 +234,11 @@ struct NewNoteScreen: View {
                             .frame(height: 24)
                         Text(friend.name)
                             .font(.myRegular(size: 18))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(.textMulticolor)
                         Spacer()
                         if store.state.selectedFriends.contains(friend) {
                             Image(systemName: "checkmark")
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.textMulticolor)
                         }
                     }
                     .padding(.vertical, 6)

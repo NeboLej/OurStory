@@ -43,6 +43,8 @@ final class NewNoteScreenStore: BaseStore {
             case .saveNote(title: let title, text: let text):
                 let newNote = Note(title: title, date: date, text: text, friends: selectedFriends, owner: nil)
                 appStore.send(.addNewNote(newNote))
+            case .selectDate(let newDate):
+                date = newDate
             }
         }
     }

@@ -10,4 +10,5 @@ import Foundation
 enum NewNoteScreenAction {
     case selectFriend(Friend)
     case saveNote(title: String?, text: String)
+    case selectDate(Date)
 }
