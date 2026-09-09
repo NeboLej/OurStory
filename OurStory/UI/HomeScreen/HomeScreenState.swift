@@ -10,9 +10,11 @@ import Foundation
 struct HomeScreenState {
     
     var currentStory: Story?
+    var allFriends: [Friend]
     
     init(appStore: AppStore) {
         currentStory = appStore.currentStory
+        allFriends = appStore.allFriends
     }
     
 }

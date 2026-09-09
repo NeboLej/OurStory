@@ -71,11 +71,11 @@ struct Friend: User, Hashable, Identifiable  {
     
     
     static var mock: [Friend] = [
-        Friend(name: "Олег", color: "470736"),
-        Friend(name: "Стас", color: "1560BD"),
-        Friend(name: "Настя", color: "B57281"),
-        Friend(name: "Вероника", color: "D1E231"),
-        Friend(name: "Виктор Сергеевич", color: "808080")
+        Friend(name: "Олег", color: "308446"),
+        Friend(name: "Стас", color: "FFBCD9"),
+        Friend(name: "Настя", color: "F3A505"),
+        Friend(name: "Вероника", color: "F4C430"),
+        Friend(name: "Виктор Сергеевич", color: "1FCECB")
     ]
     
     

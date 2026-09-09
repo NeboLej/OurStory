@@ -14,6 +14,7 @@ struct HomeScreen: View {
     @State private var selectionDate: Date = .now
     @State private var showFrinedsNote: Note? = nil
     @State private var showMenuNote: Note? = nil
+    @State private var isShowFriendsList: Bool = false
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
@@ -41,14 +42,23 @@ struct HomeScreen: View {
         .background(.backgroundFill)
         .ignoresSafeArea()
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            
             VStack(spacing: 8) {
-                HomeScreenToolbar {
-                   
-                } onCalendar: {
-                    
-                } onNewNote: {
-                    store.send(.createNewNote)
+                
+                if isShowFriendsList {
+                    if let note = showMenuNote {
+                        FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: note.friends) { friend in
+                            print(friend.name)
+                        }.padding(.horizontal)
+                    }
+
+                } else {
+                    HomeScreenToolbar {
+                       
+                    } onCalendar: {
+                        
+                    } onNewNote: {
+                        store.send(.createNewNote)
+                    }
                 }
             }
         }
@@ -167,7 +177,11 @@ struct HomeScreen: View {
                 .foregroundStyle(.black.opacity(0.2))
             VStack(spacing: 12) {
                 noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {})
-                noteMenuItem(image: "person.3.sequence", text: "Отметить друга", action: {})
+                noteMenuItem(image: "person.badge.plus", text: "Отметить друга", action: {
+                    withAnimation(.snappy) {
+                        isShowFriendsList.toggle()
+                    }
+                })
                 noteMenuItem(image: "trash", text: "Удалить", action: {})
             }
             .padding(.horizontal, 8)
@@ -178,18 +192,17 @@ struct HomeScreen: View {
     @ViewBuilder
     private func noteMenuItem(image: String, text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 0) {
                 Image(systemName: image)
-                    .foregroundStyle(.titleDark)
-                    .font(.system(size: 14))
+                    .foregroundStyle(.titleDark.opacity(0.5))
+                    .font(.system(size: 13))
                     .frame(width: 40)
                 Text(text)
                     .foregroundStyle(.titleDark)
-                    .font(.myMedium(size: 12))
+                    .font(.myMedium(size: 13))
                 Spacer()
             }
         }
-
     }
     
     @ViewBuilder

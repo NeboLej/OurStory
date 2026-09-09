@@ -34,6 +34,54 @@ struct NewNoteScreen: View {
         !story.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
+    var body: some View {
+        ZStack {
+            Color(Color.backgroundFill)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                header()
+                
+                Divider()
+                    .overlay(Color.titleDark.opacity(0.15))
+                
+                friendsIndicatorView(store.state.selectedFriends)
+                
+                titleTextField()
+                storyTextEditor()
+                
+                Spacer(minLength: 0)
+            }.padding(.horizontal, 24)
+                .onChange(of: focusedField) { oldValue, newValue in
+                    if newValue != nil {
+                        withAnimation {
+                            isShowCalendar = false
+                            isShowFriendsList = false
+                        }
+                    }
+                }
+                .onChange(of: isShowCalendar) { oldValue, newValue in
+                    if isShowCalendar {
+                        withAnimation {
+                            focusedField = nil
+                            isShowFriendsList = false
+                        }
+                    }
+                }
+                .onChange(of: isShowFriendsList) { oldValue, newValue in
+                    if isShowFriendsList {
+                        withAnimation {
+                            focusedField = nil
+                            isShowCalendar = false
+                        }
+                    }
+                }
+        }
+        .onAppear {
+            focusedField = .story
+        }
+    }
+    
     
     @ViewBuilder
     private func header() -> some View {
@@ -161,7 +209,9 @@ struct NewNoteScreen: View {
                                 store.send(.selectDate(newValue))
                             }
                     } else if isShowFriendsList {
-                        friendsList()
+                        FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: store.state.selectedFriends) { friend in
+                            store.send(.selectFriend(friend))
+                        }
                     }
                     
                     NewNoteToolbar(
@@ -179,98 +229,6 @@ struct NewNoteScreen: View {
                     )
                 }
             }
-    }
-    
-    @ViewBuilder
-    private func friendsList() -> some View {
-        VStack(spacing: 0) {
-            ForEach(store.state.allFriends) { friend in
-                Button {
-                    store.send(.selectFriend(friend))
-                } label: {
-                    HStack {
-                        Circle()
-                            .foregroundStyle(Color(hex: friend.color))
-                            .frame(height: 24)
-                        Text(friend.name)
-                            .font(.myRegular(size: 16))
-                            .foregroundStyle(.textMulticolor)
-                        Spacer()
-                        if store.state.selectedFriends.contains(friend) {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(.textMulticolor)
-                        }
-                    }
-                    .padding(.vertical, 6)
-                }
-            }
-        }
-        .padding()
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .transition(
-            .scale(scale: 0.75)
-            .combined(with: .opacity)
-        )
-    }
-    
-    var body: some View {
-        ZStack {
-            Color(Color.backgroundFill)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                header()
-                
-                Divider()
-                    .overlay(Color.titleDark.opacity(0.15))
-                
-                friendsIndicatorView(store.state.selectedFriends)
-                
-                titleTextField()
-                storyTextEditor()
-                
-                Spacer(minLength: 0)
-            }.padding(.horizontal, 24)
-                .onChange(of: focusedField) { oldValue, newValue in
-                    if newValue != nil {
-                        withAnimation {
-                            isShowCalendar = false
-                            isShowFriendsList = false
-                        }
-                    }
-                }
-                .onChange(of: isShowCalendar) { oldValue, newValue in
-                    if isShowCalendar {
-                        withAnimation {
-                            focusedField = nil
-                            isShowFriendsList = false
-                        }
-                    }
-                }
-                .onChange(of: isShowFriendsList) { oldValue, newValue in
-                    if isShowFriendsList {
-                        withAnimation {
-                            focusedField = nil
-                            isShowCalendar = false
-                        }
-                    }
-                }
-        }
-        //        .toolbar {
-        //            ToolbarItemGroup(placement: .keyboard) {
-        //                Spacer()
-        //
-        //                Button {
-        //                    focusedField = nil
-        //                } label: {
-        //                    Text("Готово")
-        //                        .font(.system(size: 15, weight: .medium, design: .serif))
-        //                }
-        //            }
-        //        }
-        .onAppear {
-            //            focusedField = .story
-        }
     }
     
     private func saveStory() {
