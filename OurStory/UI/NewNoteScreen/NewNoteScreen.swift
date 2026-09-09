@@ -56,7 +56,7 @@ struct NewNoteScreen: View {
     
     @State private var selectedDate = Date()
     @State private var isShowCalendar = false
-    @State private var isShowFriendsList = true
+    @State private var isShowFriendsList = false
     
     @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
@@ -233,7 +233,7 @@ struct NewNoteScreen: View {
                             .foregroundStyle(Color(hex: friend.color))
                             .frame(height: 24)
                         Text(friend.name)
-                            .font(.myRegular(size: 18))
+                            .font(.myRegular(size: 16))
                             .foregroundStyle(.textMulticolor)
                         Spacer()
                         if store.state.selectedFriends.contains(friend) {

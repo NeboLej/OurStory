@@ -7,6 +7,77 @@
 
 import SwiftUI
 
+struct HomeScreenToolbar: View {
+    
+    enum MenuItem {
+        case friends, settings, newNote
+        
+        var iconName: String {
+            switch self {
+            case .friends: return "person.3.sequence"
+            case .settings: return "gearshape"
+            case .newNote: return "plus"
+            }
+        }
+        
+        var name: String {
+            switch self {
+            case .friends: return "Друзья"
+            case .settings: return "Настройки"
+            case .newNote: return "История"
+            }
+        }
+    }
+    
+    let onFriends: () -> Void
+    let onCalendar: () -> Void
+    let onNewNote: () -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        
+        HStack {
+            GlassEffectContainer(spacing: 8) {
+
+                HStack(alignment: .bottom, spacing: 16) {
+                    munuItem(.settings) { }
+                    munuItem(.friends, action: onFriends)
+                }
+                .padding(.horizontal, 20)
+                .glassEffect()
+            }
+            
+            Spacer()
+            GlassEffectContainer {
+                munuItem(.newNote, action: onNewNote)
+                    .padding(.horizontal, 16)
+                    .glassEffect()
+            }
+        }
+        .padding(.horizontal, 16)
+    }
+    
+    @ViewBuilder
+    private func munuItem(_ item: MenuItem, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .center, spacing: 3) {
+                Image(systemName: item.iconName)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.textMulticolor)
+                
+                if !item.name.isEmpty {
+                    Text(item.name)
+                        .font(.myMedium(size: 10))
+                        .foregroundStyle(.textMulticolor)
+                }
+
+            }
+            .frame(height: 64)
+        }
+    }
+}
+
 struct HomeScreen: View {
     
     @State private var store: HomeScreenStore
@@ -25,9 +96,9 @@ struct HomeScreen: View {
                 .foregroundStyle(Color.myPrimary)
             screenBuilder.getComponent(type: .horizontalCalendar)
                 .padding(.top, 16)
-                
+            
             ScrollView(.vertical) {
-
+                
                 if let currentSroty = store.state.currentStory {
                     storyView(currentSroty)
                 }
@@ -35,18 +106,20 @@ struct HomeScreen: View {
             }
             .frame(maxWidth: .infinity)
         }
-
+        
         .background(.backgroundFill)
         .ignoresSafeArea()
-        .overlay(alignment: .bottomTrailing) {
-            Button {
-                store.send(.createNewNote)
-            } label: {
-                Circle()
-                    .frame(width: 60, height: 60)
-                    .padding(.trailing)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            
+            VStack(spacing: 8) {
+                HomeScreenToolbar {
+                   
+                } onCalendar: {
+                    
+                } onNewNote: {
+                    store.send(.createNewNote)
+                }
             }
-            .buttonStyle(.plain)
         }
     }
     
@@ -73,7 +146,8 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 12)
-//        .frame(maxWidth: .infinity)
+        .padding(.bottom, 100)
+        //        .frame(maxWidth: .infinity)
     }
     
     
@@ -89,7 +163,7 @@ struct HomeScreen: View {
                             .foregroundStyle(.titleDark)
                             .padding(.bottom, 4)
                     }
-
+                    
                     Text(note.text)
                         .font(.myRegular(size: 16))
                         .foregroundStyle(.titleDark)
@@ -99,7 +173,7 @@ struct HomeScreen: View {
         } else {
             friendNoteView(note)
         }
-
+        
     }
     
     @ViewBuilder
@@ -119,7 +193,7 @@ struct HomeScreen: View {
                     .font(.mySemiBoldItalic(size: 16))
                     .foregroundStyle(.titleDark)
             }
-
+            
             Text(note.text)
                 .font(.myItalic(size: 16))
                 .foregroundStyle(.titleDark)
