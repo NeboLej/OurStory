@@ -12,6 +12,7 @@ struct HomeScreen: View {
     @State private var store: HomeScreenStore
     @State private var screenBuilder: ScreenBuilder
     @State var selectionDate: Date = .now
+    @State private var showFrinedsNote: Note? = nil
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
@@ -79,12 +80,35 @@ struct HomeScreen: View {
         //        .frame(maxWidth: .infinity)
     }
     
-    
     @ViewBuilder
     private func noteView(_ note: Note) -> some View {
         if note.owner == nil {
             HStack(alignment: .top, spacing: 16) {
-                friendsIndicatorView(note.friends)
+                Button {
+                    withAnimation(.snappy) {
+                        showFrinedsNote = note
+                    }
+                } label: {
+                    Group {
+                        if showFrinedsNote == note {
+                            VStack {
+                                friendsList(friends: note.friends)
+                                    .transition(.scale(scale: 0.95).combined(with: .opacity))
+                                Rectangle()
+                                    .opacity(0.001)
+                                    .onTapGesture {
+                                        withAnimation(.snappy) {
+                                            showFrinedsNote = nil
+                                        }
+                                    }
+                            }
+                        } else {
+                            friendsIndicatorView(note.friends)
+                                .transition(.scale(scale: 0.1).combined(with: .opacity))
+                        }
+                    }
+                }.disabled(note.friends.isEmpty)
+                
                 VStack(alignment: .leading, spacing: 0) {
                     if let noteTitle = note.title {
                         Text(noteTitle)
@@ -106,8 +130,38 @@ struct HomeScreen: View {
     }
     
     @ViewBuilder
+    private func friendsList(friends: [Friend]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(friends) { friend in
+                Button {
+                    withAnimation(.snappy) {
+                        showFrinedsNote = nil
+                    }
+                } label: {
+                    HStack {
+                        Circle()
+                            .foregroundStyle(Color(hex: friend.color))
+                            .frame(height: 24)
+                        Text(friend.name)
+                            .font(.myRegular(size: 16))
+                            .foregroundStyle(.titleDark)
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(.black, style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+        )
+    }
+    
+    @ViewBuilder
     private func friendsIndicatorView(_ friends: [Friend]) -> some View {
-        
         let colors = friends.map {  Color(hex: $0.color) }
         Rectangle()
             .fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))

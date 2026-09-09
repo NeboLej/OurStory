@@ -29,7 +29,12 @@ struct Story {
 }
 
 
-struct Note: Identifiable {
+struct Note: Identifiable, Equatable {
+    
+    static func == (lhs: Note, rhs: Note) -> Bool {
+        lhs.id == rhs.id
+    }
+    
     let id: UUID = UUID()
     let title: String?
     let date: Date
