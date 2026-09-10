@@ -43,7 +43,7 @@ struct NewNoteScreen: View {
                 header()
                 
                 Divider()
-                    .overlay(Color.titleDark.opacity(0.15))
+                    .overlay(Color.textMulticolor.opacity(0.15))
                 
                 friendsIndicatorView(store.state.selectedFriends)
                 
@@ -90,11 +90,11 @@ struct NewNoteScreen: View {
                 Text("НОВАЯ ИСТОРИЯ")
                     .font(.mySemiBold(size: 14))
                     .tracking(2)
-                    .foregroundStyle(.titleDark)
+                    .foregroundStyle(.textMulticolor)
                 Text(store.state.date.toReadableDate())
                     .font(.myRegular(size: 12))
                     .tracking(2)
-                    .foregroundStyle(.titleDark.opacity(0.7))
+                    .foregroundStyle(.textMulticolor.opacity(0.7))
             }
             
             Spacer()
@@ -105,12 +105,12 @@ struct NewNoteScreen: View {
                 Text("СОХРАНИТЬ")
                     .font(.mySemiBold(size: 11))
                     .tracking(1.5)
-                    .foregroundStyle(canSave ? Color.titleDark.opacity(0.85) : Color.titleDark.opacity(0.25))
+                    .foregroundStyle(canSave ? Color.textMulticolor.opacity(0.85) : Color.textMulticolor.opacity(0.25))
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
                     .overlay {
                         RoundedRectangle(cornerRadius: 2)
-                            .stroke(canSave ? Color.titleDark.opacity(0.35) : Color.titleDark.opacity(0.12), lineWidth: 1)
+                            .stroke(canSave ? Color.textMulticolor.opacity(0.35) : Color.textMulticolor.opacity(0.12), lineWidth: 1)
                     }
             }
             .disabled(!canSave)
@@ -125,9 +125,9 @@ struct NewNoteScreen: View {
             TextField("", text: $title,
                       prompt: Text("Название итории")
                 .font(.myRegular(size: 17))
-                .foregroundStyle(.titleDark.opacity(0.32)), axis: .vertical)
+                .foregroundStyle(.textMulticolor.opacity(0.32)), axis: .vertical)
             .lineLimit(1...4)
-            .foregroundStyle(.titleDark.opacity(0.88))
+            .foregroundStyle(.textMulticolor.opacity(0.88))
             .focused($focusedField, equals: .title)
             .font(.myMedium(size: 20))
             .submitLabel(.next)
@@ -142,7 +142,7 @@ struct NewNoteScreen: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 24, height: 24)
-                    .foregroundStyle(.titleDark.opacity(0.32))
+                    .foregroundStyle(.textMulticolor.opacity(0.32))
                     .padding(.top, 8)
             }
             
@@ -164,14 +164,14 @@ struct NewNoteScreen: View {
             Text("ТЕКСТ")
                 .font(.mySemiBold(size: 11))
                 .tracking(2)
-                .foregroundStyle(.titleDark)
+                .foregroundStyle(.textMulticolor)
             
             Spacer()
             
             if !story.isEmpty {
                 Text("\(story.count) знаков")
                     .font(.myRegular(size: 14))
-                    .foregroundStyle(.titleDark)
+                    .foregroundStyle(.textMulticolor)
             }
         }
         .padding(.top, 18)
@@ -181,14 +181,14 @@ struct NewNoteScreen: View {
         TextEditor(text: $story)
             .font(.myMedium(size: 16))
             .scrollContentBackground(.hidden)
-            .foregroundStyle(.titleDark.opacity(0.7))
+            .foregroundStyle(.textMulticolor.opacity(0.7))
             .focused($focusedField, equals: .story)
         //            .focused($isTextEditorFocused)
             .overlay(alignment: .topLeading) {
                 if story.isEmpty {
                     Text("Начните писать свою историю...")
                         .font(.myRegular(size: 17))
-                        .foregroundStyle(.titleDark.opacity(0.32))
+                        .foregroundStyle(.textMulticolor.opacity(0.32))
                         .padding(.top, 8)
                         .padding(.leading, 5)
                         .allowsHitTesting(false)

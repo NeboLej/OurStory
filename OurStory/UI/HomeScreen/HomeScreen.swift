@@ -84,12 +84,12 @@ struct HomeScreen: View {
             Group {
                 Text(story.title)
                     .font(.myMedium(size: 18))
-                    .foregroundStyle(.titleDark)
+                    .foregroundStyle(.textMulticolor)
                     .padding(.bottom, 4)
                     .padding(.top, 20)
                 Text(story.date.toReadable())
                     .font(.myItalic(size: 14))
-                    .foregroundStyle(.titleDark.opacity(0.6))
+                    .foregroundStyle(.textMulticolor.opacity(0.6))
                     .padding(.bottom, 36)
             }
             .padding(.leading, 30)
@@ -139,13 +139,13 @@ struct HomeScreen: View {
                     if let noteTitle = note.title {
                         Text(noteTitle)
                             .font(.mySemiBold(size: 16))
-                            .foregroundStyle(.titleDark)
+                            .foregroundStyle(.textMulticolor)
                             .padding(.bottom, 4)
                     }
                     
                     Text(note.text)
                         .font(.myRegular(size: 16))
-                        .foregroundStyle(.titleDark)
+                        .foregroundStyle(.textMulticolor)
                 }
                 .padding(.horizontal, 16)
                 .onTapGesture {
@@ -194,11 +194,11 @@ struct HomeScreen: View {
         Button(action: action) {
             HStack(spacing: 0) {
                 Image(systemName: image)
-                    .foregroundStyle(.titleDark.opacity(0.5))
+                    .foregroundStyle(.textMulticolor.opacity(0.5))
                     .font(.system(size: 13))
                     .frame(width: 40)
                 Text(text)
-                    .foregroundStyle(.titleDark)
+                    .foregroundStyle(.textMulticolor)
                     .font(.myMedium(size: 13))
                 Spacer()
             }
@@ -220,7 +220,7 @@ struct HomeScreen: View {
                             .frame(height: 20)
                         Text(friend.name)
                             .font(.myRegular(size: 14))
-                            .foregroundStyle(.titleDark)
+                            .foregroundStyle(.textMulticolor)
                             .multilineTextAlignment(.leading)
                         Spacer()
                     }
@@ -246,12 +246,12 @@ struct HomeScreen: View {
             if let noteTitle = note.title {
                 Text(noteTitle)
                     .font(.mySemiBoldItalic(size: 16))
-                    .foregroundStyle(.titleDark)
+                    .foregroundStyle(.textMulticolor)
             }
             
             Text(note.text)
                 .font(.myItalic(size: 16))
-                .foregroundStyle(.titleDark)
+                .foregroundStyle(.textMulticolor)
                 .padding(.top, 2)
             
             HStack(alignment: .center, spacing: 3) {
@@ -265,7 +265,7 @@ struct HomeScreen: View {
                     }
                 Text("\(note.owner?.name ?? "")")
                     .font(.myRegular(size: 14))
-                    .foregroundStyle(.titleDark.opacity(0.6))
+                    .foregroundStyle(.textMulticolor.opacity(0.6))
             }
             .padding(.top, 2)
         }
