@@ -45,7 +45,7 @@ final class ScreenBuilder {
     func getScreen(type: ScreenType) -> some View {
         switch type {
         case .home: HomeScreen(store: HomeScreenStore(appStore: appStore), screenBuilder: self)
-        case .note(let note): NewNoteScreen(store: NewNoteScreenStore(appStore: appStore, note: note))
+        case .note(let note): NoteScreen(store: NoteScreenStore(appStore: appStore, note: note))
         }
     }
     

@@ -1,5 +1,5 @@
 //
-//  NewNoteScreenStore.swift
+//  NoteScreenStore.swift
 //  OurStory
 //
 //  Created by Nebo on 04.09.2026.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @Observable
-final class NewNoteScreenStore: BaseStore {
+final class NoteScreenStore: BaseStore {
     
     private var title: String? = nil
     private var text: String = ""
@@ -17,8 +17,8 @@ final class NewNoteScreenStore: BaseStore {
     private var selectedFriends: [Friend] = []
     private let rootNote: Note?
     
-    var state: NewNoteScreenState {
-        NewNoteScreenState(title: title, text: text, date: date, allFriends: appStore.allFriends, selectedFriends: selectedFriends)
+    var state: NoteScreenState {
+        NoteScreenState(title: title, text: text, date: date, allFriends: appStore.allFriends, selectedFriends: selectedFriends)
     }
     
     init(appStore: AppStore, note: Note? = nil) {
@@ -39,7 +39,7 @@ final class NewNoteScreenStore: BaseStore {
         }
     }
     
-    func send(_ action: NewNoteScreenAction, animation: Animation? = .default) {
+    func send(_ action: NoteScreenAction, animation: Animation? = .default) {
         withAnimation(animation) {
             switch action {
             case .selectFriend(let friend):

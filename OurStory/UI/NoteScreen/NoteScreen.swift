@@ -1,5 +1,5 @@
 //
-//  NewNoteScreen.swift
+//  NoteScreen.swift
 //  OurStory
 //
 //  Created by Nebo on 01.09.2026.
@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct NewNoteScreen: View {
+struct NoteScreen: View {
     
-    @State private var store: NewNoteScreenStore
+    @State private var store: NoteScreenStore
     
     @State private var title = ""
     @State private var story = ""
@@ -21,7 +21,7 @@ struct NewNoteScreen: View {
     @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
     
-    init(store: NewNoteScreenStore) {
+    init(store: NoteScreenStore) {
         self.store = store
     }
     

@@ -1,5 +1,5 @@
 //
-//  NewNoteScreenState.swift
+//  NoteScreenState.swift
 //  OurStory
 //
 //  Created by Nebo on 04.09.2026.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct NewNoteScreenState {
+struct NoteScreenState {
     
     let title: String?
     let text: String
