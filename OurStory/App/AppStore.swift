@@ -36,6 +36,14 @@ final class AppStore {
             } else {
                 stories[BaseDate(date: newNote.date)] = Story(date: newNote.date, notes: [newNote])
             }
+        case .editNote(let note):
+            if let story = stories[BaseDate(date: note.date)] {
+                let updatedStory = story.replaceNote(note)
+                stories[BaseDate(date: note.date)] = updatedStory
+                if story.date == currentStory?.date {
+                    currentStory = updatedStory
+                }
+            }
         }
     }
     

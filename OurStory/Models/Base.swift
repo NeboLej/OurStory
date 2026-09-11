@@ -26,6 +26,12 @@ struct Story {
         copy.notes.insert(note, at: 0)
         return copy
     }
+    
+    func replaceNote(_ note: Note) -> Self {
+        var copy = self
+        copy.notes = copy.notes.replaceFirst(note)
+        return copy
+    }
 }
 
 
@@ -35,12 +41,21 @@ struct Note: Identifiable, Equatable {
         lhs.id == rhs.id
     }
     
-    let id: UUID = UUID()
+    let id: UUID
     let title: String?
     let date: Date
     let text: String
     let friends: [Friend]
     let owner: User?
+    
+    init(id: UUID = UUID(), title: String? = nil, date: Date, text: String, friends: [Friend], owner: User? = nil) {
+        self.id = id
+        self.title = title
+        self.date = date
+        self.text = text
+        self.friends = friends
+        self.owner = owner
+    }
     
     static var example1: Note {
         Note(title: nil, date: Date(), text: "Ходил в лес, набрал шишек для плова потом вернулся домой и готовился к касстингу на роль девушки джеймса бонда", friends: [
@@ -55,6 +70,10 @@ struct Note: Identifiable, Equatable {
     
     static var example3: Note {
         Note(title: "Сладкая месть", date: Date(), text: "Пол дня ждал тоху у подъезда, весь год тренился играть в салочки и сегодня то я ему точно покажу кто тут батя. 💪", friends: [], owner: Friend(name: "Стас", color: "f4d3a1"))
+    }
+    
+    func copy(friends: [Friend]? = nil) -> Self {
+        Note(id: self.id, title: self.title, date: self.date, text: self.text, friends: friends ?? self.friends, owner: self.owner)
     }
 }
 

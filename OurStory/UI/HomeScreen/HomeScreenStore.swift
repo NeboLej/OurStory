@@ -17,6 +17,9 @@ final class HomeScreenStore: BaseStore {
             switch action {
             case .openScreen: print("OpenScreen")
             case .createNewNote: appStore.send(.toCreateNote)
+            case .updateFriendInNote(let note, let friend):
+                var newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
+                appStore.send(.editNote(newNote))
             }
         }
     }

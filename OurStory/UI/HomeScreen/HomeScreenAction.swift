@@ -10,5 +10,5 @@ import Foundation
 enum HomeScreenAction {
     case openScreen
     case createNewNote
-//    case addFriendInNote(note: Note, friend: Friend)
+    case updateFriendInNote(note: Note, friend: Friend)
 }

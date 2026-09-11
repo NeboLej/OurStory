@@ -13,7 +13,12 @@ struct HomeScreen: View {
     @State private var screenBuilder: ScreenBuilder
     @State private var selectionDate: Date = .now
     @State private var showFrinedsNote: Note? = nil
-    @State private var showMenuNote: Note? = nil
+    
+    @State private var showMenuNoteId: UUID? = nil
+    private var showMenuNote: Note? {
+        store.state.currentStory?.notes.first(where: { $0.id == showMenuNoteId })
+    }
+    
     @State private var isShowFriendsList: Bool = false
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
@@ -43,12 +48,15 @@ struct HomeScreen: View {
         .ignoresSafeArea()
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
-                
                 if isShowFriendsList {
                     if let note = showMenuNote {
                         FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: note.friends) { friend in
-                            print(friend.name)
-                        }.padding(.horizontal)
+                            store.send(.updateFriendInNote(note: note, friend: friend))
+//                            isShowFriendsList = false
+                        } onExit: {
+                            isShowFriendsList = false
+                        }
+                        .padding(.horizontal)
                     }
 
                 } else {
@@ -66,13 +74,16 @@ struct HomeScreen: View {
             if newValue != nil {
                 withAnimation(.snappy) {
                     showFrinedsNote = nil
+                    isShowFriendsList = false
                 }
+            } else {
+                isShowFriendsList = false
             }
         }
         .onChange(of: showFrinedsNote) { oldValue, newValue in
             if newValue != nil {
                 withAnimation(.snappy) {
-                    showMenuNote = nil
+                    showMenuNoteId = nil
                 }
             }
         }
@@ -101,7 +112,7 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.bottom, 100)
+        .padding(.bottom, 180)
     }
     
     @ViewBuilder
@@ -151,9 +162,9 @@ struct HomeScreen: View {
                 .onTapGesture {
                     withAnimation(.snappy) {
                         if showMenuNote == note {
-                            showMenuNote = nil
+                            showMenuNoteId = nil
                         } else {
-                            showMenuNote = note
+                            showMenuNoteId = note.id
                         }
                     }
                 }
