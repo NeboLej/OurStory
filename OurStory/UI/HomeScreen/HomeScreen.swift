@@ -187,7 +187,9 @@ struct HomeScreen: View {
                 .frame(width: 1)
                 .foregroundStyle(.black.opacity(0.2))
             VStack(spacing: 12) {
-                noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {})
+                noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {
+                    store.send(.editNote(note))
+                })
                 noteMenuItem(image: "person.badge.plus", text: "Отметить друга", action: {
                     withAnimation(.snappy) {
                         isShowFriendsList.toggle()

@@ -72,8 +72,8 @@ struct Note: Identifiable, Equatable {
         Note(title: "Сладкая месть", date: Date(), text: "Пол дня ждал тоху у подъезда, весь год тренился играть в салочки и сегодня то я ему точно покажу кто тут батя. 💪", friends: [], owner: Friend(name: "Стас", color: "f4d3a1"))
     }
     
-    func copy(friends: [Friend]? = nil) -> Self {
-        Note(id: self.id, title: self.title, date: self.date, text: self.text, friends: friends ?? self.friends, owner: self.owner)
+    func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {
+        Note(id: self.id, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
     }
 }
 

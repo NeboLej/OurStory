@@ -76,6 +76,10 @@ struct NewNoteScreen: View {
                         }
                     }
                 }
+                .onAppear {
+                    story = store.state.text
+                    title = store.state.title ?? ""
+                }
         }
         .onAppear {
             focusedField = .story
@@ -245,5 +249,5 @@ struct NewNoteScreen: View {
 }
 
 #Preview {
-    ScreenBuilder.previewBuilder.getScreen(type: .createNote)
+    ScreenBuilder.previewBuilder.getScreen(type: .note(nil))
 }

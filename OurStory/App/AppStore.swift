@@ -50,8 +50,8 @@ final class AppStore {
     
     func send(_ action: NavigateAction) {
         switch action {
-        case .toCreateNote:
-            appCoordinator.navigate(to: .createNote)
+        case .toNote(let note):
+            appCoordinator.navigate(to: .note(note))
         }
     }
     

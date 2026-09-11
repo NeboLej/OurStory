@@ -14,5 +14,5 @@ enum AppAction {
 }
 
 enum NavigateAction {
-    case toCreateNote
+    case toNote(Note?)
 }
