@@ -16,8 +16,9 @@ struct OurStoryApp: App {
     @Environment(\.scenePhase) private var scenePhase
     
     init() {
-        let appStore = AppStore()
-        screenBuilder = ScreenBuilder(appStore: appStore)
+        let repositoryFactory: RepositoryFactoryProtocol = RepositoryFactory()
+        let appStore = AppStore(repositoryFactory: repositoryFactory)
+        screenBuilder = ScreenBuilder(appStore: appStore, repositoryFactory: repositoryFactory)
         self.appStore = appStore
     }
     

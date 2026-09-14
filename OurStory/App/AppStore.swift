@@ -17,8 +17,21 @@ final class AppStore {
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
-    init() {
-        loadData()
+    @ObservationIgnored
+    let userRepository: UserRepositoryProtocol
+    @ObservationIgnored
+    let friendsRepository: FriendRepositoryProtocol
+    @ObservationIgnored
+    let noteRepository: NoteRepositoryProtocol
+    
+    init(repositoryFactory: RepositoryFactoryProtocol) {
+        self.userRepository = repositoryFactory.userRepository
+        self.friendsRepository = repositoryFactory.friendRepository
+        self.noteRepository = repositoryFactory.noteRepository
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.loadData()
+        }
     }
     
     func send(_ action: AppAction) {
@@ -27,6 +40,7 @@ final class AppStore {
             selectionDate = date
             currentStory = self.stories[BaseDate(date: selectionDate)]
         case .addNewNote(let newNote):
+            addNewNote(newNote)
             if let story = stories[BaseDate(date: newNote.date)] {
                 let updatedStory = story.addNewNote(newNote)
                 stories[BaseDate(date: newNote.date)] = updatedStory
@@ -55,6 +69,12 @@ final class AppStore {
         }
     }
     
+    func addNewNote(_ note: Note) {
+        Task {
+            await noteRepository.addNote(note)
+        }
+    }
+    
     
     private func loadData() {
         Task {
@@ -73,6 +93,15 @@ final class AppStore {
             currentStory = self.stories[BaseDate(date: selectionDate)]
             
             allFriends = Friend.mock
+            
+            await friendsRepository.addNewFriend(Friend.mock.first!)
+            await friendsRepository.addNewFriend(Friend.mock.last!)
+            
+            allFriends = await friendsRepository.getAllFriends()
+            print(allFriends)
+            
+            let notes = await noteRepository.getAllNotes()
+            print(notes)
         }
     }
     
