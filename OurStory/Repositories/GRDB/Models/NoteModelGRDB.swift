@@ -17,7 +17,6 @@ struct NoteFriend: Codable, FetchableRecord, MutablePersistableRecord, TableReco
 }
 
 struct NoteWithFriends: FetchableRecord, Decodable {
-    
     var note: NoteModelGRDB
     var friends: [FriendModelGRDB]
 }
@@ -30,6 +29,8 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
     var date: Date
     var text: String
     
+    var rootStoryID: UUID
+    
     mutating func didInsert(with rowID: Int64, for column: String?) { }
     
     init(from: Note) {
@@ -37,10 +38,11 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
         title = from.title
         date = from.date
         text = from.text
+        rootStoryID = from.rootStoryID
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, title, date, text
+        case id, title, date, text, rootStoryID
     }
 }
 
@@ -50,6 +52,7 @@ extension NoteModelGRDB {
         container["title"] = title
         container["date"] = date
         container["text"] = text
+        container["rootStoryID"] = rootStoryID
     }
 }
 

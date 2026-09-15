@@ -8,13 +8,30 @@
 import Foundation
 
 struct Story {
-    var date: Date
-    var title: String = "Title 1"
-    var isUserTitle: Bool = false
+    let id: UUID
+    let date: Date
+    let title: String
+    let isUserTitle: Bool
     
     lazy var baseDate: BaseDate = { BaseDate(date: date) }()
     
     var notes: [Note]
+    
+    init(id: UUID = UUID(), date: Date, title: String = "Title 1", isUserTitle: Bool = false, notes: [Note]) {
+        self.id = id
+        self.date = date
+        self.title = title
+        self.isUserTitle = isUserTitle
+        self.notes = notes
+    }
+    
+    init(from: StoryWithNotes) {
+        id = from.story.id
+        date = from.story.date
+        title = from.story.title
+        isUserTitle = from.story.isUserTitle
+        notes = from.notes.map { Note(from: $0) }
+    }
     
     static var example1: Story {
         Story(date: Date(), title: "Салки и шишки были славные но я облажался ", isUserTitle: true, notes: [Note.example1, Note.example2, Note.example3])

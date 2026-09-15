@@ -23,11 +23,14 @@ final class AppStore {
     let friendsRepository: FriendRepositoryProtocol
     @ObservationIgnored
     let noteRepository: NoteRepositoryProtocol
+    @ObservationIgnored
+    let storyRepository: StoryRepositoryProtocol
     
     init(repositoryFactory: RepositoryFactoryProtocol) {
         self.userRepository = repositoryFactory.userRepository
         self.friendsRepository = repositoryFactory.friendRepository
         self.noteRepository = repositoryFactory.noteRepository
+        self.storyRepository = repositoryFactory.storyRepository
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.loadData()
@@ -41,15 +44,6 @@ final class AppStore {
             currentStory = self.stories[BaseDate(date: selectionDate)]
         case .addNewNote(let newNote):
             addNewNote(newNote)
-            if let story = stories[BaseDate(date: newNote.date)] {
-                let updatedStory = story.addNewNote(newNote)
-                stories[BaseDate(date: newNote.date)] = updatedStory
-                if story.date == currentStory?.date {
-                    currentStory = updatedStory
-                }
-            } else {
-                stories[BaseDate(date: newNote.date)] = Story(date: newNote.date, notes: [newNote])
-            }
         case .editNote(let note):
             if let story = stories[BaseDate(date: note.date)] {
                 let updatedStory = story.replaceNote(note)
@@ -61,7 +55,7 @@ final class AppStore {
         }
     }
     
-    
+
     func send(_ action: NavigateAction) {
         switch action {
         case .toNote(let note):
@@ -71,20 +65,36 @@ final class AppStore {
     
     func addNewNote(_ note: Note) {
         Task {
-            await noteRepository.addNote(note)
+            if let story = stories[BaseDate(date: note.date)] {
+                let updatedStory = story.addNewNote(note.copy(rootStoryID: story.id))
+                stories[BaseDate(date: note.date)] = updatedStory
+                if story.date == currentStory?.date {
+                    currentStory = updatedStory
+                }
+                await noteRepository.addNote(note.copy(rootStoryID: story.id))
+            } else {
+                var newStory = Story(date: note.date, notes: [])
+                newStory.notes.append(note.copy(rootStoryID: newStory.id))
+                
+                stories[BaseDate(date: note.date)] = newStory
+                await storyRepository.newStory(newStory)
+                await noteRepository.addNote(note.copy(rootStoryID: newStory.id))
+            }
         }
     }
     
     
     private func loadData() {
         Task {
-            let days = (-5...1).compactMap { Date().getOffsetDate($0, component: .day) }
             
-            var stories: [Story] = []
+//            await friendsRepository.addNewFriend(Friend.mock.first!)
+//            await friendsRepository.addNewFriend(Friend.mock.last!)
+//            
+            allFriends = await friendsRepository.getAllFriends()
+            print(allFriends)
             
-            for day in days {
-                await stories.append(generateStory(on: day))
-            }
+            let stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
+                                                           endDate: Date().getOffsetDate(1, component: .month))
             
             stories.forEach { story in
                 self.stories[BaseDate(date: story.date)] = story
@@ -92,16 +102,8 @@ final class AppStore {
             
             currentStory = self.stories[BaseDate(date: selectionDate)]
             
-            allFriends = Friend.mock
-            
-            await friendsRepository.addNewFriend(Friend.mock.first!)
-            await friendsRepository.addNewFriend(Friend.mock.last!)
-            
-            allFriends = await friendsRepository.getAllFriends()
-            print(allFriends)
-            
-            let notes = await noteRepository.getAllNotes()
-            print(notes)
+//            let notes = await noteRepository.getAllNotes()
+            print(stories)
         }
     }
     

@@ -51,11 +51,21 @@ final class DatabaseManager {
             t.foreignKey(["userID"], references: "user", onDelete: .restrict, onUpdate: .cascade)
         }
         
+        try db.create(table: "story", ifNotExists: true) { t in
+            t.column("id", .blob).primaryKey()
+            t.column("date", .double).notNull()
+            t.column("title", .text)
+            t.column("isUserTitle", .boolean).notNull()
+        }
+        
         try db.create(table: "note", ifNotExists: true) { t in
             t.column("id", .blob).primaryKey()
             t.column("title", .text)
             t.column("text", .text).notNull()
             t.column("date", .double).notNull()
+            
+            t.column("rootStoryID", .blob).notNull()
+            t.foreignKey(["rootStoryID"], references: "story", onDelete: .cascade, onUpdate: .cascade)
         }
         
         try db.create(table: "noteFriend", ifNotExists: true) { t in

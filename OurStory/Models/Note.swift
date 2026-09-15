@@ -20,13 +20,16 @@ struct Note: Identifiable, Equatable {
     let friends: [Friend]
     let owner: Friend?
     
-    init(id: UUID = UUID(), title: String? = nil, date: Date, text: String, friends: [Friend], owner: Friend? = nil) {
+    let rootStoryID: UUID
+    
+    init(id: UUID = UUID(), rootStoryID: UUID = UUID(), title: String? = nil, date: Date, text: String, friends: [Friend], owner: Friend? = nil) {
         self.id = id
         self.title = title
         self.date = date
         self.text = text
         self.friends = friends
         self.owner = owner
+        self.rootStoryID = rootStoryID
     }
     
     init(from: NoteWithFriends) {
@@ -35,6 +38,7 @@ struct Note: Identifiable, Equatable {
         self.date = from.note.date
         self.text = from.note.text
         self.friends = from.friends.map { Friend(from: $0) }
+        self.rootStoryID = from.note.rootStoryID
         self.owner = nil
     }
     
@@ -53,7 +57,7 @@ struct Note: Identifiable, Equatable {
         Note(title: "Сладкая месть", date: Date(), text: "Пол дня ждал тоху у подъезда, весь год тренился играть в салочки и сегодня то я ему точно покажу кто тут батя. 💪", friends: [], owner: Friend(name: "Стас", color: "f4d3a1"))
     }
     
-    func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {
-        Note(id: self.id, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
+    func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil, rootStoryID: UUID? = nil) -> Self {
+        Note(id: self.id, rootStoryID: rootStoryID ?? self.rootStoryID, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
     }
 }
