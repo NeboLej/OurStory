@@ -10,8 +10,8 @@ import SwiftUI
 @Observable
 final class AppStore {
     
-    var selectionDate: Date = .now
-    var currentStory: Story?
+    var selectedDate: Date = .now
+    var selectedStory: Story?
     var stories: [BaseDate: Story] = [:]
     var allFriends: [Friend] = []
     
@@ -40,21 +40,26 @@ final class AppStore {
     func send(_ action: AppAction) {
         switch action {
         case .selectedDate(let date):
-            selectionDate = date
-            currentStory = self.stories[BaseDate(date: selectionDate)]
+            selectedDate = date
+            selectedStory = self.stories[BaseDate(date: selectedDate)]
         case .addNewNote(let newNote):
             addNewNote(newNote)
         case .editNote(let note):
             if let story = stories[BaseDate(date: note.date)] {
                 let updatedStory = story.replaceNote(note)
                 stories[BaseDate(date: note.date)] = updatedStory
-                if story.date == currentStory?.date {
-                    currentStory = updatedStory
+                if story.date == selectedStory?.date {
+                    selectedStory = updatedStory
                 }
             }
         }
     }
     
+    func getSelectedStory() -> Story {
+        let story = selectedStory ?? stories[BaseDate(date: selectedDate)] ?? Story(date: selectedDate)
+        selectedStory = story
+        return story
+    }
 
     func send(_ action: NavigateAction) {
         switch action {
@@ -64,32 +69,30 @@ final class AppStore {
     }
     
     func addNewNote(_ note: Note) {
+        
+        guard let selectedStory else { fatalError() }
+        let needSaveStory = selectedStory.notes.isEmpty
+        let updatedStory = selectedStory.addNewNote(note)
+        
+        self.selectedStory = updatedStory
+        stories[BaseDate(date: updatedStory.date)] = updatedStory
+        
         Task {
-            if let story = stories[BaseDate(date: note.date)] {
-                let updatedStory = story.addNewNote(note.copy(rootStoryID: story.id))
-                stories[BaseDate(date: note.date)] = updatedStory
-                if story.date == currentStory?.date {
-                    currentStory = updatedStory
-                }
-                await noteRepository.addNote(note.copy(rootStoryID: story.id))
-            } else {
-                var newStory = Story(date: note.date, notes: [])
-                newStory.notes.append(note.copy(rootStoryID: newStory.id))
-                
-                stories[BaseDate(date: note.date)] = newStory
-                await storyRepository.newStory(newStory)
-                await noteRepository.addNote(note.copy(rootStoryID: newStory.id))
+            if needSaveStory {
+                await storyRepository.newStory(updatedStory)
             }
+            
+            await noteRepository.addNote(note)
         }
     }
     
     
     private func loadData() {
         Task {
-            
+//            
 //            await friendsRepository.addNewFriend(Friend.mock.first!)
 //            await friendsRepository.addNewFriend(Friend.mock.last!)
-//            
+////            
             allFriends = await friendsRepository.getAllFriends()
             print(allFriends)
             
@@ -100,7 +103,7 @@ final class AppStore {
                 self.stories[BaseDate(date: story.date)] = story
             }
             
-            currentStory = self.stories[BaseDate(date: selectionDate)]
+            selectedStory = getSelectedStory()
             
 //            let notes = await noteRepository.getAllNotes()
             print(stories)

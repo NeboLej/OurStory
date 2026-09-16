@@ -13,7 +13,7 @@ struct HomeScreenState {
     var allFriends: [Friend]
     
     init(appStore: AppStore) {
-        currentStory = appStore.currentStory
+        currentStory = appStore.selectedStory
         allFriends = appStore.allFriends
     }
     

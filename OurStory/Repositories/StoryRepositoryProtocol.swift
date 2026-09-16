@@ -28,7 +28,7 @@ final class StoryRepository: BaseRepository, StoryRepositoryProtocol {
 
                 let stories = try StoryWithNotes.fetchAll(db, request)
                 
-                Logger.log("get \(stories.count) stiries", location: .GRDB, event: .success)
+                Logger.log("get \(stories.count) stories", location: .GRDB, event: .success)
                 
                 return stories.map { Story(from: $0) }
             }

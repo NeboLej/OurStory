@@ -53,8 +53,8 @@ final class NoteScreenStore: BaseStore {
                     let updatedNote = rootNote.copy(title: title, date: date, text: text, friends: selectedFriends)
                     appStore.send(.editNote(updatedNote))
                 } else {
-                    appStore.currentStory
-                    let newNote = Note(title: title.isEmpty ? nil : title, date: date, text: text, friends: selectedFriends, owner: nil)
+                    let story = appStore.getSelectedStory()
+                    let newNote = Note(rootStoryID: story.id, title: title.isEmpty ? nil : title, date: date, text: text, friends: selectedFriends, owner: nil)
                     appStore.send(.addNewNote(newNote))
                 }
                 

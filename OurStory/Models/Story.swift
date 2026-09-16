@@ -15,9 +15,9 @@ struct Story {
     
     lazy var baseDate: BaseDate = { BaseDate(date: date) }()
     
-    var notes: [Note]
+    private(set) var notes: [Note]
     
-    init(id: UUID = UUID(), date: Date, title: String = "Title 1", isUserTitle: Bool = false, notes: [Note]) {
+    init(id: UUID = UUID(), date: Date, title: String = "Title 1", isUserTitle: Bool = false, notes: [Note] = []) {
         self.id = id
         self.date = date
         self.title = title
