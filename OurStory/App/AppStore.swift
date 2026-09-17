@@ -53,7 +53,7 @@ final class AppStore {
                 }
             }
             updateNote(note)
-        case .addFriend:
+        case .addRandomFriend:
             tmpAddRandomFriend()
         }
     }
@@ -68,6 +68,8 @@ final class AppStore {
         switch action {
         case .toNote(let note):
             appCoordinator.navigate(to: .note(note))
+        case .toFriendsList:
+            appCoordinator.navigate(to: .friendList)
         }
     }
     
@@ -111,8 +113,8 @@ final class AppStore {
                                                            endDate: Date().getOffsetDate(1, component: .month))
             
             //TMP preview
-            let newStory = await generateStory(on: Date())
-            stories.append(newStory)
+//            let newStory = await generateStory(on: Date())
+//            stories.append(newStory)
             //
             
             stories.forEach { story in

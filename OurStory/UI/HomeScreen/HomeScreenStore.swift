@@ -20,7 +20,7 @@ final class HomeScreenStore: BaseStore {
                 let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
                 appStore.send(.editNote(newNote))
             case .editNote(let note): appStore.send(.toNote(note))
-            case .addFriend: appStore.send(.addFriend)
+            case .toFriendsList: appStore.send(.toFriendsList)
             }
         }
     }

@@ -71,7 +71,7 @@ struct HomeScreen: View {
                     }
                 } else {
                     HomeScreenToolbar {
-                        store.send(.addFriend)
+                        store.send(.toFriendsList)
                     } onCalendar: {
                         
                     } onNewNote: {

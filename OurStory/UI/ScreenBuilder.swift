@@ -9,12 +9,13 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home, note(Note?)
+    case home, note(Note?), friendList
     
     var id: String {
         switch self {
         case .home: "home"
         case .note: "note"
+        case .friendList: "friendList"
         }
     }
     
@@ -48,6 +49,7 @@ final class ScreenBuilder {
         switch type {
         case .home: HomeScreen(store: HomeScreenStore(appStore: appStore), screenBuilder: self)
         case .note(let note): NoteScreen(store: NoteScreenStore(appStore: appStore, note: note))
+        case .friendList: FriendListScreen(store: FriendListScreenStore(appStore: appStore))
         }
     }
     
