@@ -7,6 +7,18 @@
 
 import Foundation
 
+extension Array where Element: Identifiable {
+    func replaceFirst(_ value: Element) -> [Element] {
+        var result = self
+        
+        if let index = result.firstIndex(where: { $0.id == value.id }) {
+            result[index] = value
+        }
+
+        return result
+    }
+}
+
 extension Array where Element: Equatable {
     func deleteOrAppend(_ value: Element) -> [Element] {
         var result = self
@@ -26,16 +38,6 @@ extension Array where Element: Equatable {
 
         if let index = result.firstIndex(of: value) {
             result.remove(at: index)
-        }
-
-        return result
-    }
-    
-    func replaceFirst(_ value: Element) -> [Element] {
-        var result = self
-
-        if let index = result.firstIndex(of: value) {
-            result[index] = value
         }
 
         return result

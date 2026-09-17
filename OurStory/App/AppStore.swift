@@ -52,6 +52,9 @@ final class AppStore {
                     selectedStory = updatedStory
                 }
             }
+            updateNote(note)
+        case .addFriend:
+            tmpAddRandomFriend()
         }
     }
     
@@ -69,7 +72,6 @@ final class AppStore {
     }
     
     func addNewNote(_ note: Note) {
-        
         guard let selectedStory else { fatalError() }
         let needSaveStory = selectedStory.notes.isEmpty
         let updatedStory = selectedStory.addNewNote(note)
@@ -86,6 +88,20 @@ final class AppStore {
         }
     }
     
+    
+    func updateNote(_ note: Note) {
+        Task {
+            await noteRepository.updateNote(note)
+        }
+    }
+    
+    func tmpAddRandomFriend() {
+        Task {
+            let randomFrinend = Friend.mock.randomElement()!
+            await friendsRepository.addNewFriend(randomFrinend)
+            allFriends.append(randomFrinend)
+        }
+    }
     
     private func loadData() {
         Task {

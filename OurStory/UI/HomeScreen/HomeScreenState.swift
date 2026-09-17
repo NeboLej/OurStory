@@ -9,12 +9,12 @@ import Foundation
 
 struct HomeScreenState {
     
-    var currentStory: Story?
+    var selectedStory: Story?
     var selectedDate: Date
     var allFriends: [Friend]
     
     init(appStore: AppStore) {
-        currentStory = appStore.selectedStory
+        selectedStory = appStore.selectedStory
         allFriends = appStore.allFriends
         selectedDate = appStore.selectedDate
     }

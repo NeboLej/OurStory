@@ -15,8 +15,9 @@ struct HomeScreen: View {
     @State private var showFrinedsNote: Note? = nil
     
     @State private var showMenuNoteId: UUID? = nil
+    
     private var showMenuNote: Note? {
-        store.state.currentStory?.notes.first(where: { $0.id == showMenuNoteId })
+        store.state.selectedStory?.notes.first(where: { $0.id == showMenuNoteId })
     }
     
     @State private var isShowFriendsList: Bool = false
@@ -34,8 +35,7 @@ struct HomeScreen: View {
             screenBuilder.getComponent(type: .horizontalCalendar)
                 .padding(.top, 16)
             
-            
-            if let currentSroty = store.state.currentStory {
+            if let currentSroty = store.state.selectedStory {
                 ScrollView(.vertical) {
                     storyView(currentSroty)
                 }
@@ -62,18 +62,16 @@ struct HomeScreen: View {
             VStack(spacing: 8) {
                 if isShowFriendsList {
                     if let note = showMenuNote {
-                        FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: note.friends) { friend in
+                        FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: showMenuNote?.friends ?? []) { friend in
                             store.send(.updateFriendInNote(note: note, friend: friend))
-//                            isShowFriendsList = false
                         } onExit: {
                             isShowFriendsList = false
                         }
                         .padding(.horizontal)
                     }
-
                 } else {
                     HomeScreenToolbar {
-                       
+                        store.send(.addFriend)
                     } onCalendar: {
                         
                     } onNewNote: {

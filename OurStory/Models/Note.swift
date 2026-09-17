@@ -7,12 +7,8 @@
 
 import Foundation
 
-struct Note: Identifiable, Equatable {
-    
-    static func == (lhs: Note, rhs: Note) -> Bool {
-        lhs.id == rhs.id
-    }
-    
+struct Note: Identifiable, Equatable, Hashable {
+      
     let id: UUID
     let title: String?
     let date: Date
@@ -57,7 +53,7 @@ struct Note: Identifiable, Equatable {
         Note(title: "Сладкая месть", date: Date(), text: "Пол дня ждал тоху у подъезда, весь год тренился играть в салочки и сегодня то я ему точно покажу кто тут батя. 💪", friends: [], owner: Friend(name: "Стас", color: "f4d3a1"))
     }
     
-    func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil, rootStoryID: UUID? = nil) -> Self {
-        Note(id: self.id, rootStoryID: rootStoryID ?? self.rootStoryID, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
+    func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {
+        Note(id: self.id, rootStoryID: self.rootStoryID, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
     }
 }
