@@ -68,7 +68,6 @@ struct Friend: Hashable, Identifiable {
             let random = mock.randomElement()!
             friends.insert(random)
         }
-        print(count)
         return friends.map { $0 }
     }
 }

@@ -129,8 +129,7 @@ struct HomeScreen: View {
     @ViewBuilder
     private func noteView(_ note: Note) -> some View {
         if note.owner == nil {
-            
-            HStack(alignment: .top) {
+            HStack(alignment: .top, spacing: 0) {
                 if showMenuNote != note {
                     Button {
                         withAnimation(.snappy) {

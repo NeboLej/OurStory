@@ -15,7 +15,6 @@ final class HomeScreenStore: BaseStore {
     func send(_ action: HomeScreenAction, animation: Animation? = .default) {
         withAnimation(animation) {
             switch action {
-            case .openScreen: print("OpenScreen")
             case .createNewNote: appStore.send(.toNote(nil))
             case .updateFriendInNote(let note, let friend):
                 let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))

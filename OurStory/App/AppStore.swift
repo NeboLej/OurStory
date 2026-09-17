@@ -105,24 +105,21 @@ final class AppStore {
     
     private func loadData() {
         Task {
-//            
-//            await friendsRepository.addNewFriend(Friend.mock.first!)
-//            await friendsRepository.addNewFriend(Friend.mock.last!)
-////            
             allFriends = await friendsRepository.getAllFriends()
-            print(allFriends)
             
-            let stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
+            var stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
                                                            endDate: Date().getOffsetDate(1, component: .month))
+            
+            //TMP preview
+            let newStory = await generateStory(on: Date())
+            stories.append(newStory)
+            //
             
             stories.forEach { story in
                 self.stories[BaseDate(date: story.date)] = story
             }
             
             selectedStory = getSelectedStory()
-            
-//            let notes = await noteRepository.getAllNotes()
-            print(stories)
         }
     }
     
