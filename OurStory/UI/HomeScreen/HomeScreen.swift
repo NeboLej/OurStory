@@ -30,7 +30,7 @@ struct HomeScreen: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Rectangle()
-                .frame(height: 100)
+                .frame(height: 70)
                 .foregroundStyle(Color.myPrimary)
             screenBuilder.getComponent(type: .horizontalCalendar)
                 .padding(.top, 16)
@@ -196,7 +196,7 @@ struct HomeScreen: View {
             Rectangle()
                 .frame(width: 1)
                 .foregroundStyle(.black.opacity(0.2))
-            VStack(spacing: 12) {
+            VStack(alignment: .trailing, spacing: 12) {
                 noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {
                     store.send(.editNote(note))
                 })
@@ -206,6 +206,11 @@ struct HomeScreen: View {
                     }
                 })
                 noteMenuItem(image: "trash", text: "Удалить", action: {})
+                Spacer()
+                Text(note.date.toHourMinuteDate())
+                    .font(.myItalic(size: 12))
+                    .foregroundStyle(.textMulticolor.opacity(0.5))
+                    .padding(.trailing, 12)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
