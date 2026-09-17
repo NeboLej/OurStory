@@ -78,20 +78,24 @@ struct HorizontalCalendar: View {
         let isSelected = calendar.isDate(store.state.selectionDate, inSameDayAs: day.date)
         let isCurrenDay = calendar.isDate(day.date, inSameDayAs: Date.now)
         
-        VStack {
-            Text("\(day.value)")
-                .font(isSelected ? .mySemiBold(size: 14) : .myMedium(size: 14))
-                .foregroundStyle(isSelected ? .white : (day.notFromThisMonth ? .gray : .black))
-            Text(day.weekdaySymbol)
-                .font(isSelected ? .mySemiBold(size: 14) : .myMedium(size: 14))
-                .foregroundStyle(isSelected ? .white : (day.notFromThisMonth ? .gray : .black))
+        ZStack {
+            RoundedRectangle(cornerSize: CGSize(width: 24, height: 24), style: .continuous)
+                .fill(isSelected ? Color.myPrimary : isCurrenDay ? .black.opacity(0.6) : Color.clear)
+                .padding(1)
+            VStack {
+                
+                Text("\(day.value)")
+                    .font(isSelected ? .mySemiBold(size: 14) : .myMedium(size: 14))
+                    .foregroundStyle(isSelected ? .black : (day.notFromThisMonth ? .gray : .textMulticolor))
+                Text(day.weekdaySymbol)
+                    .font(isSelected ? .mySemiBold(size: 14) : .myMedium(size: 14))
+                    .foregroundStyle(isSelected ? .black : (day.notFromThisMonth ? .gray : .textMulticolor))
+            }
         }
-        .frame(width: 50, height: 60)
-        .background(isSelected ? .black.opacity(0.6) : isCurrenDay ? Color.myPrimary : Color.clear)
+        .frame(width: 48, height: 65)
         .animation(.linear(duration: 0.4), value: isSelected)
-        .cornerRadius(20)
         .overlay {
-            RoundedRectangle(cornerSize: CGSize(width: 20, height: 20), style: .circular)
+            RoundedRectangle(cornerSize: CGSize(width: 24, height: 24), style: .continuous)
                 .stroke(lineWidth: 1)
                 .foregroundStyle(.black)
                 .padding(1)

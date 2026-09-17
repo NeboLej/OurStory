@@ -238,10 +238,6 @@ struct NoteScreen: View {
     private func saveStory() {
         guard canSave else { return }
         
-        print("Saving story")
-        print("Title: \(title)")
-        print("Story: \(story)")
-        
         store.send(.saveNote(title: title, text: story))
         focusedField = nil
         dismiss()

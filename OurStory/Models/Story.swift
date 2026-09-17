@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Story {
+struct Story: Equatable {
     let id: UUID
     let date: Date
     let title: String

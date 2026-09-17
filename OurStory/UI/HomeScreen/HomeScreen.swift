@@ -34,16 +34,28 @@ struct HomeScreen: View {
             screenBuilder.getComponent(type: .horizontalCalendar)
                 .padding(.top, 16)
             
-            ScrollView(.vertical) {
-                
-                if let currentSroty = store.state.currentStory {
+            
+            if let currentSroty = store.state.currentStory {
+                ScrollView(.vertical) {
                     storyView(currentSroty)
                 }
-                
+                .frame(maxWidth: .infinity)
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Историй пока нет")
+                        .font(.myMedium(size: 18))
+                        .foregroundStyle(.textMulticolor)
+                        .padding(.bottom, 4)
+                        .padding(.top, 20)
+                    Text(store.state.selectedDate.toReadable())
+                        .font(.myItalic(size: 14))
+                        .foregroundStyle(.textMulticolor.opacity(0.6))
+                        .padding(.bottom, 36)
+                    Spacer()
+                }
+                .padding(.horizontal, 42)
             }
-            .frame(maxWidth: .infinity)
         }
-        
         .background(.backgroundFill)
         .ignoresSafeArea()
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -110,6 +122,7 @@ struct HomeScreen: View {
                     .padding(.vertical, 10)
                     .animatedSelectionBorder(isSelected: showMenuNote == note || showFrinedsNote == note)
             }
+            HStack { Spacer() }
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 180)
