@@ -32,11 +32,12 @@ struct FriendListScreen: View {
                 store.send(.addNewRandomFriend)
             } label: {
                 Image(systemName: "plus")
-                    .font(Font.myMedium(size: 28))
+                    .font(Font.myRegular(size: 24))
                     .padding(8)
                     .padding(.vertical, 6)
             }
-            .buttonStyle(.glass)
+            .buttonStyle(.glassProminent)
+            .tint(.myPrimary)
             .padding(.trailing , 16)
         }
     }

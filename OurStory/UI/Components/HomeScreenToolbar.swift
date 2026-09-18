@@ -10,13 +10,12 @@ import SwiftUI
 struct HomeScreenToolbar: View {
     
     enum MenuItem {
-        case friends, settings, newNote
+        case friends, settings
         
         var iconName: String {
             switch self {
             case .friends: return "person.3.sequence"
             case .settings: return "gearshape"
-            case .newNote: return "plus"
             }
         }
         
@@ -24,7 +23,6 @@ struct HomeScreenToolbar: View {
             switch self {
             case .friends: return "Друзья"
             case .settings: return "Настройки"
-            case .newNote: return "История"
             }
         }
     }
@@ -46,11 +44,26 @@ struct HomeScreenToolbar: View {
             }
             
             Spacer()
-            GlassEffectContainer {
-                munuItem(.newNote, action: onNewNote)
-                    .padding(.horizontal, 16)
-                    .glassEffect()
+            
+            
+            Button {
+                onNewNote()
+            } label: {
+                VStack(alignment: .center, spacing: 3) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.black)
+                    
+                    Text("История")
+                        .font(.myMedium(size: 12))
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 2)
+                .padding(.vertical, 8)
+                
             }
+            .tint(.myPrimary)
+            .buttonStyle(.glassProminent)
         }
         .padding(.horizontal, 16)
     }
