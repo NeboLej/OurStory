@@ -9,18 +9,34 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home, note(Note?), friendList
+    case home, note(Note?), friendList, friend(Friend)
     
     var id: String {
         switch self {
         case .home: "home"
         case .note: "note"
         case .friendList: "friendList"
+        case .friend: "friend"
         }
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+    }
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+        case (.home, .home):
+            true
+        case (.note, .note):
+            true
+        case (.friendList, .friendList):
+            true
+        case (.friend, .friend):
+            true
+        default:
+            false
+        }
     }
 }
 
@@ -50,6 +66,7 @@ final class ScreenBuilder {
         case .home: HomeScreen(store: HomeScreenStore(appStore: appStore), screenBuilder: self)
         case .note(let note): NoteScreen(store: NoteScreenStore(appStore: appStore, note: note))
         case .friendList: FriendListScreen(store: FriendListScreenStore(appStore: appStore))
+        case .friend(let friend): FriendScreen(store: FriendScreenStore(appStore: appStore, friend: friend, noteRepositpry: repositories.noteRepository))
         }
     }
     
