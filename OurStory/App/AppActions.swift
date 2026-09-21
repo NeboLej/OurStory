@@ -11,7 +11,9 @@ enum AppAction {
     case selectedDate(Date)
     case addNewNote(Note)
     case editNote(Note)
-    case addRandomFriend
+    case addNewFriend(Friend)
+    case editFriend(Friend)
+    case deleteFriend(Friend)
 }
 
 enum NavigateAction {

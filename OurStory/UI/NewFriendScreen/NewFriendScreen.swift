@@ -11,6 +11,7 @@ struct NewFriendScreen: View {
     @State private var store: NewFriendScreenStore
     @State private var name: String = ""
     @State private var selectedColor: Color = .red
+    @Environment(\.dismiss) var dismiss
     
     init(store: NewFriendScreenStore) {
         self.store = store
@@ -25,7 +26,7 @@ struct NewFriendScreen: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("НОВЫЙ\nПРОФИЛЬ № 1")
-                        .font(.mySemiBold(size: 30))
+                        .font(.mySemiBold(size: 22))
                         .tracking(2)
                         .foregroundColor(.textMulticolor)
                     
@@ -46,7 +47,7 @@ struct NewFriendScreen: View {
                     TextField("Введите имя...", text: $name)
                         .font(.myItalic(size: 20))
                         .foregroundColor(.textMulticolor)
-                        .tint(Color(hex: "#2B2A27"))
+                        .tint(.textMulticolor)
                         .padding(.vertical, 8)
                         .overlay(alignment: .bottom) {
                             Rectangle()
@@ -68,7 +69,8 @@ struct NewFriendScreen: View {
                 Spacer()
                 
                 Button {
-                    print("старт сохранения")
+                    store.send(.saveNewFriend(name: name, color: selectedColor.toHex()))
+                    dismiss()
                 } label: {
                     VStack(spacing: 2) {
                         Text("СОХРАНИТЬ")

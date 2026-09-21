@@ -53,8 +53,12 @@ final class AppStore {
                 }
             }
             updateNote(note)
-        case .addRandomFriend:
-            tmpAddRandomFriend()
+        case .addNewFriend(let friend):
+            addNewFriend(friend)
+        case .editFriend(let friend):
+            editFriend(friend)
+        case .deleteFriend(let friend):
+            deleteFriend(friend)
         }
     }
     
@@ -72,42 +76,12 @@ final class AppStore {
             appCoordinator.navigate(to: .friendList)
         case .toFriend(let friend):
             appCoordinator.navigate(to: .friend(friend))
-        case .toNewFriend:
+        case .toNewFriend: 
             appCoordinator.navigate(to: .newFriend)
         }
     }
     
-    func addNewNote(_ note: Note) {
-        guard let selectedStory else { fatalError() }
-        let needSaveStory = selectedStory.notes.isEmpty
-        let updatedStory = selectedStory.addNewNote(note)
-        
-        self.selectedStory = updatedStory
-        stories[BaseDate(date: updatedStory.date)] = updatedStory
-        
-        Task {
-            if needSaveStory {
-                await storyRepository.newStory(updatedStory)
-            }
-            
-            await noteRepository.addNote(note)
-        }
-    }
-    
-    
-    func updateNote(_ note: Note) {
-        Task {
-            await noteRepository.updateNote(note)
-        }
-    }
-    
-    func tmpAddRandomFriend() {
-        Task {
-            let randomFrinend = Friend.mock.randomElement()!
-            await friendsRepository.addNewFriend(randomFrinend)
-            allFriends.append(randomFrinend)
-        }
-    }
+
     
     private func loadData() {
         Task {

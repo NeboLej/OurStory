@@ -11,6 +11,9 @@ struct FriendScreen: View {
     
     @State var store: FriendScreenStore
     @State var isEditMode: Bool = false
+    @State var name: String = ""
+    @State var selectedColor: Color = .red
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         VStack(spacing: 0) {
@@ -31,6 +34,8 @@ struct FriendScreen: View {
                     Button {
                         withAnimation {
                             isEditMode = false
+                            name = store.state.friend.name
+                            selectedColor = Color(hex: store.state.friend.color)
                         }
                     } label: {
                         Text("ОТМЕНА")
@@ -53,7 +58,7 @@ struct FriendScreen: View {
                 Button {
                     withAnimation {
                         if isEditMode {
-                            // Логика сохранения данных
+                            store.send(.editFriend(name: name, color: selectedColor.toHex()))
                         }
                         isEditMode.toggle()
                     }
@@ -71,6 +76,10 @@ struct FriendScreen: View {
                 }
                 .buttonStyle(.plain)
             }.sharedBackgroundVisibility(.hidden)
+        }
+        .onAppear {
+            name = store.state.friend.name
+            selectedColor = Color(hex: store.state.friend.color)
         }
     }
     
@@ -187,11 +196,71 @@ struct FriendScreen: View {
     @ViewBuilder
     private func editMode() -> some View {
         VStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("РЕДАКТИРОВАТЬ\nПРОФИЛЬ")
+                    .font(.mySemiBold(size: 25))
+                    .tracking(2)
+                    .foregroundColor(.textMulticolor)
+                
+                VStack(spacing: 4) {
+                    Divider().frame(height: 3).background(.textMulticolor)
+                    Divider().frame(height: 0.5).background(.textMulticolor)
+                }
+                .padding(.top, 4)
+            }
+            .padding(.bottom, 40)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("ИМЯ ПОЛЬЗОВАТЕЛЯ")
+                    .font(.myMedium(size: 12))
+                    .tracking(3)
+                    .foregroundColor(.textMulticolor)
+                
+                TextField("Введите имя...", text: $name)
+                    .font(.myItalic(size: 20))
+                    .foregroundColor(.textMulticolor)
+                    .tint(.textMulticolor)
+                    .padding(.vertical, 8)
+                    .overlay(alignment: .bottom) {
+                        Rectangle()
+                            .frame(height: 1)
+                            .foregroundColor(Color(hex: "#A39E93"))
+                    }
+            }
+            .padding(.bottom, 40)
+            
+            VStack(alignment: .leading, spacing: 16) {
+                Text("ЦВЕТОВАЯ МЕТКА")
+                    .font(.myMedium(size: 12))
+                    .tracking(3)
+                    .foregroundColor(.textMulticolor)
+                
+                CustomColorPicker(selectedColor: $selectedColor)
+            }
+            
             Spacer()
-            Text("Экран редактирования")
-                .font(.myRegular(size: 14))
-                .foregroundStyle(.textMulticolor.opacity(0.5))
-            Spacer()
+            
+            Button {
+                store.send(.deleteFriend)
+                dismiss()
+            } label: {
+                VStack(spacing: 2) {
+                    Text("УДАЛИТЬ ДРУГА")
+                        .font(.mySemiBold(size: 14))
+                        .tracking(2)
+                        .foregroundStyle(.black)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.red.opacity(0.7))
+                .overlay {
+                    Rectangle()
+                        .stroke(Color.black.opacity(0.15), lineWidth: 1)
+                        .padding(3)
+                }
+            }
+            .buttonStyle(.plain)
+            
         }
     }
 }

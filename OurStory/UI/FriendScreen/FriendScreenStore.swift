@@ -5,12 +5,12 @@
 //  Created by Nebo on 18.09.2026.
 //
 
-import Foundation
+import SwiftUI
 
 @Observable
 final class FriendScreenStore: BaseStore {
     
-    private let friend: Friend
+    private var friend: Friend
     
     @ObservationIgnored
     private var noteRepositpry: NoteRepositoryProtocol
@@ -23,6 +23,19 @@ final class FriendScreenStore: BaseStore {
         super.init(appStore: appStore)
         
         loadData()
+    }
+    
+    func send(_ action: FriendScreenAction, animation: Animation? = .default) {
+        withAnimation(animation) {
+            switch action {
+            case .editFriend(name: let name, color: let color):
+                let newFriend = Friend(id: friend.id, name: name, color: color, user: friend.user)
+                friend = newFriend
+                appStore.send(.editFriend(newFriend))
+            case .deleteFriend:
+                appStore.send(.deleteFriend(friend))
+            }
+        }
     }
     
     

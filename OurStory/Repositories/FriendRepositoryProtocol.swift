@@ -10,4 +10,6 @@ import Foundation
 protocol FriendRepositoryProtocol {
     func getAllFriends() async -> [Friend]
     func addNewFriend(_ friend: Friend) async
+    func editFriend(_ friend: Friend) async
+    func deleteFriend(_ friend: Friend) async
 }
