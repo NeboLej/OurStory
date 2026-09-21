@@ -72,8 +72,8 @@ struct HomeScreen: View {
                 } else {
                     HomeScreenToolbar {
                         store.send(.toFriendsList)
-                    } onCalendar: {
-                        
+                    } onSettings: {
+                        store.send(.toSettings)
                     } onNewNote: {
                         store.send(.createNewNote)
                     }

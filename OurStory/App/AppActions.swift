@@ -14,6 +14,7 @@ enum AppAction {
     case addNewFriend(Friend)
     case editFriend(Friend)
     case deleteFriend(Friend)
+    case editProfile(name: String, color: String)
 }
 
 enum NavigateAction {
@@ -21,4 +22,5 @@ enum NavigateAction {
     case toFriendsList
     case toFriend(Friend)
     case toNewFriend
+    case toSettings
 }

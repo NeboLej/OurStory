@@ -35,4 +35,21 @@ final class UserRepository: BaseRepository, UserRepositoryProtocol {
             fatalError()
         }
     }
+    
+//    func getUser(id: UUID) async -> User? {
+//        do {
+//            return try await dbPool.read { db in
+//                if let model = try? UserModelGRDB.fetchOne(db, key: id) {
+//                    let user = User(from: model)
+//                    Logger.log("get user", location: .GRDB, event: .success)
+//                    return user
+//                } else {
+//                    Logger.log("Failed to get user", location: .GRDB, event: .error(DatabaseError()))
+//                    return nil
+//                }
+//            }
+//        } catch {
+//            fatalError()
+//        }
+//    }
 }

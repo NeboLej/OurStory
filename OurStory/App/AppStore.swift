@@ -14,6 +14,7 @@ final class AppStore {
     var selectedStory: Story?
     var stories: [BaseDate: Story] = [:]
     var allFriends: [Friend] = []
+    var user: User
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
@@ -25,12 +26,16 @@ final class AppStore {
     let noteRepository: NoteRepositoryProtocol
     @ObservationIgnored
     let storyRepository: StoryRepositoryProtocol
+    @ObservationIgnored
+    private let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
     
     init(repositoryFactory: RepositoryFactoryProtocol) {
         self.userRepository = repositoryFactory.userRepository
         self.friendsRepository = repositoryFactory.friendRepository
         self.noteRepository = repositoryFactory.noteRepository
         self.storyRepository = repositoryFactory.storyRepository
+        
+        user = userDefaultsManager.getCurrentUser()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.loadData()
@@ -59,6 +64,8 @@ final class AppStore {
             editFriend(friend)
         case .deleteFriend(let friend):
             deleteFriend(friend)
+        case .editProfile(name: let name, color: let color):
+            user = userDefaultsManager.editUser(name: name, color: color)
         }
     }
     
@@ -78,6 +85,8 @@ final class AppStore {
             appCoordinator.navigate(to: .friend(friend))
         case .toNewFriend: 
             appCoordinator.navigate(to: .newFriend)
+        case .toSettings:
+            appCoordinator.navigate(to: .setting)
         }
     }
     

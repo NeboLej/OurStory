@@ -9,7 +9,7 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home, note(Note?), friendList, friend(Friend), newFriend
+    case home, note(Note?), friendList, friend(Friend), newFriend, setting
     
     var id: String {
         switch self {
@@ -18,6 +18,7 @@ enum ScreenType: Identifiable, Hashable {
         case .friendList: "friendList"
         case .friend: "friend"
         case .newFriend: "newFriend"
+        case .setting: "setting"
         }
     }
     
@@ -36,6 +37,8 @@ enum ScreenType: Identifiable, Hashable {
         case (.friend, .friend):
             true
         case (.newFriend, .newFriend):
+            true
+        case (.setting, .setting):
             true
         default:
             false
@@ -70,6 +73,7 @@ final class ScreenBuilder {
         case .friendList: FriendListScreen(store: FriendListScreenStore(appStore: appStore))
         case .friend(let friend): FriendScreen(store: FriendScreenStore(appStore: appStore, friend: friend, noteRepositpry: repositories.noteRepository))
         case .newFriend: NewFriendScreen(store: NewFriendScreenStore(appStore: appStore))
+        case .setting: SettingScreen(store: SettingScreenStore(appStore: appStore))
         }
     }
     

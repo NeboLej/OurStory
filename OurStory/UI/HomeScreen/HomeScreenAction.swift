@@ -12,4 +12,5 @@ enum HomeScreenAction {
     case updateFriendInNote(note: Note, friend: Friend)
     case editNote(Note)
     case toFriendsList
+    case toSettings
 }

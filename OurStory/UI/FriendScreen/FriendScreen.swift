@@ -165,7 +165,7 @@ struct FriendScreen: View {
             Spacer()
             
             Button {
-                print("старт синхронизации")
+                store.send(.syncFriend)
             } label: {
                 VStack(spacing: 2) {
                     Text("ПЕРЕДАТЬ ИСТОРИИ")

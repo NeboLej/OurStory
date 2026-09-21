@@ -21,6 +21,7 @@ final class HomeScreenStore: BaseStore {
                 appStore.send(.editNote(newNote))
             case .editNote(let note): appStore.send(.toNote(note))
             case .toFriendsList: appStore.send(.toFriendsList)
+            case .toSettings: appStore.send(.toSettings)
             }
         }
     }

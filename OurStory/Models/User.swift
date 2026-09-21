@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct User: Hashable, Identifiable, Equatable {
+struct User: Hashable, Identifiable, Equatable, Codable {
     
     let id: UUID
-    let name: String
-    let color: String
+    var name: String
+    var color: String
     
     init(id: UUID = UUID(), name: String, color: String) {
         self.id = id

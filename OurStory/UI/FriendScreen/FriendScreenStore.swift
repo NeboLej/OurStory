@@ -12,6 +12,8 @@ final class FriendScreenStore: BaseStore {
     
     private var friend: Friend
     
+    let syncService = SyncService()
+    
     @ObservationIgnored
     private var noteRepositpry: NoteRepositoryProtocol
     
@@ -34,10 +36,11 @@ final class FriendScreenStore: BaseStore {
                 appStore.send(.editFriend(newFriend))
             case .deleteFriend:
                 appStore.send(.deleteFriend(friend))
+            case .syncFriend:
+                syncService.syncFriend(friend: friend)
             }
         }
     }
-    
     
     private func loadData() {
 //        noteRepositpry.
