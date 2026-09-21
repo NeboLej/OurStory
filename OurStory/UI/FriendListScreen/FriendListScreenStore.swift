@@ -17,8 +17,10 @@ final class FriendListScreenStore: BaseStore {
     func send(_ action: FriendListScreenAction, animation: Animation? = .default) {
         withAnimation(animation) {
             switch action {
-            case .addNewRandomFriend:
-                appStore.send(.addRandomFriend)
+            case .toNewFriend:
+                appStore.send(.toNewFriend)
+            case .toFriend(let friend):
+                appStore.send(.toFriend(friend))
             }
         }
     }

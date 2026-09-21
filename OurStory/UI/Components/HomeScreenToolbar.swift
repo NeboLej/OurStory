@@ -49,21 +49,14 @@ struct HomeScreenToolbar: View {
             Button {
                 onNewNote()
             } label: {
-                VStack(alignment: .center, spacing: 3) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.black)
-                    
-                    Text("История")
-                        .font(.myMedium(size: 12))
-                        .foregroundStyle(.black)
-                }
-                .padding(.horizontal, 2)
-                .padding(.vertical, 8)
-                
+                Image(systemName: "plus")
+                    .font(Font.myRegular(size: 24))
+                    .foregroundStyle(.black)
+                    .padding(8)
+                    .padding(.vertical, 6)
             }
-            .tint(.myPrimary)
             .buttonStyle(.glassProminent)
+            .tint(.myPrimary)
         }
         .padding(.horizontal, 16)
     }

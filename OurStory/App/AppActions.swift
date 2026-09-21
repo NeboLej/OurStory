@@ -17,4 +17,6 @@ enum AppAction {
 enum NavigateAction {
     case toNote(Note?)
     case toFriendsList
+    case toFriend(Friend)
+    case toNewFriend
 }

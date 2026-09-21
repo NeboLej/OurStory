@@ -8,5 +8,6 @@
 import Foundation
 
 enum FriendListScreenAction {
-    case addNewRandomFriend
+    case toNewFriend
+    case toFriend(Friend)
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home, note(Note?), friendList, friend(Friend)
+    case home, note(Note?), friendList, friend(Friend), newFriend
     
     var id: String {
         switch self {
@@ -17,6 +17,7 @@ enum ScreenType: Identifiable, Hashable {
         case .note: "note"
         case .friendList: "friendList"
         case .friend: "friend"
+        case .newFriend: "newFriend"
         }
     }
     
@@ -34,6 +35,8 @@ enum ScreenType: Identifiable, Hashable {
             true
         case (.friend, .friend):
             true
+        case (.newFriend, .newFriend):
+            true
         default:
             false
         }
@@ -43,7 +46,6 @@ enum ScreenType: Identifiable, Hashable {
 enum ComponentType: Hashable {
     case horizontalCalendar
 }
-
 
 final class ScreenBuilder {
     
@@ -67,6 +69,7 @@ final class ScreenBuilder {
         case .note(let note): NoteScreen(store: NoteScreenStore(appStore: appStore, note: note))
         case .friendList: FriendListScreen(store: FriendListScreenStore(appStore: appStore))
         case .friend(let friend): FriendScreen(store: FriendScreenStore(appStore: appStore, friend: friend, noteRepositpry: repositories.noteRepository))
+        case .newFriend: NewFriendScreen(store: NewFriendScreenStore(appStore: appStore))
         }
     }
     

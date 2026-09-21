@@ -70,6 +70,10 @@ final class AppStore {
             appCoordinator.navigate(to: .note(note))
         case .toFriendsList:
             appCoordinator.navigate(to: .friendList)
+        case .toFriend(let friend):
+            appCoordinator.navigate(to: .friend(friend))
+        case .toNewFriend:
+            appCoordinator.navigate(to: .newFriend)
         }
     }
     
