@@ -30,6 +30,8 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
     var text: String
     
     var rootStoryID: UUID
+    var ownerID: UUID?
+    var owner: FriendModelGRDB?
     
     mutating func didInsert(with rowID: Int64, for column: String?) { }
     
@@ -39,10 +41,12 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
         date = from.date
         text = from.text
         rootStoryID = from.rootStoryID
+        ownerID = from.owner?.id
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, title, date, text, rootStoryID
+        case id, title, date, text, rootStoryID, ownerID
+        case owner
     }
 }
 
@@ -53,10 +57,12 @@ extension NoteModelGRDB {
         container["date"] = date
         container["text"] = text
         container["rootStoryID"] = rootStoryID
+        container["ownerID"] = ownerID
     }
 }
 
 extension NoteModelGRDB {
     static let noteFriends = hasMany(NoteFriend.self)
     static let friends = hasMany(FriendModelGRDB.self, through: noteFriends, using: NoteFriend.friend)
+    static let owner = belongsTo(FriendModelGRDB.self, using: ForeignKey(["ownerID"])).forKey("owner")
 }

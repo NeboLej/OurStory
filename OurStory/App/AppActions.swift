@@ -10,6 +10,7 @@ import Foundation
 enum AppAction {
     case selectedDate(Date)
     case addNewNote(Note)
+    case syncNotes([SyncNote], Friend)
     case editNote(Note)
     case addNewFriend(Friend)
     case editFriend(Friend)

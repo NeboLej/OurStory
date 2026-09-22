@@ -46,11 +46,17 @@ final class FriendScreenStore: BaseStore {
     func syncFriend() {
         Task {
             do {
-                let user = try await syncService.syncFriend(friend: friend)
-                let updateFriend = friend.copy(user: user)
+                let sentNotes = appStore.stories[BaseDate(date: Date())]?.notes ?? []
+                let syncResult = try await syncService.syncFriend(friend: friend, notes: sentNotes)
+                
+                let newNotes = syncResult.notes
+                print(newNotes)
+                let updateFriend = friend.copy(user: syncResult.user)
                 friend = updateFriend
                 appStore.send(.editFriend(updateFriend))
-                print("Received:", user)
+                appStore.send(.syncNotes(newNotes, updateFriend))
+                
+                print("Received:", syncResult)
             } catch {
                 print("Sync failed:", error)
             }

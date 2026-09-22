@@ -19,6 +19,11 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
     func addNote(_ note: Note) async {
         do {
             try await dbPool.write { db in
+                if try NoteModelGRDB.filter(key: note.id).fetchOne(db) != nil {
+                    Logger.log("note not unique", location: .GRDB, event: .error(nil))
+                    return
+                }
+                
                 var noteModel = NoteModelGRDB(from: note)
                 try noteModel.insert(db)
                
@@ -54,6 +59,7 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         do {
             return try await dbPool.read { db in
                 let request = NoteModelGRDB.including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
+                    .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
                 let results = try NoteWithFriends.fetchAll(db, request)
                 
                 return results.map { Note(from: $0) }

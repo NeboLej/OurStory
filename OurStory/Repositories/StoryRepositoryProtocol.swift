@@ -20,8 +20,10 @@ final class StoryRepository: BaseRepository, StoryRepositoryProtocol {
         do {
             return try await dbPool.read { db in
                 
-                let notesAssociation = StoryModelGRDB.notes.including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
-
+                let notesAssociation = StoryModelGRDB.notes
+                    .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
+                    .including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
+                
                 let request = StoryModelGRDB
                     .filter(Column("date") >= startDate && Column("date") < endDate)
                     .including(all: notesAssociation)

@@ -13,7 +13,7 @@ struct Story: Equatable {
     let title: String
     let isUserTitle: Bool
     
-    lazy var baseDate: BaseDate = { BaseDate(date: date) }()
+    var baseDate: BaseDate { BaseDate(date: date) }
     
     private(set) var notes: [Note]
     
@@ -31,10 +31,6 @@ struct Story: Equatable {
         title = from.story.title
         isUserTitle = from.story.isUserTitle
         notes = from.notes.map { Note(from: $0) }
-    }
-    
-    static var example1: Story {
-        Story(date: Date(), title: "Салки и шишки были славные но я облажался ", isUserTitle: true, notes: [Note.example1, Note.example2, Note.example3])
     }
     
     func addNewNote(_ note: Note) -> Self {
