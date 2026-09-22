@@ -140,7 +140,8 @@ struct FriendScreen: View {
                         .frame(width: 44, height: 44)
                 }
                 
-                Text(store.state.friend.name.uppercased())
+                let name = store.state.friend.user == nil ? (store.state.friend.name.uppercased()) : store.state.friend.name.uppercased() + "/" + (store.state.friend.user?.name.uppercased() ?? "")
+                Text(name)
                     .font(.myMedium(size: 22))
                     .tracking(1)
                     .foregroundColor(.textMulticolor)

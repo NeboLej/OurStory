@@ -89,8 +89,6 @@ struct SettingScreen: View {
                 }
         }
         .padding(.bottom, 40)
-        
-
     }
     
     @ViewBuilder

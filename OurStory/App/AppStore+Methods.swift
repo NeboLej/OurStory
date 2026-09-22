@@ -45,6 +45,9 @@ extension AppStore {
     
     func editFriend(_ friend: Friend) {
         Task {
+            if let user = friend.user {
+                await userRepository.addNewUser(user)
+            }
             await friendsRepository.editFriend(friend)
             allFriends.removeAll { $0.id == friend.id }
             allFriends.append(friend)

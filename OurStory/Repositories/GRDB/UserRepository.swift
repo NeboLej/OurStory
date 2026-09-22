@@ -26,9 +26,13 @@ final class UserRepository: BaseRepository, UserRepositoryProtocol {
     func addNewUser(_ user: User) async {
         do {
             try await dbPool.write { db in
-                var model = UserModelGRDB(from: user)
-                try model.insert(db)
-                Logger.log("save new user", location: .GRDB, event: .success)
+                if try UserModelGRDB.filter(key: user.id).fetchCount(db) == 0 {
+                    var model = UserModelGRDB(from: user)
+                    try model.insert(db)
+                    Logger.log("save new user", location: .GRDB, event: .success)
+                } else {
+                    Logger.log("error save new user, not unique", location: .GRDB, event: .error(nil))
+                }
             }
         } catch {
             Logger.log("save new user", location: .GRDB, event: .error(error))

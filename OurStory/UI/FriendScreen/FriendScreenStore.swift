@@ -12,7 +12,7 @@ final class FriendScreenStore: BaseStore {
     
     private var friend: Friend
     
-    let syncService = SyncService()
+    var syncService: SyncService!
     
     @ObservationIgnored
     private var noteRepositpry: NoteRepositoryProtocol
@@ -24,6 +24,7 @@ final class FriendScreenStore: BaseStore {
         self.noteRepositpry = noteRepositpry
         super.init(appStore: appStore)
         
+        syncService = SyncService(profile: self.appStore.user)
         loadData()
     }
     
@@ -37,7 +38,21 @@ final class FriendScreenStore: BaseStore {
             case .deleteFriend:
                 appStore.send(.deleteFriend(friend))
             case .syncFriend:
-                syncService.syncFriend(friend: friend)
+                syncFriend()
+            }
+        }
+    }
+    
+    func syncFriend() {
+        Task {
+            do {
+                let user = try await syncService.syncFriend(friend: friend)
+                let updateFriend = friend.copy(user: user)
+                friend = updateFriend
+                appStore.send(.editFriend(updateFriend))
+                print("Received:", user)
+            } catch {
+                print("Sync failed:", error)
             }
         }
     }

@@ -53,6 +53,10 @@ struct Friend: Hashable, Identifiable {
         }
     }
     
+    func copy(user: User) -> Friend {
+        Friend(id: self.id, name: self.name, color: self.color, user: user)
+    }
+    
     static var mock: [Friend] = [
         Friend(name: "Олег", color: "308446"),
         Friend(name: "Стас", color: "FFBCD9"),
