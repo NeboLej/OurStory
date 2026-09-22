@@ -46,7 +46,7 @@ final class FriendScreenStore: BaseStore {
     func syncFriend() {
         Task {
             do {
-                let sentNotes = appStore.stories[BaseDate(date: Date())]?.notes ?? []
+                let sentNotes = await noteRepositpry.getNotes(friendID: friend.id)
                 let syncResult = try await syncService.syncFriend(friend: friend, notes: sentNotes)
                 
                 let newNotes = syncResult.notes

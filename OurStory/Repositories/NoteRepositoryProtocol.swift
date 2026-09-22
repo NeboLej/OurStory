@@ -12,6 +12,7 @@ protocol NoteRepositoryProtocol {
 //    func getAllNotes() async -> [Note]
     func addNote(_ note: Note) async
     func updateNote(_ note: Note) async
+    func getNotes(friendID: UUID) async -> [Note]
 }
 
 final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
@@ -66,6 +67,26 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
             }
         } catch {
             fatalError()
+        }
+    }
+    
+    func getNotes(friendID: UUID) async -> [Note] {
+        do {
+            return try await dbPool.read { db in
+                let request = NoteModelGRDB
+                    .joining(
+                        required: NoteModelGRDB.noteFriends
+                            .filter(Column("friendID") == friendID)
+                    )
+                    .including(optional: NoteModelGRDB.owner)
+                    .including(all: NoteModelGRDB.friends)
+
+                let notes = try NoteWithFriends.fetchAll(db, request)
+                return notes.map { Note(from: $0) }
+            }
+        } catch {
+            Logger.log("getNotes error", location: .GRDB, event: .error(error))
+            fatalError("\(error)")
         }
     }
 }

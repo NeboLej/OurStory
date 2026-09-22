@@ -71,39 +71,6 @@ final class AppStore {
         }
     }
     
-    func syncNotes(_ notes: [SyncNote], friend: Friend) {
-        let notes = notes.sorted { $0.date < $1.date }
-        guard let firstNoteDate = notes.first?.date, let lastNoteDate = notes.last?.date else { return }
-        
-        Task {
-            let syncStories = await storyRepository.getStories(startDate: firstNoteDate.getOffsetDate(-1, component: .day),
-                                                               endDate: lastNoteDate.getOffsetDate(1, component: .day))
-            
-            for note in notes {
-                var updatedStory: Story
-                
-                if let story = syncStories.first(where: { $0.baseDate == note.baseDate }) {
-                    updatedStory = story
-                } else {
-                    updatedStory = Story(date: note.date)
-                    await storyRepository.newStory(updatedStory)
-                }
-                
-//                var newStory = syncStories.first(where: { $0.baseDate == note.baseDate }) ?? Story(date: note.date)
-                    
-                let newNote = Note(id: note.id, rootStoryID: updatedStory.id, title: note.title, date: note.date, text: note.text, friends: [], owner: friend)
-                let currentUpdateStory = updatedStory.addNewNote(newNote)
-                
-                await noteRepository.addNote(newNote)
-                stories[updatedStory.baseDate] = currentUpdateStory
-                
-                if selectedStory?.id == currentUpdateStory.id {
-                    selectedStory = currentUpdateStory
-                }
-            }
-        }
-    }
-    
     func getSelectedStory() -> Story {
         let story = selectedStory ?? stories[BaseDate(date: selectedDate)] ?? Story(date: selectedDate)
         selectedStory = story
@@ -129,7 +96,7 @@ final class AppStore {
         Task {
             allFriends = await friendsRepository.getAllFriends()
             
-            var stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
+            let stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
                                                            endDate: Date().getOffsetDate(1, component: .month))
             
             //TMP preview
@@ -140,6 +107,8 @@ final class AppStore {
             stories.forEach { story in
                 self.stories[BaseDate(date: story.date)] = story
             }
+            
+            let notes1 = await noteRepository.getNotes(friendID: allFriends.first!.id)
             
             selectedStory = getSelectedStory()
         }

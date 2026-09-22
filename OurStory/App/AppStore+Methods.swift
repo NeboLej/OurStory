@@ -28,6 +28,36 @@ extension AppStore {
         }
     }
     
+    func syncNotes(_ notes: [SyncNote], friend: Friend) {
+        let notes = notes.sorted { $0.date < $1.date }
+        guard let firstNoteDate = notes.first?.date, let lastNoteDate = notes.last?.date else { return }
+        
+        Task {
+            let syncStories = await storyRepository.getStories(startDate: firstNoteDate.getOffsetDate(-1, component: .day),
+                                                               endDate: lastNoteDate.getOffsetDate(1, component: .day))
+            
+            for note in notes {
+                var updatedStory: Story
+                
+                if let story = syncStories.first(where: { $0.baseDate == note.baseDate }) {
+                    updatedStory = story
+                } else {
+                    updatedStory = Story(date: note.date)
+                    await storyRepository.newStory(updatedStory)
+                }
+                    
+                let newNote = Note(id: note.id, rootStoryID: updatedStory.id, title: note.title, date: note.date, text: note.text, friends: [], owner: friend)
+                let currentUpdateStory = updatedStory.addNewNote(newNote)
+                
+                await noteRepository.addNote(newNote)
+                stories[updatedStory.baseDate] = currentUpdateStory
+                
+                if selectedStory?.id == currentUpdateStory.id {
+                    selectedStory = currentUpdateStory
+                }
+            }
+        }
+    }
     
     func updateNote(_ note: Note) {
         Task {
