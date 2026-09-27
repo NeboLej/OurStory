@@ -30,6 +30,7 @@ extension AppStore {
     
     func syncNotes(_ notes: [SyncNote], friend: Friend) {
         let notes = notes.sorted { $0.date < $1.date }
+        var allNewNotes: [Note] = []
         guard let firstNoteDate = notes.first?.date, let lastNoteDate = notes.last?.date else { return }
         
         Task {
@@ -47,6 +48,7 @@ extension AppStore {
                 }
                     
                 let newNote = Note(id: note.id, rootStoryID: updatedStory.id, title: note.title, date: note.date, text: note.text, friends: [], owner: friend)
+                allNewNotes.append(newNote)
                 let currentUpdateStory = updatedStory.addNewNote(newNote)
                 
                 await noteRepository.addNote(newNote)
@@ -56,6 +58,7 @@ extension AppStore {
                     selectedStory = currentUpdateStory
                 }
             }
+            sortedNotes = allNewNotes
         }
     }
     

@@ -13,6 +13,9 @@ struct FriendScreen: View {
     @State var isEditMode: Bool = false
     @State var name: String = ""
     @State var selectedColor: Color = .red
+    
+    @State var syncUserIsConfirmet: Bool = false
+    
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -27,6 +30,11 @@ struct FriendScreen: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
         .background(.backgroundFill)
+        .overlay {
+            if !store.syncPgogressStates.isEmpty {
+                syncProgressScreen()
+            }
+        }
         .navigationBarBackButtonHidden(isEditMode)
         .toolbar {
             if isEditMode {
@@ -69,13 +77,17 @@ struct FriendScreen: View {
                         .foregroundStyle(Color.textMulticolor.opacity(0.85))
                         .padding(.vertical, 6)
                         .padding(.horizontal, 10)
+                        
                         .overlay {
                             Rectangle()
                                 .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
                         }
                 }
                 .buttonStyle(.plain)
-            }.sharedBackgroundVisibility(.hidden)
+                .opacity(store.state.syncPgogressStates.isEmpty ? 1 : 0)
+            }
+            .sharedBackgroundVisibility(.hidden)
+            
         }
         .onAppear {
             name = store.state.friend.name
@@ -190,6 +202,118 @@ struct FriendScreen: View {
             }
             .padding(.bottom, 16)
             .buttonStyle(.plain)
+        }
+    }
+    
+    @ViewBuilder
+    private func syncProgressScreen() -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(store.state.syncPgogressStates.enumerated()), id: \.element) { index, event in
+                HStack {
+                    Text("\(index + 1). \(event.descriptionText)")
+                        .font(.myRegular(size: 16))
+                        .foregroundStyle(.black)
+                        .padding(8)
+
+                    Spacer()
+                }
+                syncProgressOption(state: event)
+                    .disabled(syncUserIsConfirmet)
+            }
+            .transition(.asymmetric(insertion: .offset(x: 20).combined(with: .opacity), removal: .opacity))
+            .animation(.spring(response: 1, dampingFraction: 0.8), value: store.state.syncPgogressStates)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .background(.myPrimary)
+    }
+    
+    @ViewBuilder
+    private func syncProgressOption(state: SyncProgressState) -> some View {
+        switch state {
+        case .waitingForUserConfirmation(let user):
+            VStack(alignment: .leading) {
+                Text("Вы хотите обменяться историями с пользователем?")
+//                    .multilineTextAlignment(.center)
+                    .font(.myMedium(size: 16))
+                    .foregroundStyle(.black)
+                HStack {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: user.color))
+                            .frame(width: 36, height: 36)
+                        
+                        Circle()
+                            .stroke(.myPrimary, lineWidth: 2)
+                            .frame(width: 31, height: 31)
+                    }
+                    Text(user.name)
+                        .font(.myMedium(size: 16))
+                        .foregroundStyle(.black)
+                    Spacer()
+                }
+                
+                HStack {
+                    VintageSmallButton(title: "ОТМЕНИТЬ") {
+                        store.send(.confirmSyncFriend(false))
+                        syncUserIsConfirmet = true
+                    }
+                    VintageSmallButton(title: "ОБМЕНЯТЬСЯ") {
+                        store.send(.confirmSyncFriend(true))
+                        syncUserIsConfirmet = true
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(12)
+            
+        case .completed:
+            VStack(alignment: .leading) {
+                
+                Text("Отправлено историй: \(store.state.notSeenStoriesCount)")
+                    .font(.myMedium(size: 16))
+                HStack {
+                    Text("Получено историй:")
+                        .font(.myMedium(size: 16))
+                    Text(String(store.state.newNotesCount))
+                        .font(.myMedium(size: 16))
+                }
+
+                
+                HStack { Spacer() }
+                if store.state.newNotesCount > 0 {
+                    VintageSmallButton(title: "ПОСМОТРЕТЬ") {
+                        store.send(.toNewNotes)
+                    }
+                }
+                
+                Button {
+                    store.send(.exitSync)
+                } label: {
+                    VStack(spacing: 2) {
+                        Text("ЗАКРЫТЬ")
+                            .font(.mySemiBold(size: 14))
+                            .tracking(2)
+                            .foregroundStyle(.black)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.white.opacity(0.7))
+                    .overlay {
+                        Rectangle()
+                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
+                            .padding(3)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 16)
+                
+                
+            }
+            .frame(maxWidth: .infinity)
+            .padding(12)
+        default: EmptyView()
         }
     }
     

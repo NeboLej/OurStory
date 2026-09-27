@@ -13,11 +13,17 @@ final class FriendScreenStore: BaseStore {
     private var friend: Friend
     
     var syncService: SyncService!
+    var syncPgogressStates: [SyncProgressState] = []
+    var sendNotes: [Note] = []
+    var newNoteCount: Int = 0
     
     @ObservationIgnored
     private var noteRepositpry: NoteRepositoryProtocol
     
-    var state: FriendScreenState { FriendScreenState(friend: friend) }
+    var state: FriendScreenState { FriendScreenState(friend: friend,
+                                                     notSeenStoriesCount: sendNotes.count,
+                                                     syncPgogressStates: syncPgogressStates,
+                                                     newNotesCount: newNoteCount) }
     
     init(appStore: AppStore, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
         self.friend = friend
@@ -38,7 +44,24 @@ final class FriendScreenStore: BaseStore {
             case .deleteFriend:
                 appStore.send(.deleteFriend(friend))
             case .syncFriend:
+//                testSyncFriends()
                 syncFriend()
+            case .confirmSyncFriend(let isConfirm):
+                syncService.confirmUser(isConfirm)
+            case .toNewNotes:
+                appStore.send(.toNotesList(title: "Истории от \(friend.name)", notes: appStore.sortedNotes))
+            case .exitSync:
+                syncPgogressStates = []
+            }
+        }
+    }
+    
+    func testSyncFriends() {
+        let eventList: [SyncProgressState] = [.searching, .connecting, .exchangingUsers, .exchangingNotes, .completed]
+        
+        (1...5).forEach { ddd in
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(ddd)) {
+                self.syncPgogressStates.append((eventList[ddd - 1]))
             }
         }
     }
@@ -46,8 +69,11 @@ final class FriendScreenStore: BaseStore {
     func syncFriend() {
         Task {
             do {
-                let sentNotes = await noteRepositpry.getNotes(friendID: friend.id)
-                let syncResult = try await syncService.syncFriend(friend: friend, notes: sentNotes)
+                syncService.onEvent = { event in
+                    self.syncPgogressStates.append(event)
+                }
+                
+                let syncResult = try await syncService.syncFriend(friend: friend, notes: sendNotes)
                 
                 let newNotes = syncResult.notes
                 print(newNotes)
@@ -55,6 +81,7 @@ final class FriendScreenStore: BaseStore {
                 friend = updateFriend
                 appStore.send(.editFriend(updateFriend))
                 appStore.send(.syncNotes(newNotes, updateFriend))
+                newNoteCount = newNotes.count
                 
                 print("Received:", syncResult)
             } catch {
@@ -64,6 +91,8 @@ final class FriendScreenStore: BaseStore {
     }
     
     private func loadData() {
-//        noteRepositpry.
+        Task {
+            sendNotes = await noteRepositpry.getNotes(friendID: friend.id)
+        }
     }
 }

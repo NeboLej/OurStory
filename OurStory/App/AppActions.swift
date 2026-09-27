@@ -24,4 +24,5 @@ enum NavigateAction {
     case toFriend(Friend)
     case toNewFriend
     case toSettings
+    case toNotesList(title: String, notes: [Note])
 }

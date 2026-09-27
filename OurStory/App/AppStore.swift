@@ -15,6 +15,7 @@ final class AppStore {
     var stories: [BaseDate: Story] = [:]
     var allFriends: [Friend] = []
     var user: User
+    var sortedNotes: [Note] = []
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
@@ -89,6 +90,8 @@ final class AppStore {
             appCoordinator.navigate(to: .newFriend)
         case .toSettings:
             appCoordinator.navigate(to: .setting)
+        case .toNotesList(title: let title, notes: let notes):
+            appCoordinator.navigate(to: .notes(title: title, notes: notes))
         }
     }
     
@@ -108,7 +111,7 @@ final class AppStore {
                 self.stories[BaseDate(date: story.date)] = story
             }
             
-            let notes1 = await noteRepository.getNotes(friendID: allFriends.first!.id)
+//            let notes1 = await noteRepository.getNotes(friendID: allFriends.first!.id)
             
             selectedStory = getSelectedStory()
         }
