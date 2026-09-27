@@ -430,7 +430,7 @@ final class PeerExchangeManager: NSObject {
             guard let user = message.user else { return }
             
             receivedUser = user
-            onEvent?(.exchangingUsers)
+//            onEvent?(.exchangingUsers)
             
             if user.id == localFriend.user?.id {
                 sendUserApproval(true, to: peerID)
@@ -458,7 +458,7 @@ final class PeerExchangeManager: NSObject {
             guard let notes = message.notes else { return }
             
             receivedNotes = notes
-            onEvent?(.exchangingNotes)
+//            onEvent?(.exchangingNotes)
             finishSync()
         }
     }
@@ -491,7 +491,7 @@ extension PeerExchangeManager: MCNearbyServiceBrowserDelegate {
         guard peerID != self.peerID else { return }
         guard session.connectedPeers.isEmpty else { return }
         
-        onEvent?(.connecting)
+//        onEvent?(.connecting)
         browser.invitePeer(peerID, to: session, withContext: nil, timeout: 10)
     }
     
@@ -511,7 +511,8 @@ extension PeerExchangeManager: MCSessionDelegate {
         guard isActive else { return }
         
         switch state {
-        case .connecting: onEvent?(.connecting)
+        case .connecting:
+            onEvent?(.connecting)
         case .connected:
             onEvent?(.exchangingUsers)
             sendUser(to: peerID)

@@ -19,22 +19,25 @@ struct FriendScreen: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        VStack(spacing: 0) {
-            if isEditMode {
-                editMode()
-            } else {
-                showMode()
+        ZStack {
+            VStack(spacing: 0) {
+                if isEditMode {
+                    editMode()
+                } else {
+                    showMode()
+                }
+                Spacer()
             }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 20)
-        .background(.backgroundFill)
-        .overlay {
+            .padding(.horizontal, 20)
             if !store.syncPgogressStates.isEmpty {
                 syncProgressScreen()
+                    .transition(.asymmetric(insertion: .offset(x: 10).combined(with: .opacity),
+                                            removal: .push(from: .bottom)))
             }
         }
+        .animation(.easeInOut, value: store.syncPgogressStates.isEmpty)
+        .frame(maxWidth: .infinity)
+        .background(.backgroundFill)
         .navigationBarBackButtonHidden(isEditMode)
         .toolbar {
             if isEditMode {
@@ -207,26 +210,65 @@ struct FriendScreen: View {
     
     @ViewBuilder
     private func syncProgressScreen() -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(store.state.syncPgogressStates.enumerated()), id: \.element) { index, event in
-                HStack {
-                    Text("\(index + 1). \(event.descriptionText)")
-                        .font(.myRegular(size: 16))
+        ZStack(alignment: .bottom) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("СИНХРОНИЗАЦИЯ")
+                        .font(.myMedium(size: 20))
                         .foregroundStyle(.black)
-                        .padding(8)
-
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 12)
+                    ForEach(Array(store.state.syncPgogressStates.enumerated()), id: \.element) { index, event in
+                        HStack {
+                            Text("\(index + 1). \(event.descriptionText)")
+                                .font(.myRegular(size: 16))
+                                .foregroundStyle(.black)
+                                .padding(8)
+                            
+                            Spacer()
+                        }
+                        syncProgressOption(state: event)
+                        
+                    }
+                    .transition(.asymmetric(insertion: .offset(x: 10).combined(with: .opacity), removal: .opacity))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.4), value: store.state.syncPgogressStates)
+                    
                     Spacer()
                 }
-                syncProgressOption(state: event)
-                    .disabled(syncUserIsConfirmet)
             }
-            .transition(.asymmetric(insertion: .offset(x: 20).combined(with: .opacity), removal: .opacity))
-            .animation(.spring(response: 1, dampingFraction: 0.8), value: store.state.syncPgogressStates)
-
-            Spacer()
+            
+            .frame(maxWidth: .infinity)
+            .background(store.syncPgogressStates.count == 0 ? Color.clear : .myPrimary)
         }
-        .frame(maxWidth: .infinity)
-        .background(.myPrimary)
+        
+        if store.state.syncPgogressStates.last == .completed {
+            VStack {
+                Spacer()
+                
+                Button {
+                    store.send(.exitSync)
+                } label: {
+                    VStack(spacing: 2) {
+                        Text("ЗАКРЫТЬ")
+                            .font(.mySemiBold(size: 14))
+                            .tracking(2)
+                            .foregroundStyle(.black)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.backgroundFill)
+                    .overlay {
+                        Rectangle()
+                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
+                            .padding(3)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 12)
+            }
+
+        }
     }
     
     @ViewBuilder
@@ -267,49 +309,29 @@ struct FriendScreen: View {
             }
             .frame(maxWidth: .infinity)
             .padding(12)
+            .disabled(syncUserIsConfirmet)
             
         case .completed:
             VStack(alignment: .leading) {
                 
                 Text("Отправлено историй: \(store.state.notSeenStoriesCount)")
                     .font(.myMedium(size: 16))
+                    .foregroundStyle(.black)
                 HStack {
                     Text("Получено историй:")
                         .font(.myMedium(size: 16))
+                        .foregroundStyle(.black)
                     Text(String(store.state.newNotesCount))
                         .font(.myMedium(size: 16))
+                        .foregroundStyle(.black)
                 }
 
-                
                 HStack { Spacer() }
                 if store.state.newNotesCount > 0 {
                     VintageSmallButton(title: "ПОСМОТРЕТЬ") {
                         store.send(.toNewNotes)
                     }
                 }
-                
-                Button {
-                    store.send(.exitSync)
-                } label: {
-                    VStack(spacing: 2) {
-                        Text("ЗАКРЫТЬ")
-                            .font(.mySemiBold(size: 14))
-                            .tracking(2)
-                            .foregroundStyle(.black)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.white.opacity(0.7))
-                    .overlay {
-                        Rectangle()
-                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                            .padding(3)
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 16)
-                
-                
             }
             .frame(maxWidth: .infinity)
             .padding(12)

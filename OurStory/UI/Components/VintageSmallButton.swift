@@ -21,13 +21,13 @@ struct VintageSmallButton: View {
             Text(title)
                 .font(.mySemiBold(size: 12))
                 .tracking(1.5)
-                .foregroundStyle(Color.textMulticolor.opacity(0.85))
+                .foregroundStyle(Color.black.opacity(0.85))
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
                 
                 .overlay {
                     Rectangle()
-                        .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
+                        .stroke(Color.black.opacity(0.35), lineWidth: 1)
                 }
         }
         .buttonStyle(.plain)

@@ -44,8 +44,8 @@ final class FriendScreenStore: BaseStore {
             case .deleteFriend:
                 appStore.send(.deleteFriend(friend))
             case .syncFriend:
-//                testSyncFriends()
-                syncFriend()
+                testSyncFriends()
+//                syncFriend()
             case .confirmSyncFriend(let isConfirm):
                 syncService.confirmUser(isConfirm)
             case .toNewNotes:
@@ -69,8 +69,14 @@ final class FriendScreenStore: BaseStore {
     func syncFriend() {
         Task {
             do {
+                var eventDebounse: Double = 0
+                
                 syncService.onEvent = { event in
-                    self.syncPgogressStates.append(event)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + eventDebounse) {
+                        print(eventDebounse)
+                        self.syncPgogressStates.append(event)
+                    }
+                    eventDebounse += 0.8
                 }
                 
                 let syncResult = try await syncService.syncFriend(friend: friend, notes: sendNotes)
