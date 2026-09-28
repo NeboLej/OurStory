@@ -11,8 +11,6 @@ import SwiftUI
 struct SettingScreen: View {
     
     @State private var store: SettingScreenStore
-    @State private var name: String = ""
-    @State private var selectedColor: Color = .blue
     @Environment(\.dismiss) var dismiss
     
     init(store: SettingScreenStore) {
@@ -23,83 +21,111 @@ struct SettingScreen: View {
         ZStack {
             Color(.backgroundFill)
                 .ignoresSafeArea()
-            ScrollView(.vertical) {
-                VStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: store.state.user.color))
-                            .frame(width: 48, height: 48)
-                        Circle()
-                            .stroke(Color.backgroundFill, lineWidth: 2)
-                            .frame(width: 44, height: 44)
-                    }
-                    
-                    nameRow()
-                        .padding(.top, 24)
-                    colorPickerRow()
-                    Spacer()
-                    
-                    Button {
-                        store.send(.saveUser(name: name, color: selectedColor.toHex()))
-                        dismiss()
-                    } label: {
-                        Text("Сохранить")
-                            .foregroundStyle(.titleDark)
-                            .font(.myMedium(size: 18))
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
-                    }
-                    .tint(.myPrimary)
-                    .buttonStyle(.glassProminent)
-                    .padding(.top, 64)
-
-                }
-                .padding(.horizontal, 16)
-                
-            }
             
+            VStack(spacing: 0) {
+                // MARK: - Шапка профиля
+                profileHeader()
+                
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(.textMulticolor.opacity(0.35))
+                    .padding(.horizontal, 20)
+                
+                // MARK: - Список настроек
+                settingsList()
+                
+                Spacer()
+            }
         }
         .frame(maxWidth: .infinity)
         .navigationTitle("Настройки")
         .navigationBarTitleDisplayMode(.large)
-        .onAppear {
-            name = store.state.user.name
-            selectedColor = Color(hex: store.state.user.color)
-        }
     }
     
-    
+    // MARK: - Шапка профиля
     @ViewBuilder
-    private func nameRow() -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("МОЕ ИМЯ")
-                .font(.myMedium(size: 12))
-                .tracking(3)
+    private func profileHeader() -> some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: store.state.user.color))
+                    .frame(width: 64, height: 64)
+                Circle()
+                    .stroke(Color.backgroundFill, lineWidth: 3)
+                    .frame(width: 58, height: 58)
+            }
+            
+            Text(store.state.user.name.uppercased())
+                .font(.myMedium(size: 22))
+                .tracking(1)
                 .foregroundColor(.textMulticolor)
             
-            TextField("Введите ваше имя...", text: $name)
-                .font(.myItalic(size: 20))
-                .foregroundColor(.textMulticolor)
-                .tint(.textMulticolor)
-                .padding(.vertical, 8)
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundColor(Color(hex: "#A39E93"))
-                }
+            Button {
+                store.send(.toEditProfile)
+            } label: {
+                Text("ИЗМЕНИТЬ")
+                    .font(.mySemiBold(size: 11))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.textMulticolor.opacity(0.85))
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 10)
+                    .overlay {
+                        Rectangle()
+                            .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
+                    }
+            }
+            .buttonStyle(.plain)
         }
-        .padding(.bottom, 40)
+        .padding(.top, 32)
+        .padding(.bottom, 28)
+    }
+    
+    // MARK: - Список настроек
+    @ViewBuilder
+    private func settingsList() -> some View {
+        VStack(spacing: 0) {
+            settingsRow(icon: "paintbrush", title: "Тема") {
+                // Заглушка
+            }
+            
+            settingsRow(icon: "globe", title: "Язык") {
+                // Заглушка
+            }
+            
+            settingsRow(icon: "bell", title: "Уведомления") {
+                // Заглушка
+            }
+        }
+        .padding(.horizontal, 20)
     }
     
     @ViewBuilder
-    private func colorPickerRow() -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("ЦВЕТОВАЯ МЕТКА")
-                .font(.myMedium(size: 12))
-                .tracking(3)
-                .foregroundColor(.textMulticolor)
-            
-            CustomColorPicker(selectedColor: $selectedColor)
+    private func settingsRow(icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.textMulticolor.opacity(0.7))
+                    .frame(width: 24)
+                
+                Text(title)
+                    .font(.myMedium(size: 16))
+                    .foregroundStyle(.textMulticolor)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.textMulticolor.opacity(0.4))
+            }
+            .padding(.vertical, 16)
+            .padding(.horizontal, 4)
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .frame(height: 0.5)
+                .foregroundStyle(.textMulticolor.opacity(0.2))
         }
     }
 }

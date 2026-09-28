@@ -90,6 +90,8 @@ final class AppStore {
             appCoordinator.navigate(to: .newFriend)
         case .toSettings:
             appCoordinator.navigate(to: .setting)
+        case .toEditProfile:
+            appCoordinator.navigate(to: .editProfile)
         case .toNotesList(title: let title, notes: let notes):
             appCoordinator.navigate(to: .notes(title: title, notes: notes))
         }

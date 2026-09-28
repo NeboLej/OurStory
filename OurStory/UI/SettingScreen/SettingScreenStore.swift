@@ -19,6 +19,8 @@ final class SettingScreenStore: BaseStore {
             switch action {
             case .saveUser(name: let name, color: let color):
                 appStore.send(.editProfile(name: name, color: color))
+            case .toEditProfile:
+                appStore.send(.toEditProfile)
             }
         }
     }

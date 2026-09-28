@@ -14,4 +14,5 @@ enum FriendScreenAction {
     case confirmSyncFriend(Bool)
     case toNewNotes
     case exitSync
+    case applyUserProfile
 }

@@ -38,6 +38,11 @@ final class FriendScreenStore: BaseStore {
         loadData()
     }
     
+    var hasUserProfileDifference: Bool {
+        guard let user = friend.user else { return false }
+        return user.name != friend.name || user.color != friend.color
+    }
+    
     func send(_ action: FriendScreenAction, animation: Animation? = .default) {
         withAnimation(animation) {
             switch action {
@@ -57,6 +62,11 @@ final class FriendScreenStore: BaseStore {
             case .exitSync:
                 syncPgogressStates = []
                 loadData()
+            case .applyUserProfile:
+                guard let user = friend.user else { return }
+                let newFriend = Friend(id: friend.id, name: user.name, color: user.color, user: friend.user, lastSyncDate: friend.lastSyncDate)
+                friend = newFriend
+                appStore.send(.editFriend(newFriend))
             }
         }
     }
