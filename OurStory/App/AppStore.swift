@@ -14,6 +14,8 @@ final class AppStore {
     var selectedStory: Story?
     var stories: [BaseDate: Story] = [:]
     var allFriends: [Friend] = []
+    var user: User
+    var sortedNotes: [Note] = []
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
@@ -25,12 +27,16 @@ final class AppStore {
     let noteRepository: NoteRepositoryProtocol
     @ObservationIgnored
     let storyRepository: StoryRepositoryProtocol
+    @ObservationIgnored
+    private let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
     
     init(repositoryFactory: RepositoryFactoryProtocol) {
         self.userRepository = repositoryFactory.userRepository
         self.friendsRepository = repositoryFactory.friendRepository
         self.noteRepository = repositoryFactory.noteRepository
         self.storyRepository = repositoryFactory.storyRepository
+        
+        user = userDefaultsManager.getCurrentUser()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.loadData()
@@ -53,12 +59,16 @@ final class AppStore {
                 }
             }
             updateNote(note)
+        case .syncNotes(let notes, let friend):
+            syncNotes(notes, friend: friend)
         case .addNewFriend(let friend):
             addNewFriend(friend)
         case .editFriend(let friend):
             editFriend(friend)
         case .deleteFriend(let friend):
             deleteFriend(friend)
+        case .editProfile(name: let name, color: let color):
+            user = userDefaultsManager.editUser(name: name, color: color)
         }
     }
     
@@ -78,16 +88,18 @@ final class AppStore {
             appCoordinator.navigate(to: .friend(friend))
         case .toNewFriend: 
             appCoordinator.navigate(to: .newFriend)
+        case .toSettings:
+            appCoordinator.navigate(to: .setting)
+        case .toNotesList(title: let title, notes: let notes):
+            appCoordinator.navigate(to: .notes(title: title, notes: notes))
         }
     }
-    
-
     
     private func loadData() {
         Task {
             allFriends = await friendsRepository.getAllFriends()
             
-            var stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
+            let stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
                                                            endDate: Date().getOffsetDate(1, component: .month))
             
             //TMP preview
@@ -98,6 +110,8 @@ final class AppStore {
             stories.forEach { story in
                 self.stories[BaseDate(date: story.date)] = story
             }
+            
+//            let notes1 = await noteRepository.getNotes(friendID: allFriends.first!.id)
             
             selectedStory = getSelectedStory()
         }

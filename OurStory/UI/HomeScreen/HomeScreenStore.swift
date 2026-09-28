@@ -16,11 +16,8 @@ final class HomeScreenStore: BaseStore {
         withAnimation(animation) {
             switch action {
             case .createNewNote: appStore.send(.toNote(nil))
-            case .updateFriendInNote(let note, let friend):
-                let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
-                appStore.send(.editNote(newNote))
-            case .editNote(let note): appStore.send(.toNote(note))
             case .toFriendsList: appStore.send(.toFriendsList)
+            case .toSettings: appStore.send(.toSettings)
             }
         }
     }

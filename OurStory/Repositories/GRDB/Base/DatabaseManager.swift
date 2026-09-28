@@ -63,9 +63,11 @@ final class DatabaseManager {
             t.column("title", .text)
             t.column("text", .text).notNull()
             t.column("date", .double).notNull()
+            t.column("ownerID", .blob)
             
             t.column("rootStoryID", .blob).notNull()
             t.foreignKey(["rootStoryID"], references: "story", onDelete: .cascade, onUpdate: .cascade)
+            t.foreignKey(["ownerID"], references: "friend", onDelete: .restrict, onUpdate: .cascade)
         }
         
         try db.create(table: "noteFriend", ifNotExists: true) { t in

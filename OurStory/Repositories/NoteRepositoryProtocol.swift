@@ -12,6 +12,7 @@ protocol NoteRepositoryProtocol {
 //    func getAllNotes() async -> [Note]
     func addNote(_ note: Note) async
     func updateNote(_ note: Note) async
+    func getNotes(friendID: UUID) async -> [Note]
 }
 
 final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
@@ -19,6 +20,11 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
     func addNote(_ note: Note) async {
         do {
             try await dbPool.write { db in
+                if try NoteModelGRDB.filter(key: note.id).fetchOne(db) != nil {
+                    Logger.log("note not unique", location: .GRDB, event: .error(nil))
+                    return
+                }
+                
                 var noteModel = NoteModelGRDB(from: note)
                 try noteModel.insert(db)
                
@@ -54,12 +60,33 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         do {
             return try await dbPool.read { db in
                 let request = NoteModelGRDB.including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
+                    .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
                 let results = try NoteWithFriends.fetchAll(db, request)
                 
                 return results.map { Note(from: $0) }
             }
         } catch {
             fatalError()
+        }
+    }
+    
+    func getNotes(friendID: UUID) async -> [Note] {
+        do {
+            return try await dbPool.read { db in
+                let request = NoteModelGRDB
+                    .joining(
+                        required: NoteModelGRDB.noteFriends
+                            .filter(Column("friendID") == friendID)
+                    )
+                    .including(optional: NoteModelGRDB.owner)
+                    .including(all: NoteModelGRDB.friends)
+
+                let notes = try NoteWithFriends.fetchAll(db, request)
+                return notes.map { Note(from: $0) }
+            }
+        } catch {
+            Logger.log("getNotes error", location: .GRDB, event: .error(error))
+            fatalError("\(error)")
         }
     }
 }

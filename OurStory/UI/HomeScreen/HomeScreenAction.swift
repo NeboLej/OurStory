@@ -9,7 +9,6 @@ import Foundation
 
 enum HomeScreenAction {
     case createNewNote
-    case updateFriendInNote(note: Note, friend: Friend)
-    case editNote(Note)
     case toFriendsList
+    case toSettings
 }

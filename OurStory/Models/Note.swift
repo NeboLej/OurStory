@@ -35,22 +35,11 @@ struct Note: Identifiable, Equatable, Hashable {
         self.text = from.note.text
         self.friends = from.friends.map { Friend(from: $0) }
         self.rootStoryID = from.note.rootStoryID
-        self.owner = nil
-    }
-    
-    static var example1: Note {
-        Note(title: nil, date: Date(), text: "Ходил в лес, набрал шишек для плова потом вернулся домой и готовился к касстингу на роль девушки джеймса бонда", friends: [
-        ], owner: nil)
-    }
-    
-    static var example2: Note {
-        Note(title: "Салочки-сасалочки", date: Date(), text: "Вечером случайно встретил Олега, решили раз уж встретились то нужно выяснить кто из нас лучше в салки играет, 16 часов выясняли. Олег оказался реально мастером, респект ему и его бабушкам", friends: [
-            Friend(name: "Стас", color: "f4d3a1"), Friend(name: "Марина", color: "66ee33")
-        ], owner: nil)
-    }
-    
-    static var example3: Note {
-        Note(title: "Сладкая месть", date: Date(), text: "Пол дня ждал тоху у подъезда, весь год тренился играть в салочки и сегодня то я ему точно покажу кто тут батя. 💪", friends: [], owner: Friend(name: "Стас", color: "f4d3a1"))
+        if let owner = from.note.owner {
+            self.owner = Friend(from: owner)
+        } else {
+            self.owner = nil
+        }
     }
     
     func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {

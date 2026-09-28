@@ -11,11 +11,9 @@ struct HomeScreenState {
     
     var selectedStory: Story?
     var selectedDate: Date
-    var allFriends: [Friend]
     
     init(appStore: AppStore) {
         selectedStory = appStore.selectedStory
-        allFriends = appStore.allFriends
         selectedDate = appStore.selectedDate
     }
     

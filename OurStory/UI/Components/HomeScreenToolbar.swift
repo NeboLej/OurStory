@@ -28,7 +28,7 @@ struct HomeScreenToolbar: View {
     }
     
     let onFriends: () -> Void
-    let onCalendar: () -> Void
+    let onSettings: () -> Void
     let onNewNote: () -> Void
     
     var body: some View {
@@ -36,7 +36,7 @@ struct HomeScreenToolbar: View {
             GlassEffectContainer(spacing: 8) {
 
                 HStack(alignment: .bottom, spacing: 16) {
-                    munuItem(.settings) { }
+                    munuItem(.settings, action: onSettings)
                     munuItem(.friends, action: onFriends)
                 }
                 .padding(.horizontal, 20)
@@ -85,7 +85,7 @@ struct HomeScreenToolbar: View {
 #Preview {
     HomeScreenToolbar {
         
-    } onCalendar: {
+    } onSettings: {
         
     } onNewNote: {
         

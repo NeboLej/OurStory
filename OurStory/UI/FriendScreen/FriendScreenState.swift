@@ -11,6 +11,9 @@ struct FriendScreenState {
     
     let friend: Friend
     let allStoriesCount: Int = 24
-    let notSeenStoriesCount: Int = 3
+    let notSeenStoriesCount: Int
+    
+    let syncPgogressStates: [SyncProgressState]
+    let newNotesCount: Int
     
 }
