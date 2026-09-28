@@ -33,18 +33,21 @@ struct Friend: Hashable, Identifiable {
     let color: String
     
     let user: User?
+    let lastSyncDate: Date?
     
-    init(id: UUID = UUID(), name: String, color: String, user: User? = nil) {
+    init(id: UUID = UUID(), name: String, color: String, user: User? = nil, lastSyncDate: Date? = nil) {
         self.id = id
         self.name = name
         self.color = color
         self.user = user
+        self.lastSyncDate = lastSyncDate
     }
     
     init(from: FriendModelGRDB) {
         self.id = from.id
         self.color = from.color
         self.name = from.name
+        self.lastSyncDate = from.lastSyncDate
         
         if let user = from.user {
             self.user = User(from: user)
@@ -53,8 +56,8 @@ struct Friend: Hashable, Identifiable {
         }
     }
     
-    func copy(user: User) -> Friend {
-        Friend(id: self.id, name: self.name, color: self.color, user: user)
+    func copy(user: User? = nil, lastSyncDate: Date? = nil) -> Friend {
+        Friend(id: self.id, name: self.name, color: self.color, user: user ?? self.user, lastSyncDate: lastSyncDate ?? self.lastSyncDate)
     }
     
     static var mock: [Friend] = [

@@ -176,7 +176,7 @@ struct FriendScreen: View {
                 // Действие
             }
             
-            statisticElement(title: "Последняя синхронизация", value: "\(Date().toReadableDate())", onClick: nil)
+            statisticElement(title: "Последняя синхронизация", value: store.state.lastSyncDate?.toReadableDate() ?? "—", onClick: nil)
             
             Spacer()
             

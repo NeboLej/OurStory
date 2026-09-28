@@ -51,7 +51,7 @@ extension AppStore {
                 allNewNotes.append(newNote)
                 let currentUpdateStory = updatedStory.addNewNote(newNote)
                 
-                await noteRepository.addNote(newNote)
+                await noteRepository.saveOrUpdateNote(newNote)
                 stories[updatedStory.baseDate] = currentUpdateStory
                 
                 if selectedStory?.id == currentUpdateStory.id {

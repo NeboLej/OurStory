@@ -10,8 +10,9 @@ import Foundation
 struct FriendScreenState {
     
     let friend: Friend
-    let allStoriesCount: Int = 24
+    let allStoriesCount: Int
     let notSeenStoriesCount: Int
+    let lastSyncDate: Date?
     
     let syncPgogressStates: [SyncProgressState]
     let newNotesCount: Int

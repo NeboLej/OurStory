@@ -29,6 +29,7 @@ final class DatabaseManager {
             
             try dbPool.write { db in
                 try Self.createTablesIfNeeded(in: db)
+                try Self.migrate(in: db)
             }
         } catch {
             fatalError("Ошибка создания DatabasePool: \(error)")
@@ -47,6 +48,7 @@ final class DatabaseManager {
             t.column("name", .text).notNull()
             t.column("color", .text).notNull()
             t.column("userID", .blob)
+            t.column("lastSyncDate", .double)
             
             t.foreignKey(["userID"], references: "user", onDelete: .restrict, onUpdate: .cascade)
         }
@@ -73,8 +75,24 @@ final class DatabaseManager {
         try db.create(table: "noteFriend", ifNotExists: true) { t in
             t.column("noteID", .blob).notNull().references("note", onDelete: .cascade)
             t.column("friendID", .blob).notNull().references("friend", onDelete: .cascade)
+            t.column("isSent", .boolean).notNull().defaults(to: false)
             
             t.primaryKey(["noteID", "friendID"])
         }
     }
+    
+    private static func migrate(in db: Database) throws {
+    }
+//        if try db.columns(in: "noteFriend").contains(where: { $0.name == "isSent" }) == false {
+//            try db.alter(table: "noteFriend") { t in
+//                t.add(column: "isSent", .boolean).notNull().defaults(to: false)
+//            }
+//        }
+//        
+//        if try db.columns(in: "friend").contains(where: { $0.name == "lastSyncDate" }) == false {
+//            try db.alter(table: "friend") { t in
+//                t.add(column: "lastSyncDate", .double)
+//            }
+//        }
+//    }
 }

@@ -16,12 +16,16 @@ final class FriendScreenStore: BaseStore {
     var syncPgogressStates: [SyncProgressState] = []
     var sendNotes: [Note] = []
     var newNoteCount: Int = 0
+    var totalNotesCount: Int = 0
+    var unsentNotesCount: Int = 0
     
     @ObservationIgnored
     private var noteRepositpry: NoteRepositoryProtocol
     
     var state: FriendScreenState { FriendScreenState(friend: friend,
-                                                     notSeenStoriesCount: sendNotes.count,
+                                                     allStoriesCount: totalNotesCount,
+                                                     notSeenStoriesCount: unsentNotesCount,
+                                                     lastSyncDate: friend.lastSyncDate,
                                                      syncPgogressStates: syncPgogressStates,
                                                      newNotesCount: newNoteCount) }
     
@@ -38,7 +42,7 @@ final class FriendScreenStore: BaseStore {
         withAnimation(animation) {
             switch action {
             case .editFriend(name: let name, color: let color):
-                let newFriend = Friend(id: friend.id, name: name, color: color, user: friend.user)
+                let newFriend = Friend(id: friend.id, name: name, color: color, user: friend.user, lastSyncDate: friend.lastSyncDate)
                 friend = newFriend
                 appStore.send(.editFriend(newFriend))
             case .deleteFriend:
@@ -52,6 +56,7 @@ final class FriendScreenStore: BaseStore {
                 appStore.send(.toNotesList(title: "Истории от \(friend.name)", notes: appStore.sortedNotes))
             case .exitSync:
                 syncPgogressStates = []
+                loadData()
             }
         }
     }
@@ -85,8 +90,11 @@ final class FriendScreenStore: BaseStore {
                 
                 let syncResult = try await syncService.syncFriend(friend: friend, notes: sendNotes)
                 
+                let sentNoteIDs = sendNotes.map { $0.id }
+                await noteRepositpry.updateSentStatus(noteIDs: sentNoteIDs, friendID: friend.id, isSent: true)
+                
                 let newNotes = syncResult.notes
-                let updateFriend = friend.copy(user: syncResult.user)
+                let updateFriend = friend.copy(user: syncResult.user, lastSyncDate: Date())
                 friend = updateFriend
                 appStore.send(.editFriend(updateFriend))
                 appStore.send(.syncNotes(newNotes, updateFriend))
@@ -99,7 +107,9 @@ final class FriendScreenStore: BaseStore {
     
     private func loadData() {
         Task {
-            sendNotes = await noteRepositpry.getNotes(friendID: friend.id)
+            sendNotes = await noteRepositpry.getUnsentNotes(friendID: friend.id)
+            totalNotesCount = await noteRepositpry.getTotalNotesCount(friendID: friend.id)
+            unsentNotesCount = await noteRepositpry.getUnsentNotesCount(friendID: friend.id)
         }
     }
 }

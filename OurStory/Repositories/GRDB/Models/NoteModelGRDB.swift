@@ -12,6 +12,7 @@ struct NoteFriend: Codable, FetchableRecord, MutablePersistableRecord, TableReco
     static let databaseTableName = "noteFriend"
     var noteId: UUID
     var friendId: UUID
+    var isSent: Bool
     
     static let friend = belongsTo(FriendModelGRDB.self)
 }
