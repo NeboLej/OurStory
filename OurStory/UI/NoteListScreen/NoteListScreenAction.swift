@@ -7,6 +7,7 @@
 
 import Foundation
 
-enum NoteListScreenAction: Hashable {
-    
+enum NoteListScreenAction {
+    case editNote(Note)
+    case updateFriendInNote(note: Note, friend: Friend)
 }

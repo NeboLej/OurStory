@@ -9,4 +9,5 @@ import Foundation
 
 struct NoteListScreenState {
     let notes: [Note]
+    let allFriends: [Friend]
 }

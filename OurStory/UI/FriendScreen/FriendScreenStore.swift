@@ -44,8 +44,8 @@ final class FriendScreenStore: BaseStore {
             case .deleteFriend:
                 appStore.send(.deleteFriend(friend))
             case .syncFriend:
-                testSyncFriends()
-//                syncFriend()
+//                testSyncFriends()
+                syncFriend()
             case .confirmSyncFriend(let isConfirm):
                 syncService.confirmUser(isConfirm)
             case .toNewNotes:
@@ -57,23 +57,27 @@ final class FriendScreenStore: BaseStore {
     }
     
     func testSyncFriends() {
+        newNoteCount = 0
         let eventList: [SyncProgressState] = [.searching, .connecting, .exchangingUsers, .exchangingNotes, .completed]
         
         (1...5).forEach { ddd in
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(ddd)) {
+                if eventList[ddd - 1] == .completed {
+                    self.newNoteCount = self.sendNotes.count
+                }
                 self.syncPgogressStates.append((eventList[ddd - 1]))
             }
         }
     }
     
     func syncFriend() {
+        newNoteCount = 0
         Task {
             do {
                 var eventDebounse: Double = 0
                 
                 syncService.onEvent = { event in
                     DispatchQueue.main.asyncAfter(deadline: .now() + eventDebounse) {
-                        print(eventDebounse)
                         self.syncPgogressStates.append(event)
                     }
                     eventDebounse += 0.8
@@ -82,14 +86,11 @@ final class FriendScreenStore: BaseStore {
                 let syncResult = try await syncService.syncFriend(friend: friend, notes: sendNotes)
                 
                 let newNotes = syncResult.notes
-                print(newNotes)
                 let updateFriend = friend.copy(user: syncResult.user)
                 friend = updateFriend
                 appStore.send(.editFriend(updateFriend))
                 appStore.send(.syncNotes(newNotes, updateFriend))
                 newNoteCount = newNotes.count
-                
-                print("Received:", syncResult)
             } catch {
                 print("Sync failed:", error)
             }

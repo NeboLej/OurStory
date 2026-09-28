@@ -7,39 +7,41 @@
 
 import SwiftUI
 
-//protocol NoteProtocol: Hashable, Identifiable where ID == UUID  {
-//    var id: UUID { get }
-//    var title: String? { get }
-//    var text: String { get }
-//    var date: Date { get }
-//}
-
-//struct AnyNote {
-//    var id: UUID
-//    var title: String?
-//    var text: String
-//    var date: Date
-//    
-//    init(from: SyncNote) {
-//        self.id = from.id
-//        self.title = from.title
-//        self.text = from.text
-//        self.date = from.date
-//    }
-//}
-
 @Observable
 final class NoteListScreenStore: BaseStore {
     
     private var notes: [Note]
     
-    var state: NoteListScreenState {
-        NoteListScreenState(notes: notes)
+    var showMenuNoteId: UUID? = nil
+    var showFriendsNote: Note? = nil
+    var isShowFriendsList: Bool = false
+    
+    var showMenuNote: Note? {
+        notes.first(where: { $0.id == showMenuNoteId })
     }
     
-    init(appStore: AppStore, notes: [Note]) {
+    var state: NoteListScreenState {
+        NoteListScreenState(notes: notes, allFriends: appStore.allFriends)
+    }
+    
+    init(appStore: AppStore, notes: [Note] = []) {
         self.notes = notes
         super.init(appStore: appStore)
     }
     
+    func updateNotes(_ notes: [Note]) {
+        self.notes = notes
+    }
+    
+    func send(_ action: NoteListScreenAction, animation: Animation? = .default) {
+        withAnimation(animation) {
+            switch action {
+            case .editNote(let note):
+                appStore.send(.toNote(note))
+            case .updateFriendInNote(let note, let friend):
+                let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
+                appStore.send(.editNote(newNote))
+            }
+        }
+    }
 }
