@@ -25,12 +25,12 @@ final class NoteListScreenStore: BaseStore {
     }
     
     init(appStore: AppStore, notes: [Note] = []) {
-        self.notes = notes
+        self.notes = notes.sorted { $0.date > $1.date }
         super.init(appStore: appStore)
     }
     
     func updateNotes(_ notes: [Note]) {
-        self.notes = notes
+        self.notes = notes.sorted { $0.date > $1.date }
     }
     
     func send(_ action: NoteListScreenAction, animation: Animation? = .default) {

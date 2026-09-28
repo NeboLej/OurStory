@@ -12,6 +12,7 @@ struct NoteScreenState {
     let title: String?
     let text: String
     let date: Date
+    let isEditing: Bool
     
     let allFriends: [Friend]
     let selectedFriends: [Friend]

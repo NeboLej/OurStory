@@ -44,4 +44,10 @@ struct Story: Equatable {
         copy.notes = copy.notes.replaceFirst(note)
         return copy
     }
+    
+    func removeNote(_ noteID: UUID) -> Self {
+        var copy = self
+        copy.notes.removeAll { $0.id == noteID }
+        return copy
+    }
 }

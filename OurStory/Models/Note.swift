@@ -42,7 +42,7 @@ struct Note: Identifiable, Equatable, Hashable {
         }
     }
     
-    func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {
-        Note(id: self.id, rootStoryID: self.rootStoryID, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
+    func copy(rootStoryID: UUID? = nil, title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {
+        Note(id: self.id, rootStoryID: rootStoryID ?? self.rootStoryID, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
     }
 }

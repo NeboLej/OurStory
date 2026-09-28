@@ -51,14 +51,29 @@ final class AppStore {
         case .addNewNote(let newNote):
             addNewNote(newNote)
         case .editNote(let note):
-            if let story = stories[BaseDate(date: note.date)] {
-                let updatedStory = story.replaceNote(note)
-                stories[BaseDate(date: note.date)] = updatedStory
-                if story.date == selectedStory?.date {
+            let oldStoryEntry = stories.first(where: { $0.value.id == note.rootStoryID })
+            let newBaseDate = BaseDate(date: note.date)
+            let dateChanged = oldStoryEntry != nil && oldStoryEntry!.key != newBaseDate
+            
+            if dateChanged, let oldBaseDate = oldStoryEntry?.key, let oldStory = oldStoryEntry?.value {
+                // Remove note from old story
+                let updatedOldStory = oldStory.removeNote(note.id)
+                stories[oldBaseDate] = updatedOldStory
+                if selectedStory?.id == oldStory.id {
+                    selectedStory = updatedOldStory
+                }
+                
+                // Add note to new story (find existing or create)
+                moveNoteToStory(note, newBaseDate: newBaseDate)
+            } else if let oldBaseDate = oldStoryEntry?.key, let oldStory = oldStoryEntry?.value {
+                // Same date — just replace in place
+                let updatedStory = oldStory.replaceNote(note)
+                stories[oldBaseDate] = updatedStory
+                if selectedStory?.id == updatedStory.id {
                     selectedStory = updatedStory
                 }
+                updateNote(note)
             }
-            updateNote(note)
         case .syncNotes(let notes, let friend):
             syncNotes(notes, friend: friend)
         case .addNewFriend(let friend):

@@ -79,6 +79,7 @@ struct NoteScreen: View {
                 .onAppear {
                     story = store.state.text
                     title = store.state.title ?? ""
+                    selectedDate = store.state.date
                 }
         }
         .onAppear {
@@ -91,7 +92,7 @@ struct NoteScreen: View {
     private func header() -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
-                Text("НОВАЯ ИСТОРИЯ")
+                Text(store.state.isEditing ? "ИСПРАВИТЬ ИСТОРИЮ" : "НОВАЯ ИСТОРИЯ")
                     .font(.mySemiBold(size: 14))
                     .tracking(2)
                     .foregroundStyle(.textMulticolor)

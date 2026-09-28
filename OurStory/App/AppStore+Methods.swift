@@ -62,6 +62,31 @@ extension AppStore {
         }
     }
     
+    func moveNoteToStory(_ note: Note, newBaseDate: BaseDate) {
+        if let existingStory = stories[newBaseDate] {
+            // Story for new date already exists
+            let movedNote = note.copy(rootStoryID: existingStory.id)
+            let updatedStory = existingStory.addNewNote(movedNote)
+            stories[newBaseDate] = updatedStory
+            if selectedStory?.id == existingStory.id {
+                selectedStory = updatedStory
+            }
+            Task {
+                await noteRepository.updateNote(movedNote)
+            }
+        } else {
+            // Need to create new story for this date
+            let newStory = Story(date: note.date)
+            let movedNote = note.copy(rootStoryID: newStory.id)
+            let updatedStory = newStory.addNewNote(movedNote)
+            stories[newBaseDate] = updatedStory
+            Task {
+                await storyRepository.newStory(newStory)
+                await noteRepository.updateNote(movedNote)
+            }
+        }
+    }
+    
     func updateNote(_ note: Note) {
         Task {
             await noteRepository.updateNote(note)

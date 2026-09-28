@@ -18,7 +18,7 @@ final class NoteScreenStore: BaseStore {
     private let rootNote: Note?
     
     var state: NoteScreenState {
-        NoteScreenState(title: title, text: text, date: date, allFriends: appStore.allFriends, selectedFriends: selectedFriends)
+        NoteScreenState(title: title, text: text, date: date, isEditing: rootNote != nil, allFriends: appStore.allFriends, selectedFriends: selectedFriends)
     }
     
     init(appStore: AppStore, note: Note? = nil) {
