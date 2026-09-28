@@ -10,7 +10,9 @@ import SwiftUI
 @Observable
 final class HorizontalCalendarStore: BaseStore {
     
-    private var weeks: [HCWeek] = []
+    private(set) var weeks: [HCWeek] = []
+    /// ID of the "current" week that should be centered on launch
+    private(set) var currentWeekID: String = ""
     
     var state: HorizontalCalendarState {
         HorizontalCalendarState(appStore: appStore, weeks: weeks)
@@ -18,7 +20,9 @@ final class HorizontalCalendarStore: BaseStore {
     
     override init(appStore: AppStore) {
         super.init(appStore: appStore)
-        weeks = (-1...1).compactMap { loadWeek(from: Date.now, value: $0) }
+        let loaded = (-1...1).map { loadWeek(from: Date.now, value: $0) }
+        weeks = loaded
+        currentWeekID = loaded[1].id // middle week = current
     }
     
     func send(_ action: HorizontalCalendarActions, animation: Animation? = .default) {
@@ -44,6 +48,15 @@ final class HorizontalCalendarStore: BaseStore {
         }
     }
     
+    /// Returns a formatted month/year string for the given week index
+    func monthTitle(for week: HCWeek) -> String {
+        guard let midDate = week.days.first?.date else { return "" }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "LLLL yyyy"
+        return formatter.string(from: midDate).capitalized
+    }
+    
     private func loadWeek(from date: Date, value: Int) -> HCWeek {
         var days: [HCDay] = []
         var calendar = Calendar.current
@@ -59,9 +72,8 @@ final class HorizontalCalendarStore: BaseStore {
                 if let date = calendar.date(byAdding: .day, value: index, to: startOfWeek) {
                     let value = calendar.component(.day, from: date)
                     let symbolIndex = calendar.component(.weekday, from: date) - 1
-                    let isCurrentMonth = calendar.isDate(date, equalTo: modifiedDate, toGranularity: .month)
                     
-                    days.append(HCDay(value: value, weekdaySymbol: weekdaySymbols[symbolIndex], date: date, notFromThisMonth: !isCurrentMonth))
+                    days.append(HCDay(value: value, weekdaySymbol: weekdaySymbols[symbolIndex], date: date))
                 }
             }
         }

@@ -12,7 +12,6 @@ struct HCDay: Identifiable {
     let value: Int
     let weekdaySymbol: String
     let date: Date
-    let notFromThisMonth: Bool
 }
 
 
