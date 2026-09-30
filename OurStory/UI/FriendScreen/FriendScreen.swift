@@ -19,20 +19,6 @@ struct FriendScreen: View {
     // Анимация поиска (пульс вокруг аватара)
     @State private var searchPulse: CGFloat = 1.0
     
-    // Анимация ритуала — позиции точек
-    @State private var leftDotOffset: CGFloat = -120
-    @State private var rightDotOffset: CGFloat = 120
-    @State private var dotsOpacity: Double = 1.0
-    @State private var showMergedCircle: Bool = false
-    @State private var mergedScale: CGFloat = 0.5
-    @State private var mergedPulse: CGFloat = 1.0
-    
-    // Плавающая анимация точки пользователя во время поиска
-    @State private var leftDotFloatY: CGFloat = 0
-    @State private var leftDotFloatX: CGFloat = 0
-    @State private var rightDotFloatY: CGFloat = 0
-    @State private var rightDotFloatX: CGFloat = 0
-    
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -56,15 +42,29 @@ struct FriendScreen: View {
                 }
             }
             
-            if store.state.isInRitualSync {
-                ritualSyncOverlay()
-                    .transition(.opacity)
+            if store.state.isInSync {
+                SyncProgressOverlay(
+                    syncPhase: store.state.syncPhase,
+                    friendName: store.state.friend.name,
+                    friendColor: store.state.friend.color,
+                    userColor: store.appStore.user.color,
+                    onConfirmSync: { isConfirm in
+                        store.send(.confirmSyncFriend(isConfirm))
+                    },
+                    onToNewNotes: {
+                        store.send(.toNewNotes)
+                    },
+                    onExitSync: {
+                        store.send(.exitSync)
+                    }
+                )
+                .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.5), value: store.state.isInRitualSync)
+        .animation(.easeInOut(duration: 0.5), value: store.state.isInSync)
         .frame(maxWidth: .infinity)
         .background(.backgroundFill)
-        .navigationBarBackButtonHidden(isEditMode || store.state.isInRitualSync)
+        .navigationBarBackButtonHidden(isEditMode || store.state.isInSync)
         .toolbar {
             if isEditMode {
                 ToolbarItem(placement: .topBarLeading) {
@@ -113,7 +113,7 @@ struct FriendScreen: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .opacity(store.state.isInRitualSync ? 0 : 1)
+                .opacity(store.state.isInSync ? 0 : 1)
             }
             .sharedBackgroundVisibility(.hidden)
             
@@ -127,102 +127,9 @@ struct FriendScreen: View {
         .onDisappear {
             store.send(.stopSearching, animation: nil)
         }
-        .onChange(of: store.state.ritualPhase) { _, newPhase in
-            animateToPhase(newPhase)
-        }
         .onChange(of: store.syncPgogressStates) {
             if store.syncPgogressStates.last == .completed && store.hasUserProfileDifference {
                 showUserSuggestion = true
-            }
-        }
-    }
-    
-    // MARK: - Анимация фаз ритуала
-    
-    private func animateToPhase(_ phase: SyncRitualPhase) {
-        switch phase {
-        case .searching:
-            withAnimation(.easeOut(duration: 1.2)) {
-                leftDotOffset = -100
-                rightDotOffset = 100
-                dotsOpacity = 1.0
-                showMergedCircle = false
-                mergedScale = 0.5
-            }
-            // Запускаем плавающую анимацию для обеих точек
-            withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
-                leftDotFloatY = -12
-                leftDotFloatX = 8
-            }
-            withAnimation(.easeInOut(duration: 3.5).repeatForever(autoreverses: true).delay(0.5)) {
-                rightDotFloatY = 10
-                rightDotFloatX = -6
-            }
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            
-        case .approaching:
-            // Останавливаем плавание — возвращаем в центральную линию
-            withAnimation(.easeOut(duration: 0.8)) {
-                leftDotFloatY = 0
-                leftDotFloatX = 0
-                rightDotFloatY = 0
-                rightDotFloatX = 0
-            }
-            withAnimation(.easeInOut(duration: 5.0)) {
-                leftDotOffset = -22
-                rightDotOffset = 22
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }
-            
-        case .merging:
-            withAnimation(.spring(response: 1.2, dampingFraction: 0.6)) {
-                leftDotOffset = 0
-                rightDotOffset = 0
-            }
-            withAnimation(.easeOut(duration: 0.8).delay(0.6)) {
-                dotsOpacity = 0
-            }
-            withAnimation(.spring(response: 0.8, dampingFraction: 0.55).delay(1.0)) {
-                showMergedCircle = true
-                mergedScale = 1.0
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            }
-            
-        case .completed:
-            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                mergedPulse = 1.06
-            }
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            
-        case .failed:
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
-            
-        case .waitingForConfirmation:
-            withAnimation(.spring(response: 1.4, dampingFraction: 0.8)) {
-                leftDotOffset = -40
-                rightDotOffset = 40
-            }
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            
-        case .idle:
-            withAnimation(.easeOut(duration: 0.5)) {
-                leftDotOffset = -120
-                rightDotOffset = 120
-                dotsOpacity = 1.0
-                showMergedCircle = false
-                mergedScale = 0.5
-                mergedPulse = 1.0
-                leftDotFloatY = 0
-                leftDotFloatX = 0
-                rightDotFloatY = 0
-                rightDotFloatX = 0
             }
         }
     }
@@ -488,277 +395,6 @@ struct FriendScreen: View {
             }
             
             statisticElement(title: "Последняя синхронизация", value: store.state.lastSyncDate?.toReadableDate() ?? "—", onClick: nil)
-        }
-    }
-    
-    // MARK: - Ритуальный оверлей синхронизации
-    
-    @ViewBuilder
-    private func ritualSyncOverlay() -> some View {
-        ZStack {
-            Color.backgroundFill
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                Spacer()
-                
-                ritualDotsAnimation()
-                    .frame(height: 160)
-                
-                ritualStatusText()
-                    .padding(.top, 40)
-                
-                Spacer()
-                
-                ritualBottomArea()
-                    .padding(.bottom, 32)
-                    .padding(.horizontal, 20)
-            }
-        }
-    }
-    
-    // MARK: - Анимация двух точек
-    
-    @ViewBuilder
-    private func ritualDotsAnimation() -> some View {
-        let friendColor = Color(hex: store.state.friend.color)
-        let userColor = Color(hex: store.appStore.user.color)
-        let dotSize: CGFloat = 36
-        
-        ZStack {
-            // Левая точка (пользователь)
-            Circle()
-                .fill(userColor)
-                .frame(width: dotSize, height: dotSize)
-                .overlay {
-                    Circle()
-                        .stroke(Color.backgroundFill, lineWidth: 2)
-                        .frame(width: dotSize - 4, height: dotSize - 4)
-                }
-                .offset(x: leftDotOffset + leftDotFloatX, y: leftDotFloatY)
-                .opacity(dotsOpacity)
-            
-            // Правая точка (друг)
-            Circle()
-                .fill(friendColor)
-                .frame(width: dotSize, height: dotSize)
-                .overlay {
-                    Circle()
-                        .stroke(Color.backgroundFill, lineWidth: 2)
-                        .frame(width: dotSize - 4, height: dotSize - 4)
-                }
-                .offset(x: rightDotOffset + rightDotFloatX, y: rightDotFloatY)
-                .opacity(dotsOpacity)
-            
-            // Тонкая линия между точками (когда сближаются)
-            if store.state.ritualPhase == .approaching || store.state.ritualPhase == .waitingForConfirmation(User(name: "", color: "")) || abs(leftDotOffset) < 80 {
-                let lineApproaching = store.state.ritualPhase == .approaching
-                Rectangle()
-                    .fill(Color.textMulticolor.opacity(lineApproaching ? 0.1 : 0.05))
-                    .frame(width: max(0, rightDotOffset - leftDotOffset - dotSize), height: 1)
-            }
-            
-            // Объединённый круг (появляется при слиянии)
-            if showMergedCircle {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [userColor, friendColor],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: 52, height: 52)
-                    .overlay {
-                        Circle()
-                            .stroke(Color.backgroundFill, lineWidth: 2)
-                            .frame(width: 48, height: 48)
-                    }
-                    .scaleEffect(mergedScale * mergedPulse)
-                    .transition(.scale.combined(with: .opacity))
-            }
-        }
-    }
-    
-    // MARK: - Текст статуса ритуала
-    
-    @ViewBuilder
-    private func ritualStatusText() -> some View {
-        let friendName = store.state.friend.name.lowercased()
-        
-        VStack(spacing: 6) {
-            switch store.state.ritualPhase {
-            case .searching:
-                Text("ищу \(friendName)...")
-                    .font(.myItalic(size: 16))
-                    .foregroundStyle(.textMulticolor.opacity(0.5))
-                    .transition(.opacity)
-            case .approaching:
-                Text("рассказываю истории")
-                    .font(.myItalic(size: 16))
-                    .foregroundStyle(.textMulticolor.opacity(0.7))
-                    .transition(.opacity)
-            case .merging:
-                Text("истории встретились")
-                    .font(.myMedium(size: 17))
-                    .foregroundStyle(.textMulticolor.opacity(0.85))
-                    .transition(.opacity)
-            case .completed:
-                Text("спасибо, что поделились")
-                    .font(.myMedium(size: 17))
-                    .foregroundStyle(.textMulticolor)
-                    .transition(.opacity)
-            case .failed(let message):
-                VStack(spacing: 4) {
-                    Text("не получилось")
-                        .font(.myMedium(size: 16))
-                        .foregroundStyle(.textMulticolor.opacity(0.7))
-                    Text(message)
-                        .font(.myRegular(size: 12))
-                        .foregroundStyle(.textMulticolor.opacity(0.4))
-                        .multilineTextAlignment(.center)
-                }
-                .transition(.opacity)
-            case .waitingForConfirmation:
-                Text("ожидаю подтверждения")
-                    .font(.myItalic(size: 15))
-                    .foregroundStyle(.textMulticolor.opacity(0.6))
-                    .transition(.opacity)
-            case .idle:
-                EmptyView()
-            }
-        }
-        .animation(.easeInOut(duration: 1.0), value: store.state.ritualPhase)
-    }
-    
-    // MARK: - Нижняя область ритуала
-    
-    @ViewBuilder
-    private func ritualBottomArea() -> some View {
-        switch store.state.ritualPhase {
-        case .waitingForConfirmation(let user):
-            VStack(spacing: 16) {
-                Text("обменяться историями с \(user.name)?")
-                    .font(.myRegular(size: 14))
-                    .foregroundStyle(.textMulticolor.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: user.color))
-                            .frame(width: 32, height: 32)
-                        Circle()
-                            .stroke(Color.backgroundFill, lineWidth: 1.5)
-                            .frame(width: 28, height: 28)
-                    }
-                    Text(user.name)
-                        .font(.myMedium(size: 16))
-                        .foregroundStyle(.textMulticolor)
-                }
-                
-                HStack(spacing: 20) {
-                    Button {
-                        store.send(.confirmSyncFriend(false))
-                    } label: {
-                        Text("ОТМЕНИТЬ")
-                            .font(.mySemiBold(size: 12))
-                            .tracking(1.5)
-                            .foregroundStyle(.textMulticolor.opacity(0.5))
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 16)
-                            .overlay {
-                                Rectangle()
-                                    .stroke(Color.textMulticolor.opacity(0.2), lineWidth: 1)
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Button {
-                        store.send(.confirmSyncFriend(true))
-                    } label: {
-                        Text("ОБМЕНЯТЬСЯ")
-                            .font(.mySemiBold(size: 12))
-                            .tracking(1.5)
-                            .foregroundStyle(.textMulticolor.opacity(0.85))
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 16)
-                            .overlay {
-                                Rectangle()
-                                    .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                            }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
-            
-        case .completed(let newCount):
-            VStack(spacing: 16) {
-                if newCount > 0 {
-                    Text("получено историй: \(newCount)")
-                        .font(.myRegular(size: 13))
-                        .foregroundStyle(.textMulticolor.opacity(0.6))
-                    
-                    Button {
-                        store.send(.toNewNotes)
-                    } label: {
-                        Text("ПОСМОТРЕТЬ ИСТОРИИ")
-                            .font(.mySemiBold(size: 12))
-                            .tracking(1.5)
-                            .foregroundStyle(.textMulticolor.opacity(0.85))
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 20)
-                            .overlay {
-                                Rectangle()
-                                    .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                            }
-                    }
-                    .buttonStyle(.plain)
-                }
-                
-                Button {
-                    store.send(.exitSync)
-                } label: {
-                    Text("ЗАКРЫТЬ")
-                        .font(.mySemiBold(size: 14))
-                        .tracking(2)
-                        .foregroundStyle(.titleDark)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.myPrimary)
-                        .overlay {
-                            Rectangle()
-                                .stroke(Color.textMulticolor.opacity(0.15), lineWidth: 1)
-                                .padding(3)
-                        }
-                }
-                .buttonStyle(.plain)
-            }
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
-            
-        case .failed:
-            Button {
-                store.send(.exitSync)
-            } label: {
-                Text("ЗАКРЫТЬ")
-                    .font(.mySemiBold(size: 14))
-                    .tracking(2)
-                    .foregroundStyle(.textMulticolor)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.myPrimary)
-                    .overlay {
-                        Rectangle()
-                            .stroke(Color.textMulticolor.opacity(0.15), lineWidth: 1)
-                            .padding(3)
-                    }
-            }
-            .buttonStyle(.plain)
-            .transition(.opacity)
-            
-        default:
-            EmptyView()
         }
     }
     

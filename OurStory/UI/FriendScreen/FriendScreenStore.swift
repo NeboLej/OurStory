@@ -19,9 +19,9 @@ final class FriendScreenStore: BaseStore {
     var totalNotesCount: Int = 0
     var unsentNotesCount: Int = 0
     
-    // Новое: состояние поиска и ритуальной анимации
+    // Новое: состояние поиска и анимации
     var searchStatus: FriendSearchStatus = .idle
-    var ritualPhase: SyncRitualPhase = .idle
+    var syncPhase: SyncPhase = .idle
     
     @ObservationIgnored
     private var noteRepositpry: NoteRepositoryProtocol
@@ -42,9 +42,9 @@ final class FriendScreenStore: BaseStore {
     @ObservationIgnored
     private var recheckTask: Task<Void, Never>?
     
-    /// Цепочка анимаций ритуала (approaching → merging → completed)
+    /// Цепочка анимаций (approaching → merging → completed)
     @ObservationIgnored
-    private var ritualAnimationTask: Task<Void, Never>?
+    private var syncAnimationTask: Task<Void, Never>?
     
     var state: FriendScreenState { FriendScreenState(friend: friend,
                                                      allStoriesCount: totalNotesCount,
@@ -53,7 +53,7 @@ final class FriendScreenStore: BaseStore {
                                                      syncPgogressStates: syncPgogressStates,
                                                      newNotesCount: newNoteCount,
                                                      searchStatus: searchStatus,
-                                                     ritualPhase: ritualPhase) }
+                                                     syncPhase: syncPhase) }
     
     init(appStore: AppStore, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
         self.friend = friend
@@ -85,10 +85,10 @@ final class FriendScreenStore: BaseStore {
             case .toNewNotes:
                 appStore.send(.toNotesList(title: "Истории от \(friend.name)", notes: appStore.sortedNotes))
             case .exitSync:
-                ritualAnimationTask?.cancel()
-                ritualAnimationTask = nil
+                syncAnimationTask?.cancel()
+                syncAnimationTask = nil
                 syncPgogressStates = []
-                ritualPhase = .idle
+                syncPhase = .idle
                 searchStatus = .idle
                 loadData()
                 startSearching()
@@ -200,9 +200,9 @@ final class FriendScreenStore: BaseStore {
                 break
             }
         } else {
-            // Уже нажали кнопку — показываем ритуальную анимацию
+            // Уже нажали кнопку — показываем анимацию
             syncPgogressStates.append(event)
-            mapSyncEventToRitualPhase(event)
+            mapSyncEventToAnimationPhase(event)
         }
     }
     
@@ -244,7 +244,7 @@ final class FriendScreenStore: BaseStore {
         discoveryActive = false
     }
     
-    // MARK: - Синхронизация с ритуальной анимацией
+    // MARK: - Синхронизация с анимацией
     
     func syncFriend() {
         newNoteCount = 0
@@ -259,7 +259,7 @@ final class FriendScreenStore: BaseStore {
             
             let confirmed = syncService.confirmUser(true)
             if confirmed {
-                ritualPhase = .searching
+                syncPhase = .searching
             } else {
                 // Соединение умерло — перезапускаем discovery
                 searchStatus = .idle
@@ -268,13 +268,13 @@ final class FriendScreenStore: BaseStore {
             }
         } else {
             // Первая синхронизация (friend.user == nil) — запускаем полный sync
-            ritualPhase = .searching
+            syncPhase = .searching
             
             syncService.onEvent = { [weak self] event in
                 guard let self else { return }
                 DispatchQueue.main.async {
                     self.syncPgogressStates.append(event)
-                    self.mapSyncEventToRitualPhase(event)
+                    self.mapSyncEventToAnimationPhase(event)
                 }
             }
             
@@ -289,43 +289,42 @@ final class FriendScreenStore: BaseStore {
         }
     }
     
-    private func mapSyncEventToRitualPhase(_ event: SyncProgressState) {
+    private func mapSyncEventToAnimationPhase(_ event: SyncProgressState) {
         switch event {
         case .searching:
             withAnimation(.easeInOut(duration: 0.8)) {
-                ritualPhase = .searching
+                syncPhase = .searching
             }
         case .connecting, .exchangingUsers:
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 600_000_000) // 0.6с задержка
                 withAnimation(.spring(response: 1.2, dampingFraction: 0.8)) {
-                    self.ritualPhase = .approaching
+                    self.syncPhase = .approaching
                 }
             }
         case .friendNearby:
-            // Не должен попасть сюда во время ритуала, но на всякий случай
             break
         case .waitingForUserConfirmation(let user):
             withAnimation(.easeInOut(duration: 0.6)) {
-                ritualPhase = .waitingForConfirmation(user)
+                syncPhase = .waitingForConfirmation(user)
             }
         case .exchangingNotes:
             // Сначала показываем сближение, потом слияние, потом завершение
             // Вся цепочка анимаций идёт последовательно, чтобы фазы не перекрывали друг друга
             withAnimation(.easeInOut(duration: 0.8)) {
-                ritualPhase = .approaching
+                syncPhase = .approaching
             }
-            ritualAnimationTask?.cancel()
-            ritualAnimationTask = Task { @MainActor [weak self] in
+            syncAnimationTask?.cancel()
+            syncAnimationTask = Task { @MainActor [weak self] in
                 try? await Task.sleep(nanoseconds: 4_500_000_000) // 4.5с — точки сближаются
                 guard let self, !Task.isCancelled else { return }
                 withAnimation(.spring(response: 0.8, dampingFraction: 0.5)) {
-                    self.ritualPhase = .merging
+                    self.syncPhase = .merging
                 }
                 try? await Task.sleep(nanoseconds: 2_500_000_000) // 2.5с — слияние
                 guard !Task.isCancelled else { return }
                 withAnimation(.easeInOut(duration: 1.0)) {
-                    self.ritualPhase = .completed(newCount: self.newNoteCount)
+                    self.syncPhase = .completed(newCount: self.newNoteCount)
                 }
             }
         case .completed:
@@ -334,17 +333,17 @@ final class FriendScreenStore: BaseStore {
             break
         case .failed(let error):
             // Отменяем цепочку анимаций чтобы она не перезаписала ошибку
-            ritualAnimationTask?.cancel()
-            ritualAnimationTask = nil
+            syncAnimationTask?.cancel()
+            syncAnimationTask = nil
             withAnimation(.easeInOut(duration: 0.6)) {
-                ritualPhase = .failed(error.localizedDescription)
+                syncPhase = .failed(error.localizedDescription)
             }
         }
     }
     
     func testSyncFriends() {
         newNoteCount = 0
-        ritualPhase = .searching
+        syncPhase = .searching
         let eventList: [SyncProgressState] = [.searching, .connecting, .exchangingUsers, .exchangingNotes, .completed]
         
         (1...5).forEach { ddd in
@@ -353,7 +352,7 @@ final class FriendScreenStore: BaseStore {
                     self.newNoteCount = self.sendNotes.count
                 }
                 self.syncPgogressStates.append((eventList[ddd - 1]))
-                self.mapSyncEventToRitualPhase(eventList[ddd - 1])
+                self.mapSyncEventToAnimationPhase(eventList[ddd - 1])
             }
         }
     }
