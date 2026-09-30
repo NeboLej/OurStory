@@ -11,12 +11,12 @@ struct HomeScreen: View {
     
     @State private var store: HomeScreenStore
     @State private var screenBuilder: ScreenBuilder
-    @State private var noteListStore: NoteListScreenStore
+    @State private var isShowFriendsList: Bool = false
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
         self.screenBuilder = screenBuilder
-        self.noteListStore = NoteListScreenStore(appStore: store.appStore, notes: [])
+//        self._isShowFriendsList = isShowFriendsList
     }
     
     var body: some View {
@@ -28,9 +28,7 @@ struct HomeScreen: View {
                 .padding(.top, 16)
             
             if let currentStory = store.state.selectedStory {
-                ScrollView {
-                    storyView(currentStory)
-                }
+                storyView(currentStory)
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Историй пока нет")
@@ -50,17 +48,13 @@ struct HomeScreen: View {
         .background(.backgroundFill)
         .ignoresSafeArea()
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 8) {
-                if noteListStore.isShowFriendsList {
-                    NoteListScreen(title: nil, store: noteListStore).friendsListOverlay
-                } else {
-                    HomeScreenToolbar {
-                        store.send(.toFriendsList)
-                    } onSettings: {
-                        store.send(.toSettings)
-                    } onNewNote: {
-                        store.send(.createNewNote)
-                    }
+            if !isShowFriendsList {
+                HomeScreenToolbar {
+                    store.send(.toFriendsList)
+                } onSettings: {
+                    store.send(.toSettings)
+                } onNewNote: {
+                    store.send(.createNewNote)
                 }
             }
         }
@@ -73,7 +67,6 @@ struct HomeScreen: View {
                 Text(story.title)
                     .font(.myMedium(size: 18))
                     .foregroundStyle(.textMulticolor)
-//                    .padding(.bottom, 4)
                     .padding(.top, 20)
                 Text(story.date.toReadable())
                     .font(.myItalic(size: 14))
@@ -82,15 +75,9 @@ struct HomeScreen: View {
             }
             .padding(.leading, 16)
             
-            screenBuilder.getComponent(type: .notesList(notes: tmpNotes))
+            screenBuilder.getComponent(type: .notesList(notes: tmpNotes, storyID: story.id, isShowFriendsList: $isShowFriendsList))
         }
-        .padding(.bottom, 180)
-        .onChange(of: story.notes) { _, newNotes in
-//            noteListStore.updateNotes(newNotes)
-        }
-        .onAppear {
-//            noteListStore.updateNotes(story.notes)
-        }
+        .padding(.bottom, 80)
     }
 }
 
