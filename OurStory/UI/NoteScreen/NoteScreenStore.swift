@@ -12,7 +12,7 @@ final class NoteScreenStore: BaseStore {
     
     private var title: String? = nil
     private var text: String = ""
-    private var date: Date = Date()
+    private var date: Date
     private var allFriends: [Friend] = []
     private var selectedFriends: [Friend] = []
     private let rootNote: Note?
@@ -23,6 +23,7 @@ final class NoteScreenStore: BaseStore {
     
     init(appStore: AppStore, note: Note? = nil) {
         rootNote = note
+        date = appStore.selectedDate
         
         super.init(appStore: appStore)
         

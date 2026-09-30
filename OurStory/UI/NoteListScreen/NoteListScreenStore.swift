@@ -10,11 +10,18 @@ import SwiftUI
 @Observable
 final class NoteListScreenStore: BaseStore {
     
-    private var notes: [Note]
+    private var localNotes: [Note]
+    private var storyID: UUID?
+    private(set) var showMenuNoteId: UUID? = nil
+    private(set) var showFriendsNote: Note? = nil
     
-    var showMenuNoteId: UUID? = nil
-    var showFriendsNote: Note? = nil
-    var isShowFriendsList: Bool = false
+    private var notes: [Note] {
+        if let storyID,
+           let story = appStore.stories.values.first(where: { $0.id == storyID }) {
+            return story.notes
+        }
+        return localNotes
+    }
     
     var showMenuNote: Note? {
         notes.first(where: { $0.id == showMenuNoteId })
@@ -24,13 +31,10 @@ final class NoteListScreenStore: BaseStore {
         NoteListScreenState(notes: notes, allFriends: appStore.allFriends)
     }
     
-    init(appStore: AppStore, notes: [Note] = []) {
-        self.notes = notes.sorted { $0.date > $1.date }
+    init(appStore: AppStore, notes: [Note] = [], storyID: UUID? = nil) {
+        self.localNotes = notes
+        self.storyID = storyID
         super.init(appStore: appStore)
-    }
-    
-    func updateNotes(_ notes: [Note]) {
-        self.notes = notes.sorted { $0.date > $1.date }
     }
     
     func send(_ action: NoteListScreenAction, animation: Animation? = .default) {
@@ -41,6 +45,12 @@ final class NoteListScreenStore: BaseStore {
             case .updateFriendInNote(let note, let friend):
                 let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
                 appStore.send(.editNote(newNote))
+            case .selectMenuNote(let id):
+                showMenuNoteId = id
+            case .selectFriendsNote(let note):
+                showFriendsNote = note
+            case .updateNotes(let notes):
+                self.localNotes = notes.sorted { $0.date > $1.date }
             }
         }
     }

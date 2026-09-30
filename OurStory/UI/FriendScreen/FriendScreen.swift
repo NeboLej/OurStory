@@ -14,8 +14,10 @@ struct FriendScreen: View {
     @State var name: String = ""
     @State var selectedColor: Color = .red
     
-    @State var syncUserIsConfirmet: Bool = false
-    @State var showUserSuggestion: Bool = false
+    @State private var showUserSuggestion: Bool = false
+    
+    // Анимация поиска (пульс вокруг аватара)
+    @State private var searchPulse: CGFloat = 1.0
     
     @Environment(\.dismiss) var dismiss
     
@@ -39,16 +41,30 @@ struct FriendScreen: View {
                     syncButton()
                 }
             }
-            if !store.syncPgogressStates.isEmpty {
-                syncProgressScreen()
-                    .transition(.asymmetric(insertion: .offset(x: 10).combined(with: .opacity),
-                                            removal: .push(from: .bottom)))
+            
+            if store.state.isInSync {
+                SyncProgressOverlay(
+                    syncPhase: store.state.syncPhase,
+                    friendName: store.state.friend.name,
+                    friendColor: store.state.friend.color,
+                    userColor: store.appStore.user.color,
+                    onConfirmSync: { isConfirm in
+                        store.send(.confirmSyncFriend(isConfirm))
+                    },
+                    onToNewNotes: {
+                        store.send(.toNewNotes)
+                    },
+                    onExitSync: {
+                        store.send(.exitSync)
+                    }
+                )
+                .transition(.opacity)
             }
         }
-        .animation(.easeInOut, value: store.syncPgogressStates.isEmpty)
+        .animation(.easeInOut(duration: 0.5), value: store.state.isInSync)
         .frame(maxWidth: .infinity)
         .background(.backgroundFill)
-        .navigationBarBackButtonHidden(isEditMode)
+        .navigationBarBackButtonHidden(isEditMode || store.state.isInSync)
         .toolbar {
             if isEditMode {
                 ToolbarItem(placement: .topBarLeading) {
@@ -97,7 +113,7 @@ struct FriendScreen: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .opacity(store.state.syncPgogressStates.isEmpty ? 1 : 0)
+                .opacity(store.state.isInSync ? 0 : 1)
             }
             .sharedBackgroundVisibility(.hidden)
             
@@ -106,12 +122,64 @@ struct FriendScreen: View {
             name = store.state.friend.name
             selectedColor = Color(hex: store.state.friend.color)
             showUserSuggestion = false
+            store.send(.startSearching, animation: nil)
+        }
+        .onDisappear {
+            store.send(.stopSearching, animation: nil)
         }
         .onChange(of: store.syncPgogressStates) {
             if store.syncPgogressStates.last == .completed && store.hasUserProfileDifference {
                 showUserSuggestion = true
             }
         }
+    }
+    
+    // MARK: - Статус поиска
+    
+    @ViewBuilder
+    private func searchStatusView() -> some View {
+        Group {
+            switch store.state.searchStatus {
+            case .idle:
+                EmptyView()
+            case .searching:
+                Text("ищу \(store.state.friend.name.lowercased())...")
+                    .font(.myItalic(size: 13))
+                    .foregroundStyle(.textMulticolor.opacity(0.45))
+            case .found:
+                VStack(spacing: 2) {
+                    Text("\(store.state.friend.name) рядом")
+                        .font(.myItalic(size: 14))
+                        .foregroundStyle(.textMulticolor.opacity(0.7))
+                    Text("и готова слушать")
+                        .font(.myItalic(size: 12))
+                        .foregroundStyle(.textMulticolor.opacity(0.4))
+                }
+            case .notFound:
+                VStack(spacing: 10) {
+                    Text("не удалось найти")
+                        .font(.myItalic(size: 12))
+                        .foregroundStyle(.textMulticolor.opacity(0.35))
+                    
+                    Button {
+                        store.send(.retrySearching)
+                    } label: {
+                        Text("НАЙТИ \(store.state.friend.name.uppercased())")
+                            .font(.mySemiBold(size: 11))
+                            .tracking(1.5)
+                            .foregroundStyle(.textMulticolor.opacity(0.7))
+                            .padding(.vertical, 7)
+                            .padding(.horizontal, 14)
+                            .overlay {
+                                Rectangle()
+                                    .stroke(Color.textMulticolor.opacity(0.25), lineWidth: 1)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.5), value: store.state.searchStatus)
     }
     
     @ViewBuilder
@@ -245,7 +313,7 @@ struct FriendScreen: View {
                             .overlay {
                                 Rectangle()
                                     .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                            }
+                                }
                     }
                     .buttonStyle(.plain)
                 }
@@ -264,25 +332,47 @@ struct FriendScreen: View {
     private func showMode() -> some View {
         VStack(spacing: 0) {
             VStack(spacing: 12) {
+                // Аватар друга с пульсирующим кольцом при поиске
                 ZStack {
-                    Circle()
-                        .fill(Color(hex: store.state.friend.color))
-                        .frame(width: 48, height: 48)
-                    Circle()
-                        .stroke(Color.backgroundFill, lineWidth: 2)
-                        .frame(width: 44, height: 44)
+                    if store.state.searchStatus == .searching {
+                        Circle()
+                            .fill(Color(hex: store.state.friend.color).opacity(0.12))
+                            .frame(width: 68, height: 68)
+                            .scaleEffect(searchPulse)
+                            .onAppear {
+                                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                                    searchPulse = 1.3
+                                }
+                            }
+                            .onDisappear {
+                                searchPulse = 1.0
+                            }
+                    }
+                    
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: store.state.friend.color))
+                            .frame(width: 48, height: 48)
+                        Circle()
+                            .stroke(Color.backgroundFill, lineWidth: 2)
+                            .frame(width: 44, height: 44)
+                    }
                 }
+                .animation(.easeInOut(duration: 0.4), value: store.state.searchStatus)
                 
-                let name: String = {
+                let displayName: String = {
                     guard let user = store.state.friend.user, user.name != store.state.friend.name else {
                         return store.state.friend.name.uppercased()
                     }
                     return store.state.friend.name.uppercased() + "/" + user.name.uppercased()
                 }()
-                Text(name)
+                Text(displayName)
                     .font(.myMedium(size: 22))
                     .tracking(1)
                     .foregroundColor(.textMulticolor)
+                
+                // Статус поиска
+                searchStatusView()
             }
             .padding(.top, 32)
             .padding(.bottom, 40)
@@ -297,145 +387,14 @@ struct FriendScreen: View {
                 .foregroundStyle(.textMulticolor.opacity(0.35))
             
             statisticElement(title: "Общих историй", value: "\(store.state.allStoriesCount)") {
-                // Действие
+                store.send(.toAllNotes)
             }
             
             statisticElement(title: "Историй не рассказано", value: "\(store.state.notSeenStoriesCount)") {
-                // Действие
+                store.send(.toUnsentNotes)
             }
             
             statisticElement(title: "Последняя синхронизация", value: store.state.lastSyncDate?.toReadableDate() ?? "—", onClick: nil)
-        }
-    }
-    
-    @ViewBuilder
-    private func syncProgressScreen() -> some View {
-        ZStack(alignment: .bottom) {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("СИНХРОНИЗАЦИЯ")
-                        .font(.myMedium(size: 20))
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 12)
-                    ForEach(Array(store.state.syncPgogressStates.enumerated()), id: \.element) { index, event in
-                        HStack {
-                            Text("\(index + 1). \(event.descriptionText)")
-                                .font(.myRegular(size: 16))
-                                .foregroundStyle(.black)
-                                .padding(8)
-                            
-                            Spacer()
-                        }
-                        syncProgressOption(state: event)
-                        
-                    }
-                    .transition(.asymmetric(insertion: .offset(x: 10).combined(with: .opacity), removal: .opacity))
-                    .animation(.spring(response: 0.6, dampingFraction: 0.4), value: store.state.syncPgogressStates)
-                    
-                    Spacer()
-                }
-            }
-            
-            .frame(maxWidth: .infinity)
-            .background(store.syncPgogressStates.count == 0 ? Color.clear : .myPrimary)
-        }
-        
-        if store.state.syncPgogressStates.last == .completed {
-            VStack {
-                Spacer()
-                
-                Button {
-                    store.send(.exitSync)
-                } label: {
-                    VStack(spacing: 2) {
-                        Text("ЗАКРЫТЬ")
-                            .font(.mySemiBold(size: 14))
-                            .tracking(2)
-                            .foregroundStyle(.black)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.backgroundFill)
-                    .overlay {
-                        Rectangle()
-                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                            .padding(3)
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.vertical, 16)
-                .padding(.horizontal, 12)
-            }
-
-        }
-    }
-    
-    @ViewBuilder
-    private func syncProgressOption(state: SyncProgressState) -> some View {
-        switch state {
-        case .waitingForUserConfirmation(let user):
-            VStack(alignment: .leading) {
-                Text("Вы хотите обменяться историями с пользователем?")
-//                    .multilineTextAlignment(.center)
-                    .font(.myMedium(size: 16))
-                    .foregroundStyle(.black)
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(hex: user.color))
-                            .frame(width: 36, height: 36)
-                        
-                        Circle()
-                            .stroke(.myPrimary, lineWidth: 2)
-                            .frame(width: 31, height: 31)
-                    }
-                    Text(user.name)
-                        .font(.myMedium(size: 16))
-                        .foregroundStyle(.black)
-                    Spacer()
-                }
-                
-                HStack {
-                    VintageSmallButton(title: "ОТМЕНИТЬ") {
-                        store.send(.confirmSyncFriend(false))
-                        syncUserIsConfirmet = true
-                    }
-                    VintageSmallButton(title: "ОБМЕНЯТЬСЯ") {
-                        store.send(.confirmSyncFriend(true))
-                        syncUserIsConfirmet = true
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(12)
-            .disabled(syncUserIsConfirmet)
-            
-        case .completed:
-            VStack(alignment: .leading) {
-                
-                Text("Отправлено историй: \(store.state.notSeenStoriesCount)")
-                    .font(.myMedium(size: 16))
-                    .foregroundStyle(.black)
-                HStack {
-                    Text("Получено историй:")
-                        .font(.myMedium(size: 16))
-                        .foregroundStyle(.black)
-                    Text(String(store.state.newNotesCount))
-                        .font(.myMedium(size: 16))
-                        .foregroundStyle(.black)
-                }
-
-                HStack { Spacer() }
-                if store.state.newNotesCount > 0 {
-                    VintageSmallButton(title: "ПОСМОТРЕТЬ") {
-                        store.send(.toNewNotes)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(12)
-        default: EmptyView()
         }
     }
     
@@ -495,32 +454,39 @@ struct FriendScreen: View {
     // MARK: - Нижние кнопки
     @ViewBuilder
     private func syncButton() -> some View {
+        let isEnabled = store.state.isSyncButtonEnabled
+        
         Button {
             store.send(.syncFriend)
         } label: {
             VStack(spacing: 2) {
-                Text("ПЕРЕДАТЬ ИСТОРИИ")
+                Text("РАССКАЗАТЬ ИСТОРИИ")
                     .font(.mySemiBold(size: 14))
                     .tracking(2)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.black.opacity(isEnabled ? 1 : 0.3))
                 
-                Text("запустить процесс обмена")
-                    .font(.myRegular(size: 10))
-                    .opacity(0.6)
-                    .foregroundStyle(.black)
+                if store.state.searchStatus == .found {
+                    Text("начать обмен историями")
+                        .font(.myRegular(size: 10))
+                        .opacity(0.5)
+                        .foregroundStyle(.black)
+                        .transition(.opacity)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.myPrimary)
+            .background(Color.myPrimary.opacity(isEnabled ? 1 : 0.35))
             .overlay {
                 Rectangle()
                     .stroke(Color.black.opacity(0.15), lineWidth: 1)
                     .padding(3)
             }
         }
+        .disabled(!isEnabled)
         .padding(.horizontal, 20)
         .padding(.bottom, 16)
         .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.4), value: isEnabled)
     }
     
     @ViewBuilder

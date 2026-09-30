@@ -9,7 +9,7 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, notes: [Note])
+    case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, notes: [Note], isShowFriendsList: Binding<Bool>)
     
     var id: String {
         switch self {
@@ -54,6 +54,22 @@ enum ScreenType: Identifiable, Hashable {
 
 enum ComponentType: Hashable {
     case horizontalCalendar
+    case notesList(notes: [Note], storyID: UUID, isShowFriendsList: Binding<Bool>)
+    
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .horizontalCalendar: hasher.combine("horizontalCalendar")
+        case .notesList: hasher.combine("notesList")
+        }
+    }
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+        case (.horizontalCalendar, .horizontalCalendar): true
+        case (.notesList, .notesList): true
+        default: false
+        }
+    }
 }
 
 final class ScreenBuilder {
@@ -81,7 +97,10 @@ final class ScreenBuilder {
         case .newFriend: NewFriendScreen(store: NewFriendScreenStore(appStore: appStore))
         case .setting: SettingScreen(store: SettingScreenStore(appStore: appStore))
         case .editProfile: EditProfileScreen(store: SettingScreenStore(appStore: appStore))
-        case .notes(title: let title, notes: let notes): NoteListScreen(title: title, store: NoteListScreenStore(appStore: appStore, notes: notes))
+        case .notes(title: let title, notes: let notes, isShowFriendsList: let isShowFriendsList):
+            NoteListScreen(title: title,
+                           store: NoteListScreenStore(appStore: appStore, notes: notes),
+                           isShowFriendsList: isShowFriendsList)
         }
     }
     
@@ -89,6 +108,10 @@ final class ScreenBuilder {
     func getComponent(type: ComponentType) -> some View {
         switch type {
         case .horizontalCalendar: HorizontalCalendar(store: HorizontalCalendarStore(appStore: appStore))
+        case .notesList(notes: let notes, storyID: let storyID, isShowFriendsList: let isShowFriendsList):
+            NoteListContent(store: NoteListScreenStore(appStore: appStore, notes: notes, storyID: storyID),
+                            isShowFriendsList: isShowFriendsList,
+                            isShowDate: false)
         }
     }
 }

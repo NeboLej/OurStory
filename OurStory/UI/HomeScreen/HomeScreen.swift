@@ -11,12 +11,11 @@ struct HomeScreen: View {
     
     @State private var store: HomeScreenStore
     @State private var screenBuilder: ScreenBuilder
-    @State private var noteListStore: NoteListScreenStore
+    @State private var isShowFriendsList: Bool = false
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
         self.screenBuilder = screenBuilder
-        self.noteListStore = NoteListScreenStore(appStore: store.appStore, notes: [])
     }
     
     var body: some View {
@@ -28,10 +27,8 @@ struct HomeScreen: View {
                 .padding(.top, 16)
             
             if let currentStory = store.state.selectedStory {
-                ScrollView(.vertical) {
-                    storyView(currentStory)
-                }
-                .frame(maxWidth: .infinity)
+                storyView(currentStory)
+                    .id(store.state.selectedStory?.id ?? UUID())
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Историй пока нет")
@@ -51,17 +48,13 @@ struct HomeScreen: View {
         .background(.backgroundFill)
         .ignoresSafeArea()
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 8) {
-                if noteListStore.isShowFriendsList {
-                    NoteListScreen(title: nil, store: noteListStore).friendsListOverlay
-                } else {
-                    HomeScreenToolbar {
-                        store.send(.toFriendsList)
-                    } onSettings: {
-                        store.send(.toSettings)
-                    } onNewNote: {
-                        store.send(.createNewNote)
-                    }
+            if !isShowFriendsList {
+                HomeScreenToolbar {
+                    store.send(.toFriendsList)
+                } onSettings: {
+                    store.send(.toSettings)
+                } onNewNote: {
+                    store.send(.createNewNote)
                 }
             }
         }
@@ -74,26 +67,27 @@ struct HomeScreen: View {
                 Text(story.title)
                     .font(.myMedium(size: 18))
                     .foregroundStyle(.textMulticolor)
-                    .padding(.bottom, 4)
                     .padding(.top, 20)
                 Text(story.date.toReadable())
                     .font(.myItalic(size: 14))
                     .foregroundStyle(.textMulticolor.opacity(0.6))
                     .padding(.bottom, 36)
             }
-            .padding(.leading, 30)
+            .padding(.leading, 16)
             
-            NoteListScreen(title: nil, store: noteListStore).noteListContent
+            screenBuilder.getComponent(type: .notesList(notes: tmpNotes, storyID: story.id, isShowFriendsList: $isShowFriendsList))
         }
-        .padding(.bottom, 180)
-        .onChange(of: story.notes) { _, newNotes in
-            noteListStore.updateNotes(newNotes)
-        }
-        .onAppear {
-            noteListStore.updateNotes(story.notes)
-        }
+        .padding(.bottom, 80)
     }
 }
+
+let tmpNotes = [
+    Note(id: UUID(), rootStoryID: UUID(), title: "ndfsfd", date: Date(), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: Friend(name: "Вася", color: "44fd21")),
+    
+    Note(id: UUID(), rootStoryID: UUID(), title: "", date: Date().getOffsetDate(-3), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [Friend(name: "Вася", color: "44fd21")], owner: nil),
+    
+    Note(id: UUID(), rootStoryID: UUID(), title: nil, date: Date().getOffsetDate(-5), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: nil)
+]
 
 #Preview {
     ScreenBuilder.previewBuilder.getScreen(type: .home)

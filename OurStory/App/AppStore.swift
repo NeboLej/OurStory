@@ -16,6 +16,7 @@ final class AppStore {
     var allFriends: [Friend] = []
     var user: User
     var sortedNotes: [Note] = []
+    var isShowNoteFriendsList: Bool = false
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
@@ -108,7 +109,7 @@ final class AppStore {
         case .toEditProfile:
             appCoordinator.navigate(to: .editProfile)
         case .toNotesList(title: let title, notes: let notes):
-            appCoordinator.navigate(to: .notes(title: title, notes: notes))
+            appCoordinator.navigate(to: .notes(title: title, notes: notes, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
         }
     }
     

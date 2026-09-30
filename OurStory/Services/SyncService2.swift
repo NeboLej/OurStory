@@ -12,6 +12,7 @@ enum SyncProgressState: Hashable {
     case searching
     case connecting
     case exchangingUsers
+    case friendNearby(User)
     case waitingForUserConfirmation(User)
     case exchangingNotes
     case completed
@@ -22,6 +23,7 @@ enum SyncProgressState: Hashable {
         case .searching: hasher.combine(0)
         case .connecting: hasher.combine(1)
         case .exchangingUsers: hasher.combine(2)
+        case .friendNearby: hasher.combine(7)
         case .waitingForUserConfirmation: hasher.combine(3)
         case .exchangingNotes: hasher.combine(4)
         case .completed: hasher.combine(5)
@@ -34,6 +36,7 @@ enum SyncProgressState: Hashable {
         case .searching: "Ищу других пользователей рядом..."
         case .connecting: "Соединяю пользователей..."
         case .exchangingUsers: "Обмениваю информацию..."
+        case .friendNearby: "Друг рядом и готов слушать"
         case .waitingForUserConfirmation: "Получение разрешения на обмен историями..."
         case .exchangingNotes: "Рассказываю истории..."
         case .completed: "Обмен историями завершен!"
@@ -46,6 +49,7 @@ enum SyncProgressState: Hashable {
         case (.searching, .searching),
             (.connecting, .connecting),
             (.exchangingUsers, .exchangingUsers),
+            (.friendNearby, .friendNearby),
             (.waitingForUserConfirmation, .waitingForUserConfirmation),
             (.exchangingNotes, .exchangingNotes),
             (.completed, .completed),
@@ -184,13 +188,48 @@ final class SyncService {
         }
     }
     
+    /// Запускает поиск друга: подключается и обменивается user-ами.
+    /// Когда user совпадает с friend.user — onEvent получит .friendNearby.
+    /// Notes не отправляются до вызова confirmUser(true).
+    func startDiscovery(friend: Friend, notes: [Note]) {
+        manager?.cancel()
+        manager = nil
+        
+        let manager = PeerExchangeManager(localFriend: friend, myProfile: profile)
+        self.manager = manager
+        
+        manager.onEvent = { [weak self] event in
+            self?.onEvent?(event)
+        }
+        
+        // Запускаем sync без await — результат получим через onEvent / onSyncCompleted
+        // .failed и .completed уже отправляются из PeerExchangeManager через onEvent
+        Task { [weak self] in
+            do {
+                let result = try await manager.sync(notes: notes)
+                await MainActor.run {
+                    self?.onSyncCompleted?(result)
+                }
+            } catch {
+                // Ошибка уже сообщена через onEvent(.failed) из PeerExchangeManager
+            }
+        }
+    }
+    
+    /// Колбэк при успешном завершении sync (после exchange notes)
+    var onSyncCompleted: ((SyncResult) -> Void)?
+    
     func cancelSync() {
         manager?.cancel()
         manager = nil
     }
 
-    func confirmUser(_ approved: Bool) {
-        manager?.confirmUser(approved)
+    /// Возвращает true если manager активен и approval отправлен
+    @discardableResult
+    func confirmUser(_ approved: Bool) -> Bool {
+        guard let manager, manager.isActive else { return false }
+        manager.confirmUser(approved)
+        return true
     }
 }
 
@@ -233,7 +272,7 @@ final class PeerExchangeManager: NSObject {
     private var notesSent = false
     
     /// Активна ли текущая сессия.
-    private var isActive = false
+    private(set) var isActive = false
     
     // MARK: Event
     
@@ -413,12 +452,10 @@ final class PeerExchangeManager: NSObject {
         
         isActive = false
         stopNetworking()
+        onEvent?(.failed(error))
         
         guard let continuation else { return }
-        
         self.continuation = nil
-        
-        onEvent?(.failed(error))
         continuation.resume(throwing: error)
     }
     
@@ -430,10 +467,14 @@ final class PeerExchangeManager: NSObject {
             guard let user = message.user else { return }
             
             receivedUser = user
-//            onEvent?(.exchangingUsers)
+            
+            // Пользователь получен — прекращаем поиск, чтобы не создавать лишних соединений
+            advertiser.stopAdvertisingPeer()
+            browser.stopBrowsingForPeers()
             
             if user.id == localFriend.user?.id {
-                sendUserApproval(true, to: peerID)
+                // Друг совпадает — сообщаем что рядом, ждём явного подтверждения из UI
+                onEvent?(.friendNearby(user))
             } else {
                 onEvent?(.waitingForUserConfirmation(user))
             }
@@ -491,7 +532,6 @@ extension PeerExchangeManager: MCNearbyServiceBrowserDelegate {
         guard peerID != self.peerID else { return }
         guard session.connectedPeers.isEmpty else { return }
         
-//        onEvent?(.connecting)
         browser.invitePeer(peerID, to: session, withContext: nil, timeout: 10)
     }
     
