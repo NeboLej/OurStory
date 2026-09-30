@@ -28,10 +28,9 @@ struct HomeScreen: View {
                 .padding(.top, 16)
             
             if let currentStory = store.state.selectedStory {
-                ScrollView(.vertical) {
+                ScrollView {
                     storyView(currentStory)
                 }
-                .frame(maxWidth: .infinity)
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Историй пока нет")
@@ -74,26 +73,34 @@ struct HomeScreen: View {
                 Text(story.title)
                     .font(.myMedium(size: 18))
                     .foregroundStyle(.textMulticolor)
-                    .padding(.bottom, 4)
+//                    .padding(.bottom, 4)
                     .padding(.top, 20)
                 Text(story.date.toReadable())
                     .font(.myItalic(size: 14))
                     .foregroundStyle(.textMulticolor.opacity(0.6))
                     .padding(.bottom, 36)
             }
-            .padding(.leading, 30)
+            .padding(.leading, 16)
             
-            NoteListScreen(title: nil, store: noteListStore).noteListContent
+            screenBuilder.getComponent(type: .notesList(notes: tmpNotes))
         }
         .padding(.bottom, 180)
         .onChange(of: story.notes) { _, newNotes in
-            noteListStore.updateNotes(newNotes)
+//            noteListStore.updateNotes(newNotes)
         }
         .onAppear {
-            noteListStore.updateNotes(story.notes)
+//            noteListStore.updateNotes(story.notes)
         }
     }
 }
+
+let tmpNotes = [
+    Note(id: UUID(), rootStoryID: UUID(), title: "ndfsfd", date: Date(), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: Friend(name: "Вася", color: "44fd21")),
+    
+    Note(id: UUID(), rootStoryID: UUID(), title: "", date: Date().getOffsetDate(-3), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [Friend(name: "Вася", color: "44fd21")], owner: nil),
+    
+    Note(id: UUID(), rootStoryID: UUID(), title: nil, date: Date().getOffsetDate(-5), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: nil)
+]
 
 #Preview {
     ScreenBuilder.previewBuilder.getScreen(type: .home)

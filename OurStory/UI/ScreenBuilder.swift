@@ -54,6 +54,7 @@ enum ScreenType: Identifiable, Hashable {
 
 enum ComponentType: Hashable {
     case horizontalCalendar
+    case notesList(notes: [Note])
 }
 
 final class ScreenBuilder {
@@ -89,6 +90,7 @@ final class ScreenBuilder {
     func getComponent(type: ComponentType) -> some View {
         switch type {
         case .horizontalCalendar: HorizontalCalendar(store: HorizontalCalendarStore(appStore: appStore))
+        case .notesList(notes: let notes): NoteListScreen(title: nil, store: NoteListScreenStore(appStore: appStore, notes: notes)).noteListContent(isShowDate: false)
         }
     }
 }

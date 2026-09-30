@@ -19,8 +19,8 @@ struct NoteListScreen: View {
     
     var body: some View {
         ScrollView(.vertical) {
-            noteListContent
-                .padding(.bottom, 80)
+            noteListContent(isShowDate: true)
+                .padding(.bottom, 100)
         }
         .background(.backgroundFill)
         .navigationTitle(title ?? "Истории")
@@ -45,13 +45,24 @@ struct NoteListScreen: View {
     }
     
     // MARK: - Public content for embedding
-    
-    var noteListContent: some View {
+    @ViewBuilder
+    func noteListContent(isShowDate: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(store.state.notes, id: \.id) { note in
-                noteView(note)
-                    .padding(.vertical, 10)
-                    .animatedSelectionBorder(isSelected: store.showMenuNote == note || store.showFriendsNote == note)
+            ForEach(store.state.groupedNotes, id: \.date) { group in
+                if isShowDate {
+                    Text(group.date.toReadable())
+                        .font(.myMedium(size: 14))
+                        .foregroundStyle(.textMulticolor.opacity(0.5))
+                        .padding(.top, 20)
+                        .padding(.bottom, 4)
+                        .padding(.leading, 4)
+                }
+                
+                ForEach(group.notes, id: \.id) { note in
+                    noteView(note)
+                        .padding(.vertical, 10)
+                        .animatedSelectionBorder(isSelected: store.showMenuNote == note || store.showFriendsNote == note)
+                }
             }
             HStack { Spacer() }
         }
