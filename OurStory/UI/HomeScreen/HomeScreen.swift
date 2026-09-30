@@ -16,7 +16,6 @@ struct HomeScreen: View {
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
         self.screenBuilder = screenBuilder
-//        self._isShowFriendsList = isShowFriendsList
     }
     
     var body: some View {
@@ -29,6 +28,7 @@ struct HomeScreen: View {
             
             if let currentStory = store.state.selectedStory {
                 storyView(currentStory)
+                    .id(store.state.selectedStory?.id ?? UUID())
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Историй пока нет")

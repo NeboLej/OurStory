@@ -16,6 +16,8 @@ struct Note: Identifiable, Equatable, Hashable {
     let friends: [Friend]
     let owner: Friend?
     
+    var baseDate: BaseDate { BaseDate(date: date) }
+    
     let rootStoryID: UUID
     
     init(id: UUID = UUID(), rootStoryID: UUID = UUID(), title: String? = nil, date: Date, text: String, friends: [Friend], owner: Friend? = nil) {

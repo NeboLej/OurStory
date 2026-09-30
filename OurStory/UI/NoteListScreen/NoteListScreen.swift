@@ -14,13 +14,10 @@ struct NoteListScreen: View {
     @Binding var isShowFriendsList: Bool
     
     var body: some View {
-//        ScrollView(.vertical) {
-            NoteListContent(store: store, isShowFriendsList: $isShowFriendsList, isShowDate: true)
-//                .padding(.bottom, 100)
-//        }
-        .background(.backgroundFill)
-        .navigationTitle(title ?? "Истории")
-        .navigationBarTitleDisplayMode(.automatic)
+        NoteListContent(store: store, isShowFriendsList: $isShowFriendsList, isShowDate: true)
+            .background(.backgroundFill)
+            .navigationTitle(title ?? "Истории")
+            .navigationBarTitleDisplayMode(.automatic)
     }
 }
 
