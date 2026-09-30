@@ -7,6 +7,43 @@
 
 import Foundation
 
+// Фазы ритуальной анимации синхронизации
+enum SyncRitualPhase: Equatable {
+    case idle
+    case searching
+    case approaching
+    case merging
+    case completed(newCount: Int)
+    case failed(String)
+    case waitingForConfirmation(User)
+    
+    static func == (lhs: SyncRitualPhase, rhs: SyncRitualPhase) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle),
+            (.searching, .searching),
+            (.approaching, .approaching),
+            (.merging, .merging):
+            return true
+        case (.completed(let a), .completed(let b)):
+            return a == b
+        case (.failed(let a), .failed(let b)):
+            return a == b
+        case (.waitingForConfirmation(let a), .waitingForConfirmation(let b)):
+            return a == b
+        default:
+            return false
+        }
+    }
+}
+
+// Статус поиска друга поблизости
+enum FriendSearchStatus: Equatable {
+    case idle
+    case searching
+    case found
+    case notFound // Таймаут — показываем кнопку "найти"
+}
+
 struct FriendScreenState {
     
     let friend: Friend
@@ -17,4 +54,21 @@ struct FriendScreenState {
     let syncPgogressStates: [SyncProgressState]
     let newNotesCount: Int
     
+    let searchStatus: FriendSearchStatus
+    let ritualPhase: SyncRitualPhase
+    
+    var isSyncButtonEnabled: Bool {
+        guard ritualPhase == .idle else { return false }
+        // Первая синхронизация (user ещё не привязан) — кнопка всегда доступна
+        if friend.user == nil { return true }
+        // Повторная синхронизация — только когда друг найден поблизости
+        return searchStatus == .found
+    }
+    
+    var isInRitualSync: Bool {
+        switch ritualPhase {
+        case .idle: return false
+        default: return true
+        }
+    }
 }

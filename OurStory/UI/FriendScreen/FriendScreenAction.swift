@@ -15,4 +15,9 @@ enum FriendScreenAction {
     case toNewNotes
     case exitSync
     case applyUserProfile
+    
+    // Auto-search lifecycle
+    case startSearching
+    case stopSearching
+    case retrySearching
 }
