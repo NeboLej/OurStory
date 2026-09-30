@@ -15,8 +15,7 @@ protocol NoteRepositoryProtocol {
     func updateNote(_ note: Note) async
     func getNotes(friendID: UUID) async -> [Note]
     func getUnsentNotes(friendID: UUID) async -> [Note]
-    func getTotalNotesCount(friendID: UUID) async -> Int
-    func getUnsentNotesCount(friendID: UUID) async -> Int
+    func getTotalNotes(friendID: UUID) async -> [Note]
     func updateSentStatus(noteIDs: [UUID], friendID: UUID, isSent: Bool) async
     func resetSentStatus(noteID: UUID) async
 }
@@ -125,44 +124,38 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         }
     }
     
-    func getTotalNotesCount(friendID: UUID) async -> Int {
+    func getTotalNotes(friendID: UUID) async -> [Note] {
         do {
             return try await dbPool.read { db in
                 // Мои заметки где друг в списке friends (через noteFriend)
-                let myNotesCount = try NoteModelGRDB
+                let myNotesRequest = NoteModelGRDB
                     .joining(
                         required: NoteModelGRDB.noteFriends
                             .filter(Column("friendID") == friendID)
                     )
-                    .fetchCount(db)
+                    .including(optional: NoteModelGRDB.owner)
+                    .including(all: NoteModelGRDB.friends)
+                let myNotes = try NoteWithFriends.fetchAll(db, myNotesRequest)
                 
                 // Заметки где друг является owner
-                let ownerNotesCount = try NoteModelGRDB
+                let ownerNotesRequest = NoteModelGRDB
                     .filter(Column("ownerID") == friendID)
-                    .fetchCount(db)
+                    .including(optional: NoteModelGRDB.owner)
+                    .including(all: NoteModelGRDB.friends)
+                let ownerNotes = try NoteWithFriends.fetchAll(db, ownerNotesRequest)
                 
-                return myNotesCount + ownerNotesCount
+                // Объединяем и убираем дубликаты по id
+                let allNotes = myNotes + ownerNotes
+                var seen = Set<UUID>()
+                return allNotes.compactMap { noteWithFriends -> Note? in
+                    let note = Note(from: noteWithFriends)
+                    guard seen.insert(note.id).inserted else { return nil }
+                    return note
+                }
             }
         } catch {
-            Logger.log("getTotalNotesCount error", location: .GRDB, event: .error(error))
-            return 0
-        }
-    }
-    
-    func getUnsentNotesCount(friendID: UUID) async -> Int {
-        do {
-            return try await dbPool.read { db in
-                try NoteModelGRDB
-                    .joining(
-                        required: NoteModelGRDB.noteFriends
-                            .filter(Column("friendID") == friendID)
-                            .filter(Column("isSent") == false)
-                    )
-                    .fetchCount(db)
-            }
-        } catch {
-            Logger.log("getUnsentNotesCount error", location: .GRDB, event: .error(error))
-            return 0
+            Logger.log("getTotalNotes error", location: .GRDB, event: .error(error))
+            return []
         }
     }
     

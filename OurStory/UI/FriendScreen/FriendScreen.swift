@@ -387,11 +387,11 @@ struct FriendScreen: View {
                 .foregroundStyle(.textMulticolor.opacity(0.35))
             
             statisticElement(title: "Общих историй", value: "\(store.state.allStoriesCount)") {
-                // Действие
+                store.send(.toAllNotes)
             }
             
             statisticElement(title: "Историй не рассказано", value: "\(store.state.notSeenStoriesCount)") {
-                // Действие
+                store.send(.toUnsentNotes)
             }
             
             statisticElement(title: "Последняя синхронизация", value: store.state.lastSyncDate?.toReadableDate() ?? "—", onClick: nil)

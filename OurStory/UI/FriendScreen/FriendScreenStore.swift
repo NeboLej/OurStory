@@ -16,8 +16,8 @@ final class FriendScreenStore: BaseStore {
     var syncPgogressStates: [SyncProgressState] = []
     var sendNotes: [Note] = []
     var newNoteCount: Int = 0
-    var totalNotesCount: Int = 0
-    var unsentNotesCount: Int = 0
+    var totalNotes: [Note] = []
+    var unsentNotes: [Note] = []
     
     // Новое: состояние поиска и анимации
     var searchStatus: FriendSearchStatus = .idle
@@ -47,8 +47,8 @@ final class FriendScreenStore: BaseStore {
     private var syncAnimationTask: Task<Void, Never>?
     
     var state: FriendScreenState { FriendScreenState(friend: friend,
-                                                     allStoriesCount: totalNotesCount,
-                                                     notSeenStoriesCount: unsentNotesCount,
+                                                     allStoriesCount: totalNotes.count,
+                                                     notSeenStoriesCount: unsentNotes.count,
                                                      lastSyncDate: friend.lastSyncDate,
                                                      syncPgogressStates: syncPgogressStates,
                                                      newNotesCount: newNoteCount,
@@ -103,6 +103,14 @@ final class FriendScreenStore: BaseStore {
                 stopSearching()
             case .retrySearching:
                 retrySearching()
+            case .toAllNotes:
+                if totalNotes.count > 0 {
+                    appStore.send(.toNotesList(title: "Наши с \(friend.name) истории", notes: totalNotes))
+                }
+            case .toUnsentNotes:
+                if unsentNotes.count > 0 {
+                    appStore.send(.toNotesList(title: "Мои нерасказанные истории", notes: unsentNotes))
+                }
             }
         }
     }
@@ -360,8 +368,8 @@ final class FriendScreenStore: BaseStore {
     private func loadData() {
         Task {
             sendNotes = await noteRepositpry.getUnsentNotes(friendID: friend.id)
-            totalNotesCount = await noteRepositpry.getTotalNotesCount(friendID: friend.id)
-            unsentNotesCount = await noteRepositpry.getUnsentNotesCount(friendID: friend.id)
+            totalNotes = await noteRepositpry.getTotalNotes(friendID: friend.id)
+            unsentNotes = await noteRepositpry.getUnsentNotes(friendID: friend.id)
         }
     }
 }
