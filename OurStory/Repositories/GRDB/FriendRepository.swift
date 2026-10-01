@@ -29,6 +29,7 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 var model = FriendModelGRDB(from: friend, userID: friend.user?.id)
+                model.updatedDate = Date()
                 try model.insert(db)
                 Logger.log("save new friend", location: .GRDB, event: .success)
             }
@@ -42,7 +43,8 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 if try FriendModelGRDB.filter(key: friend.id).fetchCount(db) != 0 {
-                    let model = FriendModelGRDB(from: friend, userID: friend.user?.id)
+                    var model = FriendModelGRDB(from: friend, userID: friend.user?.id)
+                    model.updatedDate = Date()
                     try model.update(db)
                     Logger.log("edit friend \(friend.name)", location: .GRDB, event: .success)
                 } else {
@@ -58,6 +60,26 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
     func deleteFriend(_ friend: Friend) async {
         do {
             try await dbPool.write { db in
+                // Track noteFriend deletions for cloud sync before cascade
+                let noteFriendRows = try NoteFriend
+                    .filter(Column("friendID") == friend.id)
+                    .fetchAll(db)
+                
+                let now = Date().timeIntervalSinceReferenceDate
+                for nf in noteFriendRows {
+                    let compositeKey = "\(nf.noteId.uuidString)_\(nf.friendId.uuidString)"
+                    try db.execute(
+                        sql: "INSERT OR REPLACE INTO deletedRecord (recordType, recordID, deletionDate) VALUES (?, ?, ?)",
+                        arguments: ["CD_NoteFriend", compositeKey, now]
+                    )
+                }
+                
+                // Track friend deletion for cloud sync
+                try db.execute(
+                    sql: "INSERT OR REPLACE INTO deletedRecord (recordType, recordID, deletionDate) VALUES (?, ?, ?)",
+                    arguments: ["CD_Friend", friend.id.uuidString, now]
+                )
+                
                 if try FriendModelGRDB.deleteOne(db, key: friend.id) {
                     Logger.log("Success to delete friend", location: .GRDB, event: .success)
                 }

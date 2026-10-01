@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 @main
 struct OurStoryApp: App {
@@ -47,10 +48,24 @@ struct OurStoryApp: App {
         .fullScreenCover(item: coordinator.fullScreenCover) { screenType in
             screenBuilder.getScreen(type: screenType)
         }
+        .task {
+            // Initial sync on first launch (onChange doesn't fire for the initial scenePhase value)
+            appStore.syncDownloadAndUpload()
+        }
         .onChange(of: scenePhase, { oldValue, newValue in
-            guard newValue == .active else { return }
-            Task {
-                //TODO: Update data with open app
+            switch newValue {
+            case .active:
+                appStore.syncDownloadAndUpload()
+            case .background:
+                let backgroundTask = UIApplication.shared.beginBackgroundTask()
+                Task {
+                    await appStore.cloudKitService.uploadAll()
+                    await MainActor.run {
+                        UIApplication.shared.endBackgroundTask(backgroundTask)
+                    }
+                }
+            default:
+                break
             }
         })
     }

@@ -75,7 +75,7 @@ struct HomeScreen: View {
             }
             .padding(.leading, 16)
             
-            screenBuilder.getComponent(type: .notesList(notes: tmpNotes, storyID: story.id, isShowFriendsList: $isShowFriendsList))
+            screenBuilder.getComponent(type: .notesList(notes: story.notes, storyID: story.id, isShowFriendsList: $isShowFriendsList))
         }
         .padding(.bottom, 80)
     }

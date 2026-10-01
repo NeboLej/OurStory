@@ -13,8 +13,16 @@ struct NoteFriend: Codable, FetchableRecord, MutablePersistableRecord, TableReco
     var noteId: UUID
     var friendId: UUID
     var isSent: Bool
+    var updatedDate: Date?
     
     static let friend = belongsTo(FriendModelGRDB.self)
+    
+    func encode(to container: inout PersistenceContainer) {
+        container["noteID"] = noteId
+        container["friendID"] = friendId
+        container["isSent"] = isSent
+        container["updatedDate"] = updatedDate
+    }
 }
 
 struct NoteWithFriends: FetchableRecord, Decodable {
@@ -33,6 +41,7 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
     var rootStoryID: UUID
     var ownerID: UUID?
     var owner: FriendModelGRDB?
+    var updatedDate: Date?
     
     mutating func didInsert(with rowID: Int64, for column: String?) { }
     
@@ -43,10 +52,11 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
         text = from.text
         rootStoryID = from.rootStoryID
         ownerID = from.owner?.id
+        updatedDate = Date()
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, title, date, text, rootStoryID, ownerID
+        case id, title, date, text, rootStoryID, ownerID, updatedDate
         case owner
     }
 }
@@ -59,6 +69,7 @@ extension NoteModelGRDB {
         container["text"] = text
         container["rootStoryID"] = rootStoryID
         container["ownerID"] = ownerID
+        container["updatedDate"] = updatedDate
     }
 }
 

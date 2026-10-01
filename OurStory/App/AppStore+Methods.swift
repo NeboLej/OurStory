@@ -118,4 +118,36 @@ extension AppStore {
             allFriends.removeAll { $0.id == friend.id }
         }
     }
+    
+    // MARK: - Cloud Sync
+    
+    func syncUpload() {
+        Task {
+            await cloudKitService.uploadAll()
+        }
+    }
+    
+    func syncDownload() {
+        Task {
+            await cloudKitService.downloadAll()
+            await MainActor.run {
+                loadData()
+            }
+        }
+    }
+    
+    func syncDownloadAndUpload() {
+        guard !isSyncing else { return }
+        isSyncing = true
+        Task {
+            await cloudKitService.downloadAll()
+            await MainActor.run {
+                loadData()
+            }
+            await cloudKitService.uploadAll()
+            await MainActor.run {
+                isSyncing = false
+            }
+        }
+    }
 }

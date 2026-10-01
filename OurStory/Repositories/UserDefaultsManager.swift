@@ -41,6 +41,13 @@ class UserDefaultsManager {
         return currentUser
     }
     
+    func restoreUser(id: UUID, name: String, color: String) -> User {
+        db.set(id.uuidString, forKey: UserDefaultsKeys.userID.rawValue)
+        db.set(name, forKey: UserDefaultsKeys.userName.rawValue)
+        db.set(color, forKey: UserDefaultsKeys.userColor.rawValue)
+        return User(id: id, name: name, color: color)
+    }
+    
     private func createNewUser() -> User {
         let user = User(name: "", color: "")
         db.set(user.id.uuidString, forKey: UserDefaultsKeys.userID.rawValue)

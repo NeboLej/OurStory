@@ -23,12 +23,13 @@ struct StoryModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, Table
     var isUserTitle: Bool
     
     var notes: [NoteModelGRDB]?
+    var updatedDate: Date?
     
     mutating func didInsert(with rowID: Int64, for column: String?) { }
     
     enum CodingKeys: CodingKey {
         case id, date, title, isUserTitle
-        case notes
+        case notes, updatedDate
     }
     
     init(from: Story) {
@@ -36,6 +37,7 @@ struct StoryModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, Table
         date = from.date
         title = from.title
         isUserTitle = from.isUserTitle
+        updatedDate = Date()
     }
 }
 
@@ -45,6 +47,7 @@ extension StoryModelGRDB {
         container["date"] = date
         container["title"] = title
         container["isUserTitle"] = isUserTitle
+        container["updatedDate"] = updatedDate
     }
 }
 
