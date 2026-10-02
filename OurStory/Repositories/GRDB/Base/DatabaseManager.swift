@@ -82,17 +82,31 @@ final class DatabaseManager {
     }
     
     private static func migrate(in db: Database) throws {
+        // Migration 1: Add updatedDate to all mutable tables
+        let tablesToMigrate = ["user", "friend", "story", "note", "noteFriend"]
+        
+        for table in tablesToMigrate {
+            if try db.columns(in: table).contains(where: { $0.name == "updatedDate" }) == false {
+                try db.alter(table: table) { t in
+                    t.add(column: "updatedDate", .double)
+                }
+                try db.execute(sql: "UPDATE \(table) SET updatedDate = ? WHERE updatedDate IS NULL",
+                              arguments: [Date().timeIntervalSinceReferenceDate])
+            }
+        }
+        
+        // Migration 2: Create deletedRecord tracking table for cloud sync
+        try db.create(table: "deletedRecord", ifNotExists: true) { t in
+            t.column("recordType", .text).notNull()
+            t.column("recordID", .text).notNull()
+            t.column("deletionDate", .double).notNull()
+            t.primaryKey(["recordType", "recordID"])
+        }
+        
+        // Migration 3: Create cloudSyncMetadata table for tracking last sync times
+        try db.create(table: "cloudSyncMetadata", ifNotExists: true) { t in
+            t.column("key", .text).primaryKey()
+            t.column("value", .text)
+        }
     }
-//        if try db.columns(in: "noteFriend").contains(where: { $0.name == "isSent" }) == false {
-//            try db.alter(table: "noteFriend") { t in
-//                t.add(column: "isSent", .boolean).notNull().defaults(to: false)
-//            }
-//        }
-//        
-//        if try db.columns(in: "friend").contains(where: { $0.name == "lastSyncDate" }) == false {
-//            try db.alter(table: "friend") { t in
-//                t.add(column: "lastSyncDate", .double)
-//            }
-//        }
-//    }
 }

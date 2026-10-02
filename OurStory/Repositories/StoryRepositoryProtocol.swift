@@ -45,6 +45,7 @@ final class StoryRepository: BaseRepository, StoryRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 var storyModel = StoryModelGRDB(from: story)
+                storyModel.updatedDate = Date()
                 try storyModel.save(db)
                 Logger.log("save new story \(story.id)", location: .GRDB, event: .success)
             }

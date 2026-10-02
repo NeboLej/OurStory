@@ -95,6 +95,10 @@ struct SettingScreen: View {
             settingsRow(icon: "bell", title: "Уведомления") {
                 // Заглушка
             }
+            
+            settingsRow(icon: "icloud.and.arrow.down", title: "Синхронизация iCloud") {
+                store.send(.syncFromCloud)
+            }
         }
         .padding(.horizontal, 20)
     }

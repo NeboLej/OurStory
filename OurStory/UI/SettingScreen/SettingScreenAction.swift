@@ -10,4 +10,5 @@ import Foundation
 enum SettingScreenAction {
     case saveUser(name: String, color: String)
     case toEditProfile
+    case syncFromCloud
 }

@@ -21,6 +21,8 @@ final class SettingScreenStore: BaseStore {
                 appStore.send(.editProfile(name: name, color: color))
             case .toEditProfile:
                 appStore.send(.toEditProfile)
+            case .syncFromCloud:
+                appStore.syncDownload()
             }
         }
     }

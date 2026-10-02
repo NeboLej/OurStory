@@ -28,6 +28,7 @@ final class UserRepository: BaseRepository, UserRepositoryProtocol {
             try await dbPool.write { db in
                 if try UserModelGRDB.filter(key: user.id).fetchCount(db) == 0 {
                     var model = UserModelGRDB(from: user)
+                    model.updatedDate = Date()
                     try model.insert(db)
                     Logger.log("save new user", location: .GRDB, event: .success)
                 } else {

@@ -14,6 +14,7 @@ struct UserModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
     var id: UUID
     var name: String
     var color: String
+    var updatedDate: Date?
     
     mutating func didInsert(with rowID: Int64, for column: String?) { }
     
@@ -21,6 +22,14 @@ struct UserModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
         id = from.id
         name = from.name
         color = from.color
+        updatedDate = Date()
+    }
+    
+    func encode(to container: inout PersistenceContainer) {
+        container["id"] = id
+        container["name"] = name
+        container["color"] = color
+        container["updatedDate"] = updatedDate
     }
 }
 

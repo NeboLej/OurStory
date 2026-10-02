@@ -19,7 +19,10 @@ final class AppStore {
     var isShowNoteFriendsList: Bool = false
     
     var appCoordinator: AppCoordinator = AppCoordinator()
+    var cloudSyncState: CloudSyncState = .idle
     
+    @ObservationIgnored
+    let cloudKitService = CloudKitService.shared
     @ObservationIgnored
     let userRepository: UserRepositoryProtocol
     @ObservationIgnored
@@ -31,6 +34,9 @@ final class AppStore {
     @ObservationIgnored
     private let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
     
+    @ObservationIgnored
+    var isSyncing = false
+    
     init(repositoryFactory: RepositoryFactoryProtocol) {
         self.userRepository = repositoryFactory.userRepository
         self.friendsRepository = repositoryFactory.friendRepository
@@ -38,6 +44,10 @@ final class AppStore {
         self.storyRepository = repositoryFactory.storyRepository
         
         user = userDefaultsManager.getCurrentUser()
+        
+        cloudKitService.onStateChange = { [weak self] state in
+            self?.cloudSyncState = state
+        }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.loadData()
@@ -113,7 +123,7 @@ final class AppStore {
         }
     }
     
-    private func loadData() {
+    func loadData() {
         Task {
             allFriends = await friendsRepository.getAllFriends()
             

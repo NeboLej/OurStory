@@ -31,10 +31,11 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                 }
                 
                 var noteModel = NoteModelGRDB(from: note)
+                noteModel.updatedDate = Date()
                 try noteModel.insert(db)
                
                 try note.friends.forEach { friend in
-                    var link = NoteFriend(noteId: noteModel.id, friendId: friend.id, isSent: false)
+                    var link = NoteFriend(noteId: noteModel.id, friendId: friend.id, isSent: false, updatedDate: Date())
                     try link.insert(db)
                 }
                 
@@ -49,13 +50,14 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 if try NoteModelGRDB.filter(key: note.id).fetchCount(db) != 0 {
-                    let mutable = NoteModelGRDB(from: note)
+                    var mutable = NoteModelGRDB(from: note)
+                    mutable.updatedDate = Date()
                     try mutable.update(db)
                     
                     // Пересоздаём связи noteFriend
                     try db.execute(sql: "DELETE FROM noteFriend WHERE noteID = ?", arguments: [note.id])
                     try note.friends.forEach { friend in
-                        var link = NoteFriend(noteId: note.id, friendId: friend.id, isSent: false)
+                        var link = NoteFriend(noteId: note.id, friendId: friend.id, isSent: false, updatedDate: Date())
                         try link.insert(db)
                     }
                     
@@ -164,9 +166,10 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 let placeholders = noteIDs.map { _ in "?" }.joined(separator: ",")
+                let now = Date().timeIntervalSinceReferenceDate
                 try db.execute(
-                    sql: "UPDATE noteFriend SET isSent = ? WHERE friendID = ? AND noteID IN (\(placeholders))",
-                    arguments: StatementArguments([isSent.databaseValue, friendID.databaseValue] + noteIDs.map { $0.databaseValue })
+                    sql: "UPDATE noteFriend SET isSent = ?, updatedDate = ? WHERE friendID = ? AND noteID IN (\(placeholders))",
+                    arguments: StatementArguments([isSent.databaseValue, now.databaseValue, friendID.databaseValue] + noteIDs.map { $0.databaseValue })
                 )
                 Logger.log("updateSentStatus isSent=\(isSent)", location: .GRDB, event: .success)
             }
@@ -178,9 +181,10 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
     func resetSentStatus(noteID: UUID) async {
         do {
             try await dbPool.write { db in
+                let now = Date().timeIntervalSinceReferenceDate
                 try db.execute(
-                    sql: "UPDATE noteFriend SET isSent = 0 WHERE noteID = ?",
-                    arguments: [noteID]
+                    sql: "UPDATE noteFriend SET isSent = 0, updatedDate = ? WHERE noteID = ?",
+                    arguments: [now, noteID]
                 )
                 Logger.log("resetSentStatus", location: .GRDB, event: .success)
             }
@@ -193,11 +197,13 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 if try NoteModelGRDB.filter(key: note.id).fetchOne(db) != nil {
-                    let mutable = NoteModelGRDB(from: note)
+                    var mutable = NoteModelGRDB(from: note)
+                    mutable.updatedDate = Date()
                     try mutable.update(db)
                     Logger.log("saveOrUpdateNote: updated existing note", location: .GRDB, event: .success)
                 } else {
                     var noteModel = NoteModelGRDB(from: note)
+                    noteModel.updatedDate = Date()
                     try noteModel.insert(db)
                     Logger.log("saveOrUpdateNote: inserted new note", location: .GRDB, event: .success)
                 }
@@ -205,7 +211,7 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                 try db.execute(sql: "DELETE FROM noteFriend WHERE noteID = ?", arguments: [note.id])
                 
                 try note.friends.forEach { friend in
-                    var link = NoteFriend(noteId: note.id, friendId: friend.id, isSent: false)
+                    var link = NoteFriend(noteId: note.id, friendId: friend.id, isSent: false, updatedDate: Date())
                     try link.insert(db)
                 }
             }

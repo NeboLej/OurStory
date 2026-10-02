@@ -11,11 +11,13 @@ final class Logger {
     
     enum Location {
         case GRDB
+        case cloudKit
         case unowned
         
         var text: String {
             switch self {
             case .GRDB: return "💿"
+            case .cloudKit: return "☁️"
             case .unowned: return "🧭"
             }
         }
