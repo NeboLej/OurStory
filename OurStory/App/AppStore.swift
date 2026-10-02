@@ -120,6 +120,8 @@ final class AppStore {
             appCoordinator.navigate(to: .editProfile)
         case .toNotesList(title: let title, notes: let notes):
             appCoordinator.navigate(to: .notes(title: title, notes: notes, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
+        case .toLogs:
+            appCoordinator.navigate(to: .log)
         }
     }
     

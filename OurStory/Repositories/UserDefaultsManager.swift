@@ -38,6 +38,10 @@ class UserDefaultsManager {
         db.set(currentUser.name, forKey: UserDefaultsKeys.userName.rawValue)
         db.set(currentUser.color, forKey: UserDefaultsKeys.userColor.rawValue)
         
+        Task {
+            try await CloudKitService.shared.uploadProfile()
+        }
+        
         return currentUser
     }
     

@@ -99,6 +99,11 @@ struct SettingScreen: View {
             settingsRow(icon: "icloud.and.arrow.down", title: "Синхронизация iCloud") {
                 store.send(.syncFromCloud)
             }
+            
+            settingsRow(icon: "note", title: "Логи") {
+                store.send(.toLogScreen)
+            }
+            
         }
         .padding(.horizontal, 20)
     }

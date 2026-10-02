@@ -60,6 +60,12 @@ extension AppStore {
             }
             sortedNotes = allNewNotes
         }
+        
+        Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+
+            await CloudKitService.shared.uploadAll()
+        }
     }
     
     func moveNoteToStory(_ note: Note, newBaseDate: BaseDate) {

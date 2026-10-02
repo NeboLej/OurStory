@@ -36,10 +36,10 @@ extension CloudKitService {
     // MARK: - Download Users
     
     func downloadUsers(from records: [CKRecord]) async throws {
-        let lastSync = await getLastDownloadDate()
+//        let lastSync = await getLastDownloadDate()
         
         try await dbPool.write { db in
-            let localUsers = try UserModelGRDB.fetchAll(db)
+//            let localUsers = try UserModelGRDB.fetchAll(db)
             var cloudIDSet = Set<UUID>()
             
             for record in records {
@@ -67,16 +67,16 @@ extension CloudKitService {
             }
             
             // Handle remote deletions
-            if let lastSync {
-                for local in localUsers {
-                    if !cloudIDSet.contains(local.id) {
-                        let localUpdated = local.updatedDate ?? Date.distantPast
-                        if localUpdated < lastSync {
-                            try UserModelGRDB.deleteOne(db, key: local.id)
-                        }
-                    }
-                }
-            }
+//            if let lastSync {
+//                for local in localUsers {
+//                    if !cloudIDSet.contains(local.id) {
+//                        let localUpdated = local.updatedDate ?? Date.distantPast
+//                        if localUpdated < lastSync {
+//                            try UserModelGRDB.deleteOne(db, key: local.id)
+//                        }
+//                    }
+//                }
+//            }
         }
         
         Logger.log("Downloaded \(records.count) users", location: .cloudKit, event: .success)
@@ -85,10 +85,10 @@ extension CloudKitService {
     // MARK: - Download Friends
     
     func downloadFriends(from records: [CKRecord]) async throws {
-        let lastSync = await getLastDownloadDate()
+//        let lastSync = await getLastDownloadDate()
         
         try await dbPool.write { db in
-            let localFriends = try FriendModelGRDB.fetchAll(db)
+//            let localFriends = try FriendModelGRDB.fetchAll(db)
             var cloudIDSet = Set<UUID>()
             
             for record in records {
@@ -122,16 +122,16 @@ extension CloudKitService {
             }
             
             // Handle remote deletions
-            if let lastSync {
-                for local in localFriends {
-                    if !cloudIDSet.contains(local.id) {
-                        let localUpdated = local.updatedDate ?? Date.distantPast
-                        if localUpdated < lastSync {
-                            try FriendModelGRDB.deleteOne(db, key: local.id)
-                        }
-                    }
-                }
-            }
+//            if let lastSync {
+//                for local in localFriends {
+//                    if !cloudIDSet.contains(local.id) {
+//                        let localUpdated = local.updatedDate ?? Date.distantPast
+//                        if localUpdated < lastSync {
+//                            try FriendModelGRDB.deleteOne(db, key: local.id)
+//                        }
+//                    }
+//                }
+//            }
         }
         
         Logger.log("Downloaded \(records.count) friends", location: .cloudKit, event: .success)
@@ -140,10 +140,10 @@ extension CloudKitService {
     // MARK: - Download Stories
     
     func downloadStories(from records: [CKRecord]) async throws {
-        let lastSync = await getLastDownloadDate()
+//        let lastSync = await getLastDownloadDate()
         
         try await dbPool.write { db in
-            let localStories = try StoryModelGRDB.fetchAll(db)
+//            let localStories = try StoryModelGRDB.fetchAll(db)
             var cloudIDSet = Set<UUID>()
             
             for record in records {
@@ -174,17 +174,17 @@ extension CloudKitService {
             }
             
             // Handle remote deletions
-            if let lastSync {
-                for local in localStories {
-                    if !cloudIDSet.contains(local.id) {
-                        let localUpdated = local.updatedDate ?? Date.distantPast
-                        if localUpdated < lastSync {
-                            // CASCADE will delete associated notes and noteFriends
-                            try StoryModelGRDB.deleteOne(db, key: local.id)
-                        }
-                    }
-                }
-            }
+//            if let lastSync {
+//                for local in localStories {
+//                    if !cloudIDSet.contains(local.id) {
+//                        let localUpdated = local.updatedDate ?? Date.distantPast
+//                        if localUpdated < lastSync {
+//                            // CASCADE will delete associated notes and noteFriends
+//                            try StoryModelGRDB.deleteOne(db, key: local.id)
+//                        }
+//                    }
+//                }
+//            }
         }
         
         Logger.log("Downloaded \(records.count) stories", location: .cloudKit, event: .success)
@@ -193,10 +193,10 @@ extension CloudKitService {
     // MARK: - Download Notes
     
     func downloadNotes(from records: [CKRecord]) async throws {
-        let lastSync = await getLastDownloadDate()
+//        let lastSync = await getLastDownloadDate()
         
         try await dbPool.write { db in
-            let localNotes = try NoteModelGRDB.fetchAll(db)
+//            let localNotes = try NoteModelGRDB.fetchAll(db)
             var cloudIDSet = Set<UUID>()
             
             for record in records {
@@ -243,16 +243,16 @@ extension CloudKitService {
             }
             
             // Handle remote deletions
-            if let lastSync {
-                for local in localNotes {
-                    if !cloudIDSet.contains(local.id) {
-                        let localUpdated = local.updatedDate ?? Date.distantPast
-                        if localUpdated < lastSync {
-                            try NoteModelGRDB.deleteOne(db, key: local.id)
-                        }
-                    }
-                }
-            }
+//            if let lastSync {
+//                for local in localNotes {
+//                    if !cloudIDSet.contains(local.id) {
+//                        let localUpdated = local.updatedDate ?? Date.distantPast
+//                        if localUpdated < lastSync {
+//                            try NoteModelGRDB.deleteOne(db, key: local.id)
+//                        }
+//                    }
+//                }
+//            }
         }
         
         Logger.log("Downloaded \(records.count) notes", location: .cloudKit, event: .success)
@@ -261,10 +261,10 @@ extension CloudKitService {
     // MARK: - Download NoteFriends
     
     func downloadNoteFriends(from records: [CKRecord]) async throws {
-        let lastSync = await getLastDownloadDate()
+//        let lastSync = await getLastDownloadDate()
         
         try await dbPool.write { db in
-            let localNoteFriends = try NoteFriend.fetchAll(db)
+//            let localNoteFriends = try NoteFriend.fetchAll(db)
             var cloudKeySet = Set<String>()
             
             for record in records {
@@ -289,7 +289,8 @@ extension CloudKitService {
                     let localUpdated = existing.updatedDate ?? Date.distantPast
                     if cloudUpdated > localUpdated {
                         var model = existing
-                        model.isSent = cloudIsSent
+                        // Preserve local isSent=true: once sent, don't revert to unsent from cloud
+                        model.isSent = existing.isSent || cloudIsSent
                         model.updatedDate = cloudUpdated
                         try model.update(db)
                     }
@@ -300,20 +301,20 @@ extension CloudKitService {
             }
             
             // Handle remote deletions
-            if let lastSync {
-                for local in localNoteFriends {
-                    let key = "\(local.noteId.uuidString)_\(local.friendId.uuidString)"
-                    if !cloudKeySet.contains(key) {
-                        let localUpdated = local.updatedDate ?? Date.distantPast
-                        if localUpdated < lastSync {
-                            try db.execute(
-                                sql: "DELETE FROM noteFriend WHERE noteID = ? AND friendID = ?",
-                                arguments: [local.noteId, local.friendId]
-                            )
-                        }
-                    }
-                }
-            }
+//            if let lastSync {
+//                for local in localNoteFriends {
+//                    let key = "\(local.noteId.uuidString)_\(local.friendId.uuidString)"
+//                    if !cloudKeySet.contains(key) {
+//                        let localUpdated = local.updatedDate ?? Date.distantPast
+//                        if localUpdated < lastSync {
+//                            try db.execute(
+//                                sql: "DELETE FROM noteFriend WHERE noteID = ? AND friendID = ?",
+//                                arguments: [local.noteId, local.friendId]
+//                            )
+//                        }
+//                    }
+//                }
+//            }
         }
         
         Logger.log("Downloaded \(records.count) noteFriends", location: .cloudKit, event: .success)

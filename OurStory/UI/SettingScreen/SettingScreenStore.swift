@@ -23,6 +23,8 @@ final class SettingScreenStore: BaseStore {
                 appStore.send(.toEditProfile)
             case .syncFromCloud:
                 appStore.syncDownload()
+            case .toLogScreen:
+                appStore.send(.toLogs)
             }
         }
     }

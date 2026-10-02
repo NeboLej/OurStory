@@ -26,4 +26,5 @@ enum NavigateAction {
     case toSettings
     case toEditProfile
     case toNotesList(title: String, notes: [Note])
+    case toLogs
 }

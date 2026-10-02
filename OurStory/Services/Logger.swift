@@ -39,8 +39,12 @@ final class Logger {
     
     private init() {}
     
+    static var allLogs = [String]()
+    
     static func log(_ text: String = "", location: Location = .unowned, event: Status = .unowned) {
-        print(["LOG: ", location.text, event.text, " ---- ",  text].joined())
+        let log = ["LOG: ", location.text, event.text, " ---- ",  text].joined()
+        allLogs.append(log)
+        print(log)
     }
 }
 
