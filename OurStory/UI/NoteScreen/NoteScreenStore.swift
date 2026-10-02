@@ -23,7 +23,16 @@ final class NoteScreenStore: BaseStore {
     
     init(appStore: AppStore, note: Note? = nil) {
         rootNote = note
-        date = appStore.selectedDate
+        // Combine the selected calendar day with the current time
+        let selectedDay = appStore.selectedDate
+        let now = Date.now
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day], from: selectedDay)
+        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: now)
+        components.hour = timeComponents.hour
+        components.minute = timeComponents.minute
+        components.second = timeComponents.second
+        date = calendar.date(from: components) ?? now
         
         super.init(appStore: appStore)
         
