@@ -28,9 +28,13 @@ extension CloudKitService {
     
     // MARK: - Upload Users
     
-    func uploadUsers() async throws {
+    func uploadUsers(since lastUpload: Date?) async throws {
         let users = try await dbPool.read { db in
-            try UserModelGRDB.fetchAll(db)
+            if let lastUpload {
+                try UserModelGRDB.filter(Column("updatedDate") > lastUpload).fetchAll(db)
+            } else {
+                try UserModelGRDB.fetchAll(db)
+            }
         }
         
         var records: [CKRecord] = []
@@ -49,9 +53,13 @@ extension CloudKitService {
     
     // MARK: - Upload Friends
     
-    func uploadFriends() async throws {
+    func uploadFriends(since lastUpload: Date?) async throws {
         let friends = try await dbPool.read { db in
-            try FriendModelGRDB.fetchAll(db)
+            if let lastUpload {
+                try FriendModelGRDB.filter(Column("updatedDate") > lastUpload).fetchAll(db)
+            } else {
+                try FriendModelGRDB.fetchAll(db)
+            }
         }
         
         var records: [CKRecord] = []
@@ -72,9 +80,13 @@ extension CloudKitService {
     
     // MARK: - Upload Stories
     
-    func uploadStories() async throws {
+    func uploadStories(since lastUpload: Date?) async throws {
         let stories = try await dbPool.read { db in
-            try StoryModelGRDB.fetchAll(db)
+            if let lastUpload {
+                try StoryModelGRDB.filter(Column("updatedDate") > lastUpload).fetchAll(db)
+            } else {
+                try StoryModelGRDB.fetchAll(db)
+            }
         }
         
         var records: [CKRecord] = []
@@ -94,9 +106,13 @@ extension CloudKitService {
     
     // MARK: - Upload Notes
     
-    func uploadNotes() async throws {
+    func uploadNotes(since lastUpload: Date?) async throws {
         let notes = try await dbPool.read { db in
-            try NoteModelGRDB.fetchAll(db)
+            if let lastUpload {
+                try NoteModelGRDB.filter(Column("updatedDate") > lastUpload).fetchAll(db)
+            } else {
+                try NoteModelGRDB.fetchAll(db)
+            }
         }
         
         var records: [CKRecord] = []
@@ -118,9 +134,13 @@ extension CloudKitService {
     
     // MARK: - Upload NoteFriends
     
-    func uploadNoteFriends() async throws {
+    func uploadNoteFriends(since lastUpload: Date?) async throws {
         let noteFriends = try await dbPool.read { db in
-            try NoteFriend.fetchAll(db)
+            if let lastUpload {
+                try NoteFriend.filter(Column("updatedDate") > lastUpload).fetchAll(db)
+            } else {
+                try NoteFriend.fetchAll(db)
+            }
         }
         
         var records: [CKRecord] = []

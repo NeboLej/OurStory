@@ -33,6 +33,7 @@ final class AppStore {
     let storyRepository: StoryRepositoryProtocol
     @ObservationIgnored
     private let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
+    
     @ObservationIgnored
     var isSyncing = false
     

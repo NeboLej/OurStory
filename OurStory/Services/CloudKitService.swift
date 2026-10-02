@@ -68,13 +68,23 @@ final class CloudKitService {
         
         do {
             try await ensureZoneExists()
+            let lastUpload = await getLastUploadDate()
             try await uploadProfile()
-            try await uploadUsers()
-            try await uploadFriends()
-            try await uploadStories()
-            try await uploadNotes()
-            try await uploadNoteFriends()
+            try await uploadUsers(since: lastUpload)
+            try await uploadFriends(since: lastUpload)
+            try await uploadStories(since: lastUpload)
+            try await uploadNotes(since: lastUpload)
+            try await uploadNoteFriends(since: lastUpload)
             try await processDeletions()
+            
+            // Save last upload date
+            try await dbPool.write { db in
+                try db.execute(
+                    sql: "INSERT OR REPLACE INTO cloudSyncMetadata (key, value) VALUES (?, ?)",
+                    arguments: ["lastUploadDate", ISO8601DateFormatter().string(from: Date())]
+                )
+            }
+            
             Logger.log("Upload completed", location: .cloudKit, event: .success)
             await MainActor.run { onStateChange?(.completed) }
         } catch {
@@ -180,9 +190,17 @@ final class CloudKitService {
     }
     
     func getLastDownloadDate() async -> Date? {
+        await getMetadataDate(key: "lastDownloadDate")
+    }
+    
+    func getLastUploadDate() async -> Date? {
+        await getMetadataDate(key: "lastUploadDate")
+    }
+    
+    private func getMetadataDate(key: String) async -> Date? {
         do {
             return try await dbPool.read { db in
-                if let row = try Row.fetchOne(db, sql: "SELECT value FROM cloudSyncMetadata WHERE key = ?", arguments: ["lastDownloadDate"]),
+                if let row = try Row.fetchOne(db, sql: "SELECT value FROM cloudSyncMetadata WHERE key = ?", arguments: [key]),
                    let dateString = row["value"] as? String {
                     return ISO8601DateFormatter().date(from: dateString)
                 }
