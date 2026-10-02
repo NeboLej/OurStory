@@ -33,6 +33,7 @@ struct FriendScreen: View {
                         }
                     }
                     .padding(.horizontal, 20)
+                    .padding(.bottom, 150)
                 }
                 
                 if isEditMode {
@@ -295,27 +296,11 @@ struct FriendScreen: View {
                     }
                 }
                 
-                HStack(spacing: 12) {
-                    Button {
-                        withAnimation {
-                            store.send(.applyUserProfile)
-                            name = user.name
-                            selectedColor = Color(hex: user.color)
-                            showUserSuggestion = false
-                        }
-                    } label: {
-                        Text("ПРИМЕНИТЬ")
-                            .font(.mySemiBold(size: 12))
-                            .tracking(1.5)
-                            .foregroundStyle(Color.textMulticolor.opacity(0.85))
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 10)
-                            .overlay {
-                                Rectangle()
-                                    .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                                }
-                    }
-                    .buttonStyle(.plain)
+                VintageSmallButton(title: "ПРИМЕНИТЬ") {
+                    store.send(.applyUserProfile)
+                    name = user.name
+                    selectedColor = Color(hex: user.color)
+                    showUserSuggestion = false
                 }
             }
             .padding(14)
@@ -444,10 +429,96 @@ struct FriendScreen: View {
                 CustomColorPicker(selectedColor: $selectedColor)
             }
             
+            if let user = store.state.friend.user {
+                if !isShowUnlinkBanner {
+                    Button {
+                        withAnimation {
+                            isShowUnlinkBanner.toggle()
+                        }
+                    } label: {
+                        linkUser(user: user)
+                    }.padding(.top, 16)
+                } else {
+                    unlinkBanner(user: user)
+                        .padding(.top, 16)
+                }
+            }
+            
             if store.hasUserProfileDifference {
                 userSuggestionBanner(showCloseButton: false)
                     .padding(.top, 24)
             }
+        }
+    }
+    
+    @State var isShowUnlinkBanner: Bool = false
+    
+    
+    @ViewBuilder
+    private func linkUser(user: User) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: user.color))
+                    .frame(width: 32, height: 32)
+                Circle()
+                    .stroke(Color.backgroundFill, lineWidth: 1.5)
+                    .frame(width: 28, height: 28)
+            }
+            
+            HStack(spacing: 4) {
+                Text(store.state.friend.name)
+                    .font(.myMedium(size: 14))
+                    .foregroundStyle(.textMulticolor)
+                Image(systemName: "link")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.textMulticolor.opacity(0.4))
+                Text(user.name)
+                    .font(.myMedium(size: 14))
+                    .foregroundStyle(.textMulticolor)
+            }
+            
+            Spacer()
+        }
+    }
+    // MARK: - Баннер отвязки
+    @ViewBuilder
+    private func unlinkBanner(user: User) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("ПРИВЯЗКА")
+                    .font(.mySemiBold(size: 10))
+                    .tracking(1.5)
+                    .foregroundStyle(.textMulticolor.opacity(0.5))
+                Spacer()
+                
+                Button {
+                    withAnimation {
+                        isShowUnlinkBanner = false
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.textMulticolor.opacity(0.4))
+                }
+                .buttonStyle(.plain)
+            }
+            
+            Text("\(store.state.friend.name) привязан к аккаунту \(user.name)")
+                .font(.myRegular(size: 13))
+                .foregroundStyle(.textMulticolor.opacity(0.7))
+            
+            linkUser(user: user)
+            
+            VintageSmallButton(title: "ОТВЯЗАТЬ") {
+                store.send(.unlinkFriend)
+                isEditMode = false
+            }
+        }
+        .padding(14)
+        .overlay {
+            Rectangle()
+                .stroke(Color.textMulticolor.opacity(0.15), lineWidth: 1)
         }
     }
     
@@ -519,6 +590,6 @@ struct FriendScreen: View {
 
 #Preview {
     NavigationStack {
-        ScreenBuilder.previewBuilder.getScreen(type: .friend(Friend(name: "София", color: "F16C6C")))
+        ScreenBuilder.previewBuilder.getScreen(type: .friend(Friend(name: "София", color: "F16C6C", user: User(name: "Витя", color: "33eed5"))))
     }
 }

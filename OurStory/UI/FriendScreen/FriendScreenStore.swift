@@ -111,6 +111,12 @@ final class FriendScreenStore: BaseStore {
                 if unsentNotes.count > 0 {
                     appStore.send(.toNotesList(title: "Мои нерасказанные истории", notes: unsentNotes))
                 }
+            case .unlinkFriend:
+                stopSearching()
+                let unlinked = Friend(id: friend.id, name: friend.name, color: friend.color, user: nil, lastSyncDate: friend.lastSyncDate)
+                friend = unlinked
+                searchStatus = .idle
+                appStore.send(.editFriend(unlinked))
             }
         }
     }

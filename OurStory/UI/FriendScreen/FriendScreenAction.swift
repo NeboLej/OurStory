@@ -17,6 +17,7 @@ enum FriendScreenAction {
     case applyUserProfile
     case toAllNotes
     case toUnsentNotes
+    case unlinkFriend
     
     // Auto-search lifecycle
     case startSearching
