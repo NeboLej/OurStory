@@ -24,6 +24,14 @@ struct HomeScreen: View {
                 .frame(height: 70)
                 .foregroundStyle(Color.myPrimary)
             screenBuilder.getComponent(type: .horizontalCalendar)
+                .overlay(alignment: .topTrailing) {
+                    if store.state.isSyncing {
+                        CloudSyncIndicator()
+                            .padding(.trailing, 12)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.3), value: store.state.isSyncing)
                 .padding(.top, 16)
             
             if let currentStory = store.state.selectedStory {
