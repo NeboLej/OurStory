@@ -91,32 +91,33 @@ struct FriendScreen: View {
                     .fixedSize()
                 }.sharedBackgroundVisibility(.hidden)
             }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    withAnimation {
-                        if isEditMode {
-                            store.send(.editFriend(name: name, color: selectedColor.toHex()))
+            if !store.state.isInSync {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation {
+                            if isEditMode {
+                                store.send(.editFriend(name: name, color: selectedColor.toHex()))
+                            }
+                            isEditMode.toggle()
                         }
-                        isEditMode.toggle()
-                    }
-                } label: {
-                    Text(isEditMode ? "СОХРАНИТЬ" : "ИЗМЕНИТЬ")
-                        .font(.mySemiBold(size: 11))
-                        .tracking(1.5)
-                        .foregroundStyle(Color.textMulticolor.opacity(0.85))
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 10)
+                    } label: {
+                        Text(isEditMode ? "СОХРАНИТЬ" : "ИЗМЕНИТЬ")
+                            .font(.mySemiBold(size: 11))
+                            .tracking(1.5)
+                            .foregroundStyle(Color.textMulticolor.opacity(0.85))
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
                         
-                        .overlay {
-                            Rectangle()
-                                .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                        }
+                            .overlay {
+                                Rectangle()
+                                    .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(store.state.isInSync ? 0 : 1)
                 }
-                .buttonStyle(.plain)
-                .opacity(store.state.isInSync ? 0 : 1)
+                .sharedBackgroundVisibility(.hidden)
             }
-            .sharedBackgroundVisibility(.hidden)
             
         }
         .onAppear {

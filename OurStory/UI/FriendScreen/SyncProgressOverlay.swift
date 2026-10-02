@@ -30,6 +30,11 @@ struct SyncProgressOverlay: View {
     @State private var rightDotFloatY: CGFloat = 0
     @State private var rightDotFloatX: CGFloat = 0
     
+    private var isWaitingForConfirmation: Bool {
+        if case .waitingForConfirmation = syncPhase { return true }
+        return false
+    }
+    
     var body: some View {
         ZStack {
             Color.backgroundFill
@@ -49,6 +54,22 @@ struct SyncProgressOverlay: View {
                 bottomArea()
                     .padding(.bottom, 32)
                     .padding(.horizontal, 20)
+            }
+            .frame(maxWidth: .infinity)
+            .overlay(alignment: .topTrailing) {
+                switch syncPhase {
+                case .completed: EmptyView()
+                default :
+                    Button {
+                        onExitSync()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.textMulticolor.opacity(0.6))
+                            .padding(.trailing, 24)
+                            .padding(.top, 8)
+                    }
+                }
             }
         }
         .onAppear {
@@ -86,9 +107,9 @@ struct SyncProgressOverlay: View {
                 rightDotFloatY = 0
                 rightDotFloatX = 0
             }
-            withAnimation(.easeInOut(duration: 5.0)) {
-                leftDotOffset = -100
-                rightDotOffset = 100
+            withAnimation(.easeInOut(duration: 4.5)) {
+                leftDotOffset = -22
+                rightDotOffset = 22
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -179,7 +200,7 @@ struct SyncProgressOverlay: View {
                 .opacity(dotsOpacity)
             
             // Тонкая линия между точками (когда сближаются)
-            if syncPhase == .approaching || syncPhase == .waitingForConfirmation(User(name: "", color: "")) || abs(leftDotOffset) < 80 {
+            if syncPhase == .approaching || isWaitingForConfirmation || abs(leftDotOffset) < 80 {
                 let lineApproaching = syncPhase == .approaching
                 Rectangle()
                     .fill(Color.textMulticolor.opacity(lineApproaching ? 0.1 : 0.05))
@@ -232,7 +253,7 @@ struct SyncProgressOverlay: View {
                     .foregroundStyle(.textMulticolor.opacity(0.85))
                     .transition(.opacity)
             case .completed:
-                Text("спасибо, что поделились")
+                Text("здорово, что поделились")
                     .font(.myMedium(size: 17))
                     .foregroundStyle(.textMulticolor)
                     .transition(.opacity)
@@ -325,22 +346,10 @@ struct SyncProgressOverlay: View {
                     Text("получено историй: \(newCount)")
                         .font(.myRegular(size: 13))
                         .foregroundStyle(.textMulticolor.opacity(0.6))
-                    
-                    Button {
+
+                    VintageSmallButton(title: "ПОСМОТРЕТЬ ИСТОРИИ") {
                         onToNewNotes()
-                    } label: {
-                        Text("ПОСМОТРЕТЬ ИСТОРИИ")
-                            .font(.mySemiBold(size: 12))
-                            .tracking(1.5)
-                            .foregroundStyle(.textMulticolor.opacity(0.85))
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 20)
-                            .overlay {
-                                Rectangle()
-                                    .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                            }
                     }
-                    .buttonStyle(.plain)
                 }
                 
                 exitButton()
@@ -376,4 +385,15 @@ struct SyncProgressOverlay: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+#Preview {
+    SyncProgressOverlay(syncPhase: .completed(newCount: 3), friendName: "sdf", friendColor: "44ff32", userColor: "33eedd") { isBool in
+        
+    } onToNewNotes: {
+        
+    } onExitSync: {
+        
+    }
+    
 }

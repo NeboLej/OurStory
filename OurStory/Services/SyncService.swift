@@ -284,7 +284,9 @@ final class PeerExchangeManager: NSObject {
         self.localFriend = localFriend
         self.myProfile = myProfile
         
-        self.peerID = MCPeerID(displayName: localFriend.id.uuidString)
+        // Используем myProfile.id — уникальный для каждого устройства.
+        // localFriend.id одинаков на обоих сторонах и вызывает конфликт MCPeerID.
+        self.peerID = MCPeerID(displayName: myProfile.id.uuidString)
         self.session = MCSession(peer: peerID, securityIdentity: nil, encryptionPreference: .required)
         self.advertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceType)
         self.browser = MCNearbyServiceBrowser(peer: peerID, serviceType: serviceType)
@@ -314,6 +316,7 @@ final class PeerExchangeManager: NSObject {
         
         isActive = true
         
+        Logger.log("PeerExchange: sync started, notes count: \(myNotes.count), friendID: \(localFriend.id)", event: .unowned)
         onEvent?(.searching)
         
         return try await withTaskCancellationHandler {
@@ -356,6 +359,7 @@ final class PeerExchangeManager: NSObject {
     }
     
     func confirmUser(_ approved: Bool) {
+        Logger.log("PeerExchange: confirmUser(\(approved)), isActive: \(isActive), localApprovalSent: \(localApprovalSent), connectedPeers: \(session.connectedPeers.count)", event: .unowned)
         guard isActive else { return }
         guard !localApprovalSent else { return }
         guard let peer = session.connectedPeers.first else { return }
@@ -387,6 +391,7 @@ final class PeerExchangeManager: NSObject {
     }
     
     private func trySendNotesIfReady() {
+        Logger.log("PeerExchange: trySendNotesIfReady - isActive: \(isActive), notesSent: \(notesSent), localApprovalSent: \(localApprovalSent), remoteApprovalReceived: \(remoteApprovalReceived)", event: .unowned)
         guard isActive else { return }
         guard !notesSent else { return }
         guard localApprovalSent else { return }
@@ -407,10 +412,10 @@ final class PeerExchangeManager: NSObject {
         
         do {
             let data = try JSONEncoder().encode(message)
-            
             try session.send(data, toPeers: [peer], with: .reliable)
-            
+            Logger.log("PeerExchange: sent user profile \(myProfile.name) to \(peer.displayName)", event: .success)
         } catch {
+            Logger.log("PeerExchange: failed to send user", event: .error(error))
             finishSyncWithError(error)
         }
     }
@@ -423,11 +428,12 @@ final class PeerExchangeManager: NSObject {
         
         do {
             let data = try JSONEncoder().encode(message)
-            
             try session.send(data, toPeers: [peer], with: .reliable)
             notesSent = true
+            Logger.log("PeerExchange: sent \(myNotes.count) notes to \(peer.displayName)", event: .success)
             onEvent?(.exchangingNotes)
         } catch {
+            Logger.log("PeerExchange: failed to send notes", event: .error(error))
             finishSyncWithError(error)
         }
     }
@@ -443,6 +449,7 @@ final class PeerExchangeManager: NSObject {
         self.continuation = nil
         
         stopNetworking()
+        Logger.log("PeerExchange: sync completed successfully, received \(receivedNotes.count) notes from \(user.name)", event: .success)
         onEvent?(.completed)
         continuation.resume(returning: SyncResult(user: user, notes: receivedNotes))
     }
@@ -452,6 +459,7 @@ final class PeerExchangeManager: NSObject {
         
         isActive = false
         stopNetworking()
+        Logger.log("PeerExchange: sync failed", event: .error(error))
         onEvent?(.failed(error))
         
         guard let continuation else { return }
@@ -460,13 +468,17 @@ final class PeerExchangeManager: NSObject {
     }
     
     private func handle(message: SyncMessage, fromPeer peerID: MCPeerID) {
-        guard isActive else { return }
+        guard isActive else {
+            Logger.log("PeerExchange: handle ignored, isActive=false, kind=\(message.kind)", event: .unowned)
+            return
+        }
         
         switch message.kind {
         case .user:
             guard let user = message.user else { return }
             
             receivedUser = user
+            Logger.log("PeerExchange: received user \(user.name) (id: \(user.id)), localFriend.user?.id: \(localFriend.user?.id.uuidString ?? "nil")", event: .success)
             
             // Пользователь получен — прекращаем поиск, чтобы не создавать лишних соединений
             advertiser.stopAdvertisingPeer()
@@ -474,12 +486,15 @@ final class PeerExchangeManager: NSObject {
             
             if user.id == localFriend.user?.id {
                 // Друг совпадает — сообщаем что рядом, ждём явного подтверждения из UI
+                Logger.log("PeerExchange: friend matched -> friendNearby", event: .success)
                 onEvent?(.friendNearby(user))
             } else {
+                Logger.log("PeerExchange: friend not matched -> waitingForUserConfirmation", event: .unowned)
                 onEvent?(.waitingForUserConfirmation(user))
             }
         case .userApproval:
             guard let approved = message.approval else { return }
+            Logger.log("PeerExchange: received userApproval: \(approved), localApprovalSent: \(localApprovalSent)", event: .unowned)
             
             if !approved {
                 finishSyncWithError(SyncError.userRejected)
@@ -494,12 +509,13 @@ final class PeerExchangeManager: NSObject {
             trySendNotesIfReady()
             
         case .notes:
+            Logger.log("PeerExchange: received notes message, localApprovalSent: \(localApprovalSent), remoteApprovalReceived: \(remoteApprovalReceived), count: \(message.notes?.count ?? -1)", event: .unowned)
             guard localApprovalSent else { return }
             guard remoteApprovalReceived else { return }
             guard let notes = message.notes else { return }
             
             receivedNotes = notes
-//            onEvent?(.exchangingNotes)
+            Logger.log("PeerExchange: received \(notes.count) notes, calling finishSync", event: .success)
             finishSync()
         }
     }
@@ -547,30 +563,40 @@ extension PeerExchangeManager: MCNearbyServiceBrowserDelegate {
 extension PeerExchangeManager: MCSessionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        
-        guard isActive else { return }
-        
-        switch state {
-        case .connecting:
-            onEvent?(.connecting)
-        case .connected:
-            onEvent?(.exchangingUsers)
-            sendUser(to: peerID)
-        case .notConnected:
-            finishSyncWithError(SyncError.disconnected)
-        @unknown default:
-            break
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            Logger.log("PeerExchange: session state changed to \(state.rawValue) for peer \(peerID.displayName), isActive: \(self.isActive)", event: .unowned)
+            guard self.isActive else { return }
+            
+            switch state {
+            case .connecting:
+                self.onEvent?(.connecting)
+            case .connected:
+                self.onEvent?(.exchangingUsers)
+                self.sendUser(to: peerID)
+            case .notConnected:
+                self.finishSyncWithError(SyncError.disconnected)
+            @unknown default:
+                break
+            }
         }
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        guard isActive else { return }
-        
+        // Decode on background to avoid blocking main queue
+        let message: SyncMessage
         do {
-            let message = try JSONDecoder().decode(SyncMessage.self, from: data)
-            handle(message: message, fromPeer: peerID)
+            message = try JSONDecoder().decode(SyncMessage.self, from: data)
         } catch {
-            print("Failed to decode SyncMessage:", error)
+            Logger.log("PeerExchange: failed to decode message", event: .error(error))
+            return
+        }
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            Logger.log("PeerExchange: received \(message.kind) from \(peerID.displayName), isActive: \(self.isActive)", event: .success)
+            guard self.isActive else { return }
+            self.handle(message: message, fromPeer: peerID)
         }
     }
     

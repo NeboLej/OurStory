@@ -67,8 +67,8 @@ struct FriendScreenState {
     
     var isInSync: Bool {
         switch syncPhase {
-        case .idle: return false
-        default: return true
+        case .idle: false
+        default: true
         }
     }
 }

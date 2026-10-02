@@ -87,6 +87,9 @@ final class FriendScreenStore: BaseStore {
             case .exitSync:
                 syncAnimationTask?.cancel()
                 syncAnimationTask = nil
+                approachingDelayTask?.cancel()
+                approachingDelayTask = nil
+                syncService.cancelSync()
                 syncPgogressStates = []
                 syncPhase = .idle
                 searchStatus = .idle
@@ -265,13 +268,16 @@ final class FriendScreenStore: BaseStore {
         recheckTask?.cancel()
         recheckTask = nil
         
+        Logger.log("SyncFriend: started, discoveryActive: \(discoveryActive), friend.user: \(friend.user?.name ?? "nil"), sendNotes: \(sendNotes.count)")
+        
         if discoveryActive {
             // Discovery уже нашла друга, соединение установлено — подтверждаем
-            // Оверлей открывается сразу с "поиском", точки стоят на месте
+            // Оверлей открывается сразу с «поиском», точки стоят на месте
             // Когда начнётся реальный обмен — точки поедут навстречу
             discoveryActive = false
             
             let confirmed = syncService.confirmUser(true)
+            Logger.log("SyncFriend: discovery path, confirmUser result: \(confirmed)")
             if confirmed {
                 syncPhase = .searching
             } else {
@@ -282,11 +288,13 @@ final class FriendScreenStore: BaseStore {
             }
         } else {
             // Первая синхронизация (friend.user == nil) — запускаем полный sync
+            Logger.log("SyncFriend: first sync path (no discovery), starting full sync")
             syncPhase = .searching
             
             syncService.onEvent = { [weak self] event in
                 guard let self else { return }
                 DispatchQueue.main.async {
+                    Logger.log("SyncFriend: received event: \(event.descriptionText)")
                     self.syncPgogressStates.append(event)
                     self.mapSyncEventToAnimationPhase(event)
                 }
@@ -295,6 +303,7 @@ final class FriendScreenStore: BaseStore {
             syncService.onSyncCompleted = { [weak self] result in
                 guard let self else { return }
                 DispatchQueue.main.async {
+                    Logger.log("SyncFriend: sync completed, received \(result.notes.count) notes from \(result.user.name)")
                     self.handleSyncCompleted(result)
                 }
             }
@@ -303,6 +312,10 @@ final class FriendScreenStore: BaseStore {
         }
     }
     
+    /// Задача отложенного перехода в .approaching (из .connecting / .exchangingUsers)
+    @ObservationIgnored
+    private var approachingDelayTask: Task<Void, Never>?
+    
     private func mapSyncEventToAnimationPhase(_ event: SyncProgressState) {
         switch event {
         case .searching:
@@ -310,8 +323,13 @@ final class FriendScreenStore: BaseStore {
                 syncPhase = .searching
             }
         case .connecting, .exchangingUsers:
-            Task { @MainActor in
+            // Запускаем с задержкой, но только если фаза ещё не продвинулась дальше
+            approachingDelayTask?.cancel()
+            approachingDelayTask = Task { @MainActor [weak self] in
                 try? await Task.sleep(nanoseconds: 600_000_000) // 0.6с задержка
+                guard let self, !Task.isCancelled else { return }
+                // Не перезаписываем, если уже перешли к waitingForConfirmation или дальше
+                guard self.syncPhase == .searching else { return }
                 withAnimation(.spring(response: 1.2, dampingFraction: 0.8)) {
                     self.syncPhase = .approaching
                 }
@@ -319,6 +337,9 @@ final class FriendScreenStore: BaseStore {
         case .friendNearby:
             break
         case .waitingForUserConfirmation(let user):
+            // Отменяем отложенный переход в .approaching
+            approachingDelayTask?.cancel()
+            approachingDelayTask = nil
             withAnimation(.easeInOut(duration: 0.6)) {
                 syncPhase = .waitingForConfirmation(user)
             }
