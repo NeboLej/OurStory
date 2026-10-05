@@ -70,6 +70,8 @@ final class NoteScreenStore: BaseStore {
                 
             case .selectDate(let newDate):
                 date = newDate
+            case .addNewFriend:
+                appStore.send(.toNewFriend)
             }
         }
     }

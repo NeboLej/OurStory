@@ -19,7 +19,7 @@ struct NewNoteToolbar: View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 Button(action: onAddFriend) {
-                    Label("Добавить друга", systemImage: "person.badge.plus")
+                    Label("Отметить друга", systemImage: "person.badge.plus")
                         .font(.system(size: 14, weight: .medium))
                         .padding(.horizontal, 12)
                         .frame(height: 36)

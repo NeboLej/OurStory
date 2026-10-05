@@ -33,35 +33,39 @@ struct NoteListContent: View {
     }
     
     private var noteList: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(store.state.groupedNotes, id: \.date) { group in
-                        if isShowDate {
-                            Text(group.date.toReadable())
-                                .font(.myMedium(size: 14))
-                                .foregroundStyle(.textMulticolor.opacity(0.5))
-                                .padding(.top, 20)
-                                .padding(.bottom, 4)
-                                .padding(.leading, 4)
-                        }
-                        
-                        ForEach(group.notes, id: \.id) { note in
-                            noteView(note)
-                                .padding(.vertical, 10)
-                                .animatedSelectionBorder(isSelected: store.showMenuNote == note || store.showFriendsNote == note)
-                        }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(store.state.groupedNotes, id: \.date) { group in
+                    if isShowDate {
+                        Text(group.date.toReadable())
+                            .font(.myMedium(size: 14))
+                            .foregroundStyle(.textMulticolor.opacity(0.5))
+                            .padding(.top, 20)
+                            .padding(.bottom, 4)
+                            .padding(.leading, 4)
                     }
-                    HStack { Spacer() }
-                }
-                .frame(minHeight: geometry.size.height, alignment: .top)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation(.snappy) {
-                        store.send(.selectMenuNote(nil))
-                        store.send(.selectFriendsNote(nil))
+                    
+                    ForEach(group.notes, id: \.id) { note in
+                        noteView(note)
+                            .padding(.vertical, 10)
+                            .animatedSelectionBorder(isSelected: store.showMenuNote == note || store.showFriendsNote == note)
                     }
                 }
+                HStack { Spacer() }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.snappy) {
+                    store.send(.selectMenuNote(nil))
+                    store.send(.selectFriendsNote(nil))
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.snappy) {
+                store.send(.selectMenuNote(nil))
+                store.send(.selectFriendsNote(nil))
             }
         }
         
@@ -92,15 +96,11 @@ struct NoteListContent: View {
                 store.send(.updateFriendInNote(note: note, friend: friend))
             } onAddFriend: {
                 isShowFriendsList = false
-                isShowNewFriend = true
+                store.send(.addNewFriend)
             } onExit: {
                 isShowFriendsList = false
             }
-            .padding(.horizontal)
-            .sheet(isPresented: $isShowNewFriend) {
-                NewFriendScreen(store: NewFriendScreenStore(appStore: store.appStore))
-                    .presentationDetents([.medium])
-            }
+            .padding(.horizontal, 12)
         }
     }
     

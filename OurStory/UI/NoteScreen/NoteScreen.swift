@@ -17,7 +17,6 @@ struct NoteScreen: View {
     @State private var selectedDate = Date()
     @State private var isShowCalendar = false
     @State private var isShowFriendsList = false
-    @State private var isShowNewFriend = false
     
     @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
@@ -94,10 +93,6 @@ struct NoteScreen: View {
         }
         .onAppear {
             focusedField = .story
-        }
-        .sheet(isPresented: $isShowNewFriend) {
-            NewFriendScreen(store: NewFriendScreenStore(appStore: store.appStore))
-                .presentationDetents([.medium])
         }
     }
     
@@ -231,11 +226,10 @@ struct NoteScreen: View {
                             store.send(.selectFriend(friend))
                         } onAddFriend: {
                             isShowFriendsList = false
-                            isShowNewFriend = true
+                            store.send(.addNewFriend)
                         } onExit: {
                             isShowFriendsList = false
                         }
-//                        .padding(.horizontal)
                     }
                     
                     NewNoteToolbar(

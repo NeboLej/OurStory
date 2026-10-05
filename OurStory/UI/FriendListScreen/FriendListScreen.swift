@@ -115,6 +115,7 @@ struct FriendListScreen: View {
                     .padding(.trailing, 4)
             }
             .padding(.vertical, 14)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .overlay(alignment: .bottom) {

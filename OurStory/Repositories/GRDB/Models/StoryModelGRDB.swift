@@ -29,7 +29,7 @@ struct StoryModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, Table
     
     enum CodingKeys: CodingKey {
         case id, date, title, isUserTitle
-        case notes, updatedDate
+        case updatedDate
     }
     
     init(from: Story) {

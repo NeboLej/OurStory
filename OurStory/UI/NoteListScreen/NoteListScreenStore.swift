@@ -51,6 +51,8 @@ final class NoteListScreenStore: BaseStore {
                 showFriendsNote = note
             case .updateNotes(let notes):
                 self.localNotes = notes.sorted { $0.date > $1.date }
+            case .addNewFriend:
+                appStore.send(.toNewFriend)
             }
         }
     }

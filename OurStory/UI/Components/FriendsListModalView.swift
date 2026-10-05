@@ -131,36 +131,43 @@ struct FriendsListModalView: View {
             }
             
             // Add friend button
-            if let onAddFriend {
-                VStack(spacing: 0) {
-                    Rectangle()
-                        .frame(height: 0.5)
-                        .foregroundStyle(.textMulticolor.opacity(0.15))
-                        .padding(.horizontal, 16)
-                    
-                    Button {
-                        withAnimation {
-                            onAddFriend()
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 12, weight: .semibold))
-                            Text("НОВЫЙ ДРУГ")
-                                .font(.mySemiBold(size: 11))
-                                .tracking(1.5)
-                        }
-                        .foregroundStyle(.textMulticolor.opacity(0.6))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: addButtonHeight)
-                    }
-                    .buttonStyle(.plain)
-                }
+            if onAddFriend != nil {
+                addFriendButton()
             }
         }
         .frame(height: calculatedHeight)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .glassEffect(Glass.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .transition(.scale(scale: 0.75).combined(with: .opacity))
+    }
+    
+    
+    @ViewBuilder
+    private func addFriendButton() -> some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .frame(height: 0.5)
+                .foregroundStyle(.textMulticolor.opacity(0.15))
+                .padding(.horizontal, 16)
+            
+            Button {
+                withAnimation {
+                    onAddFriend?()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("НОВЫЙ ДРУГ")
+                        .font(.mySemiBold(size: 11))
+                        .tracking(1.5)
+                }
+                .foregroundStyle(.textMulticolor.opacity(0.6))
+                .frame(maxWidth: .infinity)
+                .frame(height: addButtonHeight)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
 
