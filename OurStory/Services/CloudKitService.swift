@@ -60,7 +60,7 @@ final class CloudKitService {
     
     func uploadAll() async {
         guard await checkiCloudAvailability() else {
-            Logger.log("iCloud not available, skipping upload", location: .cloudKit, event: .unowned)
+            Logger.log("iCloud not available, skipping upload", location: .cloudKit, event: .processing)
             return
         }
         
@@ -96,30 +96,30 @@ final class CloudKitService {
     // MARK: - Full Download
     
     func downloadAll() async {
-        Logger.log("Starting downloadAll", location: .cloudKit, event: .unowned)
+        Logger.log("Starting downloadAll", location: .cloudKit, event: .processing)
         guard await checkiCloudAvailability() else {
-            Logger.log("iCloud not available, skipping download", location: .cloudKit, event: .unowned)
+            Logger.log("iCloud not available, skipping download", location: .cloudKit, event: .processing)
             return
         }
         
         await MainActor.run { onStateChange?(.downloading) }
         
         do {
-            Logger.log("downloadAll: ensureZoneExists...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: ensureZoneExists...", location: .cloudKit, event: .processing)
             try await ensureZoneExists()
-            Logger.log("downloadAll: fetching all records from zone...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: fetching all records from zone...", location: .cloudKit, event: .processing)
             let allRecords = try await fetchAllRecordsFromZone()
-            Logger.log("downloadAll: downloadProfile...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: downloadProfile...", location: .cloudKit, event: .processing)
             try await downloadProfile(from: allRecords["CD_Profile"] ?? [])
-            Logger.log("downloadAll: downloadUsers...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: downloadUsers...", location: .cloudKit, event: .processing)
             try await downloadUsers(from: allRecords["CD_User"] ?? [])
-            Logger.log("downloadAll: downloadFriends...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: downloadFriends...", location: .cloudKit, event: .processing)
             try await downloadFriends(from: allRecords["CD_Friend"] ?? [])
-            Logger.log("downloadAll: downloadStories...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: downloadStories...", location: .cloudKit, event: .processing)
             try await downloadStories(from: allRecords["CD_Story"] ?? [])
-            Logger.log("downloadAll: downloadNotes...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: downloadNotes...", location: .cloudKit, event: .processing)
             try await downloadNotes(from: allRecords["CD_Note"] ?? [])
-            Logger.log("downloadAll: downloadNoteFriends...", location: .cloudKit, event: .unowned)
+            Logger.log("downloadAll: downloadNoteFriends...", location: .cloudKit, event: .processing)
             try await downloadNoteFriends(from: allRecords["CD_NoteFriend"] ?? [])
             
             // Save last download date

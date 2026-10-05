@@ -26,13 +26,15 @@ final class Logger {
     enum Status {
         case success
         case error(Error? = nil)
+        case processing
         case unowned
         
         var text: String {
             switch self {
-            case .success: return "☘️"
-            case let .error(error): return "🆘 ERROR: \(error?.localizedDescription ?? "N/A")"
-            case .unowned: return "👾"
+            case .success: "☘️"
+            case let .error(error): "🆘 ERROR: \(error?.localizedDescription ?? "N/A")"
+            case .processing: "🌬️"
+            case .unowned: "👾"
             }
         }
     }
