@@ -21,25 +21,35 @@ struct NoteListContent: View {
     }
     
     private var noteList: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(store.state.groupedNotes, id: \.date) { group in
-                    if isShowDate {
-                        Text(group.date.toReadable())
-                            .font(.myMedium(size: 14))
-                            .foregroundStyle(.textMulticolor.opacity(0.5))
-                            .padding(.top, 20)
-                            .padding(.bottom, 4)
-                            .padding(.leading, 4)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(store.state.groupedNotes, id: \.date) { group in
+                        if isShowDate {
+                            Text(group.date.toReadable())
+                                .font(.myMedium(size: 14))
+                                .foregroundStyle(.textMulticolor.opacity(0.5))
+                                .padding(.top, 20)
+                                .padding(.bottom, 4)
+                                .padding(.leading, 4)
+                        }
+                        
+                        ForEach(group.notes, id: \.id) { note in
+                            noteView(note)
+                                .padding(.vertical, 10)
+                                .animatedSelectionBorder(isSelected: store.showMenuNote == note || store.showFriendsNote == note)
+                        }
                     }
-                    
-                    ForEach(group.notes, id: \.id) { note in
-                        noteView(note)
-                            .padding(.vertical, 10)
-                            .animatedSelectionBorder(isSelected: store.showMenuNote == note || store.showFriendsNote == note)
+                    HStack { Spacer() }
+                }
+                .frame(minHeight: geometry.size.height, alignment: .top)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.snappy) {
+                        store.send(.selectMenuNote(nil))
+                        store.send(.selectFriendsNote(nil))
                     }
                 }
-                HStack { Spacer() }
             }
         }
         
