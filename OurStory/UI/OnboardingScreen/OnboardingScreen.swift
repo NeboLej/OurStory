@@ -1,24 +1,23 @@
 //
-//  NewFriendScreen.swift
+//  OnboardingScreen.swift
 //  OurStory
-//
-//  Created by Nebo on 21.09.2026.
 //
 
 import SwiftUI
 
-struct NewFriendScreen: View {
-    @State private var store: NewFriendScreenStore
+struct OnboardingScreen: View {
+    
+    @State private var store: OnboardingScreenStore
     @State private var name: String = ""
     @State private var selectedColor: Color = Color.pickerColors.randomElement()!
-    @Environment(\.dismiss) var dismiss
+    @FocusState private var isNameFocused: Bool
+    
+    init(store: OnboardingScreenStore) {
+        self.store = store
+    }
     
     private var isSaveDisabled: Bool {
         name.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-    
-    init(store: NewFriendScreenStore) {
-        self.store = store
     }
     
     var body: some View {
@@ -26,11 +25,10 @@ struct NewFriendScreen: View {
             Color(.backgroundFill)
                 .ignoresSafeArea()
             
-            VStack(alignment: .leading, spacing: 0) {
-                
+            VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("НОВЫЙ\nПРОФИЛЬ № 1")
-                        .font(.mySemiBold(size: 22))
+                    Text("НАШИ\nИСТОРИИ")
+                        .font(.mySemiBold(size: 25))
                         .tracking(2)
                         .foregroundColor(.textMulticolor)
                     
@@ -43,15 +41,18 @@ struct NewFriendScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("ИМЯ ПОЛЬЗОВАТЕЛЯ")
+                    Text("МОЕ ИМЯ")
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)
                     
-                    TextField("Введите имя...", text: $name)
+                    TextField("Введите ваше имя...", text: $name)
                         .font(.myItalic(size: 20))
                         .foregroundColor(.textMulticolor)
                         .tint(.textMulticolor)
+                        .focused($isNameFocused)
+                        .submitLabel(.done)
+                        .onSubmit { isNameFocused = false }
                         .padding(.vertical, 8)
                         .overlay(alignment: .bottom) {
                             Rectangle()
@@ -73,40 +74,32 @@ struct NewFriendScreen: View {
                 Spacer()
                 
                 Button {
-                    store.send(.saveNewFriend(name: name, color: selectedColor.toHex()))
-                    dismiss()
+                    store.send(.saveProfile(name: name.trimmingCharacters(in: .whitespaces),
+                                            color: selectedColor.toHex()))
                 } label: {
-                    VStack(spacing: 2) {
-                        Text("СОХРАНИТЬ")
-                            .font(.mySemiBold(size: 14))
-                            .tracking(2)
-                            .foregroundStyle(.black)
-                        
-//                        Text("------")
-//                            .font(.myRegular(size: 10))
-//                            .opacity(0.6)
-//                            .foregroundStyle(.black)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .disabled(isSaveDisabled)
-                    .background(Color.myPrimary)
-                    .overlay {
-                        Rectangle()
-                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                            .padding(3)
-                    }
+                    Text("ПРОДОЛЖИТЬ")
+                        .font(.mySemiBold(size: 14))
+                        .tracking(2)
+                        .foregroundStyle(isSaveDisabled ? Color.textMulticolor.opacity(0.3) : Color.textMulticolor)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .overlay {
+                            Rectangle()
+                                .stroke(isSaveDisabled ? Color.textMulticolor.opacity(0.2) : Color.textMulticolor.opacity(0.5), lineWidth: 1)
+                        }
                 }
                 .buttonStyle(.plain)
+                .disabled(isSaveDisabled)
+                .padding(.bottom, 40)
             }
-            .padding(12)
+            .padding(.horizontal, 20)
         }
+        .frame(maxWidth: .infinity)
+        .background(.backgroundFill)
+        .onAppear { isNameFocused = true }
     }
 }
 
 #Preview {
-    ScreenBuilder.previewBuilder.getScreen(type: .newFriend)
-//    @Previewable @State var selectedColor: Color = .red
-    
-//    CustomColorPicker(selectedColor: $selectedColor)
+    ScreenBuilder.previewBuilder.getScreen(type: .onboarding)
 }

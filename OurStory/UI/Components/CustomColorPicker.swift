@@ -11,16 +11,13 @@ import SwiftUI
 struct CustomColorPicker: View {
     @Binding var selectedColor: Color
     
-    @State var vintageColors: [Color] = [
-        .red, .orange, .yellow, .green, .mint, .teal,
-        .blue, .indigo, .purple, .pink, .gray
-    ]
+    @State var colors: [Color] = Color.pickerColors
     
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 6)
     
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 16) {
-            ForEach(vintageColors, id: \.self) { color in
+            ForEach(colors, id: \.self) { color in
                 ZStack {
                     Circle()
                         .stroke(Color.textMulticolor.opacity(0.85), lineWidth: selectedColor == color ? 1.5 : 0)
@@ -42,16 +39,16 @@ struct CustomColorPicker: View {
                 .labelsHidden()
                 .overlay {
                     Circle()
-                        .stroke(Color.textMulticolor.opacity(0.85), lineWidth: !vintageColors.contains(selectedColor) ? 1.5 : 0)
+                        .stroke(Color.textMulticolor.opacity(0.85), lineWidth: !colors.contains(selectedColor) ? 1.5 : 0)
                         .frame(width: 36, height: 36)
                 }
                 
         }
         .onAppear {
-            if !vintageColors.contains(selectedColor) {
-                vintageColors.insert(selectedColor, at: 0)
-                if vintageColors.count > 11 {
-                    vintageColors = vintageColors.dropLast()
+            if !colors.contains(selectedColor) {
+                colors.insert(selectedColor, at: 0)
+                if colors.count > 11 {
+                    colors = colors.dropLast()
                 }
             }
         }

@@ -9,6 +9,11 @@ import SwiftUI
 
 extension Color {
     
+    static var pickerColors: [Color] = [
+        .red, .orange, .yellow, .green, .mint, .teal,
+        .blue, .indigo, .purple, .pink, .gray
+    ]
+    
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0

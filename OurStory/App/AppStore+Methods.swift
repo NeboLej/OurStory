@@ -151,12 +151,21 @@ extension AppStore {
         Task {
             await cloudKitService.downloadAll()
             await MainActor.run {
+                // Re-read user from UserDefaults (may have been restored from iCloud)
+                user = userDefaultsManager.getCurrentUser()
                 loadData()
+                checkOnboardingNeeded()
             }
             await cloudKitService.uploadAll()
             await MainActor.run {
                 isSyncing = false
             }
+        }
+    }
+    
+    func checkOnboardingNeeded() {
+        if user.name.isEmpty || user.color.isEmpty {
+            appCoordinator.fullScreenCover = .onboarding
         }
     }
 }
