@@ -17,6 +17,7 @@ struct NoteScreen: View {
     @State private var selectedDate = Date()
     @State private var isShowCalendar = false
     @State private var isShowFriendsList = false
+    @State private var isShowNewFriend = false
     
     @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
@@ -38,6 +39,14 @@ struct NoteScreen: View {
         ZStack {
             Color(Color.backgroundFill)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    if isShowFriendsList || isShowCalendar {
+                        withAnimation(.spring(response: 0.3)) {
+                            isShowFriendsList = false
+                            isShowCalendar = false
+                        }
+                    }
+                }
             
             VStack(spacing: 0) {
                 header()
@@ -51,7 +60,8 @@ struct NoteScreen: View {
                 storyTextEditor()
                 
                 Spacer(minLength: 0)
-            }.padding(.horizontal, 24)
+            }
+            .padding(.horizontal, 12)
                 .onChange(of: focusedField) { oldValue, newValue in
                     if newValue != nil {
                         withAnimation {
@@ -84,6 +94,10 @@ struct NoteScreen: View {
         }
         .onAppear {
             focusedField = .story
+        }
+        .sheet(isPresented: $isShowNewFriend) {
+            NewFriendScreen(store: NewFriendScreenStore(appStore: store.appStore))
+                .presentationDetents([.medium])
         }
     }
     
@@ -201,7 +215,6 @@ struct NoteScreen: View {
             }
             .padding(.leading, -5)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                
                 VStack(spacing: 8) {
                     if isShowCalendar {
                         DatePicker("",selection: $selectedDate, displayedComponents: [.date , .hourAndMinute])
@@ -216,7 +229,13 @@ struct NoteScreen: View {
                     } else if isShowFriendsList {
                         FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: store.state.selectedFriends) { friend in
                             store.send(.selectFriend(friend))
+                        } onAddFriend: {
+                            isShowFriendsList = false
+                            isShowNewFriend = true
+                        } onExit: {
+                            isShowFriendsList = false
                         }
+//                        .padding(.horizontal)
                     }
                     
                     NewNoteToolbar(

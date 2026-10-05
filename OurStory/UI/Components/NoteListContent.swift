@@ -11,12 +11,24 @@ struct NoteListContent: View {
     
     @State var store: NoteListScreenStore
     @Binding var isShowFriendsList: Bool
+    @State private var isShowNewFriend = false
     var isShowDate: Bool
     
     var body: some View {
         noteList
+            .overlay {
+                if isShowFriendsList {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3)) {
+                                isShowFriendsList = false
+                            }
+                        }
+                }
+            }
             .overlay(alignment: .bottom) {
-                    friendsListOverlay
+                friendsListOverlay
             }
     }
     
@@ -78,10 +90,17 @@ struct NoteListContent: View {
         if isShowFriendsList, let note = store.showMenuNote {
             FriendsListModalView(allFriends: store.state.allFriends, selectedFriends: store.showMenuNote?.friends ?? []) { friend in
                 store.send(.updateFriendInNote(note: note, friend: friend))
+            } onAddFriend: {
+                isShowFriendsList = false
+                isShowNewFriend = true
             } onExit: {
                 isShowFriendsList = false
             }
             .padding(.horizontal)
+            .sheet(isPresented: $isShowNewFriend) {
+                NewFriendScreen(store: NewFriendScreenStore(appStore: store.appStore))
+                    .presentationDetents([.medium])
+            }
         }
     }
     
@@ -91,6 +110,18 @@ struct NoteListContent: View {
     private func noteView(_ note: Note) -> some View {
         if note.owner == nil {
             HStack(alignment: .top, spacing: 0) {
+                
+                Button {
+                    withAnimation(.snappy) {
+                        store.send(.selectFriendsNote(note))
+                    }
+                } label: {
+                    friendsIndicatorView(note.friends)
+                        .transition(.scale(scale: 0.1).combined(with: .opacity))
+                        .frame(width: store.showFriendsNote == note ? 0 : store.showMenuNote == note ? 4 : 16)
+                        .padding(.vertical, store.showMenuNote == note ? 8 : 0)
+                }
+  
                 if store.showMenuNote != note {
                     Button {
                         withAnimation(.snappy) {
@@ -110,9 +141,6 @@ struct NoteListContent: View {
                                             }
                                         }
                                 }
-                            } else {
-                                friendsIndicatorView(note.friends)
-                                    .transition(.scale(scale: 0.1).combined(with: .opacity))
                             }
                         }
                     }.disabled(note.friends.isEmpty)
@@ -225,7 +253,7 @@ struct NoteListContent: View {
         let colors = friends.map { Color(hex: $0.color) }
         Rectangle()
             .fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))
-            .frame(width: 16)
+//            .frame(width: 16)
     }
     
     private func friendNoteView(_ note: Note) -> some View {
@@ -271,10 +299,13 @@ struct NoteListContent: View {
 
 
 #Preview {
+
+   
     NavigationStack {
-        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
-            
-        })))
+        ScreenBuilder.previewBuilder.getScreen(type: .home)
+//        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
+//            
+//        })))
     }
 
 }
