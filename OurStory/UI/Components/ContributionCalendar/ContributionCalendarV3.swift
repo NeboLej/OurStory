@@ -33,9 +33,13 @@ struct ContributionCalendarV3: View {
     
     private let stories: [Story]
     private let onSelectStory: ((Story?) -> Void)?
+    private let screenBuilder: ScreenBuilder
     
     @State private var selectedDay: Date?
+    @State private var selectedStory: Story?
     @State private var monthPages: [V3MonthData] = []
+    @State private var isShowFriendsList = false
+    @State private var scrollTargetID: Int?
     
     private let cal: Calendar = {
         var c = Calendar.current
@@ -51,40 +55,175 @@ struct ContributionCalendarV3: View {
         return Array(s[1...]) + [s[0]]
     }
     
-    init(stories: [BaseDate: Story], onSelectStory: ((Story?) -> Void)? = nil) {
-        //        self.stories = stories
+    private var hasSelectedNotes: Bool {
+        selectedStory?.notes.isEmpty == false
+    }
+    
+    init(stories: [BaseDate: Story],
+         screenBuilder: ScreenBuilder,
+         onSelectStory: ((Story?) -> Void)? = nil) {
         self.onSelectStory = onSelectStory
-        storyMap = stories//Dictionary(uniqueKeysWithValues: stories.map { ($0.baseDate, $0) })
+        self.screenBuilder = screenBuilder
+        storyMap = stories
         self.stories = Array(storyMap.values)
     }
     
+    @State var panelHeightCoeficient: CGFloat = 0.3
+    @State private var panelDragStartCoeficient: CGFloat?
+    
     var body: some View {
-        VStack(spacing: 0) {
-            // Sticky weekday header
-            weekdayHeader
-                .padding(.bottom, 8)
+        GeometryReader { geo in
+            let panelHeight = geo.size.height * panelHeightCoeficient
             
-            ScrollViewReader { proxy in
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 24) {
-                        ForEach(monthPages) { page in
-                            monthSection(page)
-                                .id(page.id)
+            ZStack(alignment: .bottom) {
+                // Calendar
+                VStack(spacing: 0) {
+                    weekdayHeader
+                        .background(.backgroundFill)
+//                        .padding(.bottom, 8)
+                    
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: 24) {
+                                ForEach(monthPages) { page in
+                                    monthSection(page)
+                                        .id(page.id)
+                                }
+                                .padding(.horizontal, 8)
+                            }
+                            .padding(.bottom, hasSelectedNotes ? panelHeight + 8 : 8)
                         }
-                        .padding(.horizontal, 8)
+                        .onChange(of: monthPages.count) {
+                            if let last = monthPages.last {
+                                proxy.scrollTo(last.id, anchor: .bottom)
+                            }
+                        }
+                        .onChange(of: scrollTargetID) { _, targetID in
+                            guard let targetID else { return }
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(targetID, anchor: .top)
+                            }
+                            scrollTargetID = nil
+                        }
+                        .background(.backgroundFill)
+                        .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20))
                     }
-                    .padding(.bottom, 8)
-                }
-                .onChange(of: monthPages.count) {
-                    if let last = monthPages.last {
-                        proxy.scrollTo(last.id, anchor: .bottom)
+                    
+                    
+                    // Notes panel pinned to bottom
+                    if let story = selectedStory, !story.notes.isEmpty {
+                        VStack(spacing: 0) {
+                            Rectangle()
+                                .fill(.black)
+                                .frame(height: 8)
+                            
+                            notesPanel(story: story, totalHeight: geo.size.height)
+                                .frame(height: panelHeight)
+                                .frame(maxWidth: .infinity)
+                            //                            .background(.ultraThinMaterial)
+                                .background(.backgroundFill)
+                                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20))
+                                .shadow(color: .black.opacity(0.08), radius: 16, y: -6)
+                                
+                        }.transition(.move(edge: .bottom))
                     }
                 }
+                
+                
             }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .background(.backgroundFill)
+        .ignoresSafeArea(edges: .bottom)
+//        .background(.backgroundFill)
         .onAppear {
             monthPages = buildPages()
+        }
+    }
+    
+    let minPanelHeight: CGFloat = 0.58
+    let maxPanelHeight: CGFloat = 0.92
+    
+    private func notesPanel(story: Story, totalHeight: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            // Drag handle
+            Capsule()
+                .fill(Color.textMulticolor.opacity(0.15))
+                .frame(width: 32, height: 4)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
+            
+            // Header
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(story.date.toReadable())
+                        .font(.mySemiBold(size: 15))
+                        .foregroundStyle(.textMulticolor)
+                    
+                    Text("\(story.notes.count) \(story.notes.count == 1 ? "запись" : "записей")")
+                        .font(.myRegular(size: 12))
+                        .foregroundStyle(.textMulticolor.opacity(0.4))
+                }
+                
+                Spacer()
+                
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        selectedDay = nil
+                        selectedStory = nil
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.textMulticolor.opacity(0.4))
+                        .frame(width: 28, height: 28)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 6)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 10, coordinateSpace: .global)
+                    .onChanged { value in
+                        let startCoef = panelDragStartCoeficient ?? panelHeightCoeficient
+                        if panelDragStartCoeficient == nil {
+                            panelDragStartCoeficient = panelHeightCoeficient
+                        }
+                        let dragDelta = -value.translation.height / totalHeight
+                        panelHeightCoeficient = min(maxPanelHeight, max(0.05, startCoef + dragDelta))
+                    }
+                    .onEnded { value in
+                        let startCoef = panelDragStartCoeficient ?? minPanelHeight
+                        let velocity = value.predictedEndTranslation.height - value.translation.height
+                        let swipedUp = velocity < -150 || value.translation.height < -40
+                        let swipedDown = velocity > 150 || value.translation.height > 40
+                        
+                        withAnimation(.snappy(duration: 0.3)) {
+                            if swipedUp {
+                                panelHeightCoeficient = maxPanelHeight
+                            } else if swipedDown {
+                                if startCoef <= minPanelHeight + 0.05 {
+                                    selectedDay = nil
+                                    selectedStory = nil
+                                }
+                                panelHeightCoeficient = minPanelHeight
+                            } else if panelHeightCoeficient > 0.5 {
+                                panelHeightCoeficient = maxPanelHeight
+                            } else {
+                                panelHeightCoeficient = minPanelHeight
+                            }
+                        }
+                        panelDragStartCoeficient = nil
+                    }
+            )
+            
+            Divider()
+                .opacity(0.3)
+            
+            screenBuilder.getComponent(
+                type: .notesList(notes: story.notes, storyID: story.id, isShowFriendsList: $isShowFriendsList)
+            )
+            .id(story.id)
         }
     }
     
@@ -164,7 +303,7 @@ struct ContributionCalendarV3: View {
                     .strokeBorder(
                         AngularGradient(gradient: Gradient(stops: angularStops(for: cell.colors)), center: .center ), lineWidth: 2.5)
                     .padding(1)
-//                    .opacity(0.8)
+                //                    .opacity(0.8)
             } else if let color = cell.colors.first {
                 shape
                     .strokeBorder(color, lineWidth: 2.5)
@@ -207,8 +346,28 @@ struct ContributionCalendarV3: View {
         .frame(maxWidth: .infinity)
         .frame(height: cellSize)
         .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.2)) { selectedDay = cell.date }
-            onSelectStory?(storyForDate(cell.date))
+            let story = storyForDate(cell.date)
+            withAnimation(.easeInOut(duration: 0.3)) {
+                if selectedDay == cell.date {
+                    selectedDay = nil
+                    selectedStory = nil
+                } else {
+                    panelHeightCoeficient = minPanelHeight
+                    selectedDay = cell.date
+                    selectedStory = story
+                }
+            }
+            // Scroll selected month into view after panel appears
+            if selectedDay == cell.date {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    if let page = monthPages.first(where: {
+                        cal.isDate($0.month, equalTo: cell.date, toGranularity: .month)
+                    }) {
+                        scrollTargetID = page.id
+                    }
+                }
+            }
+            onSelectStory?(story)
         }
     }
     
@@ -360,7 +519,7 @@ struct ContributionCalendarV3: View {
         let ff = (0..<100).map { offset in
             let date = Calendar.current.date(byAdding: .day, value: -offset, to: .now)!
             let notes: [Note] = Bool.random() ? [
-                Note(rootStoryID: UUID(), date: date, text: "Test note text", friends: Friend.getRandomFriends()),
+                Note(rootStoryID: UUID(), date: date, text: "Test note text флывфл тывлофтыл втфолывт флоывол фтволфт ыовтф ловтфлыотв олфыв фщызвзфщылв зщфылв фышв щфштвщф щвы шфщовшщ", friends: Friend.getRandomFriends()),
                 Note(rootStoryID: UUID(), date: date, text: "Test note 2", friends: Friend.getRandomFriends())
             ] : []
             return Story(date: date, notes: notes)
@@ -369,59 +528,6 @@ struct ContributionCalendarV3: View {
     }()
     
     NavigationStack {
-        ContributionCalendarV3(stories: stories) { story in
-            print("Selected: \(String(describing: story?.date))")
-            withAnimation {
-                selectedStory = story
-            }
-            print("Selected: \(String(describing: story?.notes))")
-            
-            //            showList = true
-        }
+        ContributionCalendarV3(stories: stories, screenBuilder: ScreenBuilder.previewBuilder)
     }
-    
-    //    ScreenBuilder.previewBuilder.getScreen(type: .calendar)
-    
-    //    @Previewable @State var selectedStory: Story? = nil
-    //    @Previewable @State var stories: [BaseDate: Story] = {
-    //        let ff = (0..<100).map { offset in
-    //        let date = Calendar.current.date(byAdding: .day, value: -offset, to: .now)!
-    //        let notes: [Note] = Bool.random() ? [
-    //            Note(rootStoryID: UUID(), date: date, text: "Test note text", friends: Friend.getRandomFriends()),
-    //            Note(rootStoryID: UUID(), date: date, text: "Test note 2", friends: Friend.getRandomFriends())
-    //        ] : []
-    //        return Story(date: date, notes: notes)
-    //    }
-    //        return Dictionary(uniqueKeysWithValues: ff.map { ($0.baseDate, $0) })
-    //    }()
-    //
-    //
-    //    GeometryReader { geometry in
-    //        var isHalfScreenCalendar = selectedStory?.notes.isEmpty == false
-    //        VStack(spacing: 0) {
-    //            ContributionCalendarV3(stories: stories) { story in
-    //                print("Selected: \(String(describing: story?.date))")
-    //                withAnimation {
-    //                    selectedStory = story
-    //                }
-    //                print("Selected: \(String(describing: story?.notes))")
-    //
-    //                //            showList = true
-    //            }
-    //            .padding()
-    //            .frame(maxWidth: .infinity)
-    //            .frame(height: geometry.size.height * (isHalfScreenCalendar ? 0.7 : 1))
-    //            .background(Color.backgroundFill)
-    //
-    //            if let story = selectedStory, !story.notes.isEmpty {
-    //                VStack {
-    //                    ScreenBuilder.previewBuilder.getComponent(type: .notesList(notes: story.notes, storyID: .init(), isShowFriendsList: .constant(false)))
-    //                        .padding(.top, 22)
-    //                        .id(selectedStory?.id ?? UUID())
-    //                        .frame(height: selectedStory != nil ?  geometry.size.height * 0.3 : 0)
-    //                }
-    //            }
-    //
-    //        }
-    //    }
 }

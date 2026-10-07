@@ -101,7 +101,7 @@ final class ScreenBuilder {
                            isShowFriendsList: isShowFriendsList)
         case .log: LogScreen()
         case .onboarding: OnboardingScreen(store: OnboardingScreenStore(appStore: appStore))
-        case .calendar: ContributionCalendarV3(stories: appStore.stories)
+        case .calendar: ContributionCalendarV3(stories: appStore.stories, screenBuilder: self)
         }
     }
     
