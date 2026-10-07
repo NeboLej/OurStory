@@ -11,4 +11,5 @@ enum HomeScreenAction {
     case createNewNote
     case toFriendsList
     case toSettings
+    case toCalendar
 }

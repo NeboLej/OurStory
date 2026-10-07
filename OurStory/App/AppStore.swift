@@ -122,6 +122,8 @@ final class AppStore {
             appCoordinator.navigate(to: .notes(title: title, notes: notes, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
         case .toLogs:
             appCoordinator.navigate(to: .log)
+        case .toCalendar:
+            appCoordinator.navigate(to: .calendar)
         }
     }
     

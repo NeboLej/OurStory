@@ -18,6 +18,7 @@ final class HomeScreenStore: BaseStore {
             case .createNewNote: appStore.send(.toNote(nil))
             case .toFriendsList: appStore.send(.toFriendsList)
             case .toSettings: appStore.send(.toSettings)
+            case .toCalendar: appStore.send(.toCalendar)
             }
         }
     }

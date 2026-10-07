@@ -266,7 +266,7 @@ struct ContributionCalendar: View {
         return Story(date: date, notes: notes)
     }
     
-    ContributionCalendar(stories: stories, monthsBack: 2) { story in
+    ContributionCalendar(stories: stories, monthsBack: 6) { story in
         print("Selected: \(story?.date)")
     }
     .frame(maxWidth: .infinity)
