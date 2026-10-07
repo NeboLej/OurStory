@@ -7,10 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8E3E6180307682A300F90716 /* CLAUDE.md in Resources */ = {isa = PBXBuildFile; fileRef = 8E3E617F307682A300F90716 /* CLAUDE.md */; };
 		8E45DC8D3058243500D23317 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 8E45DC8C3058243500D23317 /* GRDB */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8E3E617F307682A300F90716 /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 		8EEEAC633044811A00742298 /* OurStory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OurStory.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -50,6 +52,7 @@
 		8EEEAC5A3044811A00742298 = {
 			isa = PBXGroup;
 			children = (
+				8E3E617F307682A300F90716 /* CLAUDE.md */,
 				8EEEAC653044811A00742298 /* OurStory */,
 				8EEEAC643044811A00742298 /* Products */,
 			);
@@ -131,6 +134,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E3E6180307682A300F90716 /* CLAUDE.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
