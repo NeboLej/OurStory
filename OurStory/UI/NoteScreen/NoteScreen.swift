@@ -85,6 +85,9 @@ struct NoteScreen: View {
                         }
                     }
                 }
+                .onChange(of: story) { _, newValue in
+                    store.send(.updateStoryText(newValue), animation: .easeInOut(duration: 0.2))
+                }
                 .onAppear {
                     story = store.state.text
                     title = store.state.title ?? ""
@@ -211,6 +214,11 @@ struct NoteScreen: View {
             .padding(.leading, -5)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 8) {
+                    if let suggested = store.state.suggestedFriend {
+                        friendSuggestionChip(friend: suggested)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    
                     if isShowCalendar {
                         DatePicker("",selection: $selectedDate, displayedComponents: [.date , .hourAndMinute])
                             .datePickerStyle(.graphical)
@@ -248,6 +256,39 @@ struct NoteScreen: View {
                 }
             }
     }
+    
+    @ViewBuilder
+    private func friendSuggestionChip(friend: Friend) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .foregroundStyle(Color(hex: friend.color))
+                .frame(width: 14, height: 14)
+                .overlay {
+                    Circle()
+                        .stroke(Color.textMulticolor.opacity(0.15), lineWidth: 0.5)
+                }
+            
+            Text("Отметить \(friend.name)?")
+                .font(.myMedium(size: 13))
+                .foregroundStyle(.textMulticolor.opacity(0.85))
+            
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background {
+            Capsule()
+                .fill(Color.textMulticolor.opacity(0.06))
+                .overlay {
+                    Capsule()
+                        .stroke(Color.textMulticolor.opacity(0.12), lineWidth: 0.5)
+                }
+        }
+        .contentShape(Capsule())
+        .onTapGesture {
+            store.send(.acceptSuggestion)
+        }
+    }
+
     
     private func saveStory() {
         guard canSave else { return }

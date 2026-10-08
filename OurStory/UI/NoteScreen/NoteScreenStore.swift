@@ -15,10 +15,12 @@ final class NoteScreenStore: BaseStore {
     private var date: Date
     private var allFriends: [Friend] = []
     private var selectedFriends: [Friend] = []
+    private var suggestedFriend: Friend? = nil
+    private var suggestionTask: Task<Void, Never>? = nil
     private let rootNote: Note?
     
     var state: NoteScreenState {
-        NoteScreenState(title: title, text: text, date: date, isEditing: rootNote != nil, allFriends: appStore.allFriends, selectedFriends: selectedFriends)
+        NoteScreenState(title: title, text: text, date: date, isEditing: rootNote != nil, allFriends: appStore.allFriends, selectedFriends: selectedFriends, suggestedFriend: suggestedFriend)
     }
     
     init(appStore: AppStore, note: Note? = nil) {
@@ -72,8 +74,54 @@ final class NoteScreenStore: BaseStore {
                 date = newDate
             case .addNewFriend:
                 appStore.send(.toNewFriend)
+            case .updateStoryText(let text):
+                checkForFriendMention(in: text)
+            case .acceptSuggestion:
+                if let friend = suggestedFriend, !selectedFriends.contains(friend) {
+                    selectedFriends.append(friend)
+                }
+                suggestedFriend = nil
             }
         }
+    }
+    
+    private func checkForFriendMention(in text: String) {
+        suggestionTask?.cancel()
+        suggestionTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled, let self else { return }
+            self.suggestedFriend = self.findMatchingFriend(in: text)
+        }
+    }
+    
+    private func findMatchingFriend(in text: String) -> Friend? {
+        let lastWord = extractLastWord(from: text)
+        guard lastWord.count >= 3 else { return nil }
+        
+        let unselected = appStore.allFriends.filter { !selectedFriends.contains($0) }
+        
+        for friend in unselected {
+            let nameParts = friend.name.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+            for part in nameParts {
+                if lastWord.fuzzyMatchesName(part) { return friend }
+            }
+            
+            if let userName = friend.user?.name {
+                let userParts = userName.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+                for part in userParts {
+                    if lastWord.fuzzyMatchesName(part) { return friend }
+                }
+            }
+        }
+        return nil
+    }
+    
+    private func extractLastWord(from text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let lastSpace = trimmed.lastIndex(where: { $0.isWhitespace || $0.isNewline }) else {
+            return trimmed
+        }
+        return String(trimmed[trimmed.index(after: lastSpace)...])
     }
     
     private func loadLocalNote() -> Note? {

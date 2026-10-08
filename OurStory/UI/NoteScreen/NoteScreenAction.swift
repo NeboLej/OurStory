@@ -12,4 +12,6 @@ enum NoteScreenAction {
     case saveNote(title: String, text: String)
     case selectDate(Date)
     case addNewFriend
+    case updateStoryText(String)
+    case acceptSuggestion
 }
