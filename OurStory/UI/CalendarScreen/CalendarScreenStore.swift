@@ -24,8 +24,9 @@ final class CalendarScreenStore: BaseStore {
     private var selectedStory: Story?
     private var selectedDate: Date?
     
-    let cal: Calendar = {
+    let calendar: Calendar = {
         var c = Calendar.current
+        c.locale = Locale(identifier: "ru_RU")
         return c
     }()
     
@@ -54,19 +55,19 @@ final class CalendarScreenStore: BaseStore {
         let monthStarts = monthRange(from: stories, today: today)
         
         for monthStart in monthStarts {
-            guard let range = cal.range(of: .day, in: .month, for: monthStart) else { continue }
+            guard let range = calendar.range(of: .day, in: .month, for: monthStart) else { continue }
             
             var cells: [CalendarViewCellData] = []
             var totalNotes = 0
             var activeDays = 0
             var cellIndex = 0
             
-            let year = cal.component(.year, from: monthStart)
-            let month = cal.component(.month, from: monthStart)
+            let year = calendar.component(.year, from: monthStart)
+            let month = calendar.component(.month, from: monthStart)
             
             // Leading placeholders
-            if let firstDay = cal.date(from: DateComponents(year: year, month: month, day: range.lowerBound)) {
-                let wd = cal.component(.weekday, from: firstDay)
+            if let firstDay = calendar.date(from: DateComponents(year: year, month: month, day: range.lowerBound)) {
+                let wd = calendar.component(.weekday, from: firstDay)
                 let offset = wd == 1 ? 6 : wd - 2
                 for _ in 0..<offset {
                     cells.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], noteCount: 0))
@@ -75,7 +76,7 @@ final class CalendarScreenStore: BaseStore {
             }
             
             for day in range {
-                guard let dayDate = cal.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
+                guard let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
                 
                 let story = storyMap[BaseDate(date: dayDate)]
                 let colors = extractColors(from: story)
@@ -90,7 +91,7 @@ final class CalendarScreenStore: BaseStore {
                                         day: day,
                                         date: dayDate,
                                         dayNumber: day,
-                                        isToday: cal.isDateInToday(dayDate),
+                                        isToday: calendar.isDateInToday(dayDate),
                                         colors: colors,
                                         noteCount: noteCount))
                 cellIndex += 1
@@ -128,20 +129,20 @@ final class CalendarScreenStore: BaseStore {
         let dates = stories.map(\.date)
         guard let earliest = dates.min() else {
             // No stories — show current month only
-            let comps = cal.dateComponents([.year, .month], from: today)
-            return [cal.date(from: comps)].compactMap { $0 }
+            let comps = calendar.dateComponents([.year, .month], from: today)
+            return [calendar.date(from: comps)].compactMap { $0 }
         }
         
-        let startComps = cal.dateComponents([.year, .month], from: earliest)
-        let endComps = cal.dateComponents([.year, .month], from: today)
+        let startComps = calendar.dateComponents([.year, .month], from: earliest)
+        let endComps = calendar.dateComponents([.year, .month], from: today)
         
-        guard var cursor = cal.date(from: startComps),
-              let end = cal.date(from: endComps) else { return [] }
+        guard var cursor = calendar.date(from: startComps),
+              let end = calendar.date(from: endComps) else { return [] }
         
         var result: [Date] = []
         while cursor <= end {
             result.append(cursor)
-            guard let next = cal.date(byAdding: .month, value: 1, to: cursor) else { break }
+            guard let next = calendar.date(byAdding: .month, value: 1, to: cursor) else { break }
             cursor = next
         }
         return result

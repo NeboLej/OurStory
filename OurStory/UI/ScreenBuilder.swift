@@ -70,6 +70,7 @@ enum ComponentType: Hashable {
     }
 }
 
+@MainActor
 final class ScreenBuilder {
     
     static let previewBuilder: ScreenBuilder = {

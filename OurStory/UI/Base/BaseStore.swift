@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 class BaseStore {
     let appStore: AppStore
     

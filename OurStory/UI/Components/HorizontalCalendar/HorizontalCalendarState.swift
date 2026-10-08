@@ -12,7 +12,7 @@ struct HorizontalCalendarState {
     let weeks: [HCWeek]
     let selectionDate: Date
     
-    init(appStore: AppStore, weeks: [HCWeek]) {
+    @MainActor init(appStore: AppStore, weeks: [HCWeek]) {
         selectionDate = appStore.selectedDate
         self.weeks = weeks
     }

@@ -13,7 +13,7 @@ struct HomeScreenState {
     var selectedDate: Date
     var isSyncing: Bool
     
-    init(appStore: AppStore) {
+    @MainActor init(appStore: AppStore) {
         selectedStory = appStore.selectedStory
         selectedDate = appStore.selectedDate
         

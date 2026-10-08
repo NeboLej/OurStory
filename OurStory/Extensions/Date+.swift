@@ -25,9 +25,10 @@ extension Date {
     
     func toMonthYearDate() -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
         formatter.dateFormat = "LLLL yyyy"
         
-        return formatter.string(from: self)
+        return formatter.string(from: self).capitalizedFirstLetter
     }
     
     func toHourMinuteDate() -> String {
@@ -46,3 +47,10 @@ extension Date {
         Calendar.current.date(byAdding: component, value: offset, to: self) ?? Date()
     }
 }
+private extension String {
+    var capitalizedFirstLetter: String {
+        guard let first else { return self }
+        return first.uppercased() + dropFirst()
+    }
+}
+

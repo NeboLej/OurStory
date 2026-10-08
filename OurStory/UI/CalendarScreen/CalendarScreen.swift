@@ -28,7 +28,7 @@ struct CalendarScreen: View {
     private let cornerRadius: CGFloat = 8
     
     private var weekdaySymbols: [String] {
-        let s = store.cal.shortWeekdaySymbols
+        let s = store.calendar.shortWeekdaySymbols
         return Array(s[1...]) + [s[0]]
     }
     
@@ -68,7 +68,7 @@ struct CalendarScreen: View {
                             
                             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                                 if let page = store.state.monthPages.first(where: {
-                                    store.cal.isDate($0.month, equalTo: newDate, toGranularity: .month)
+                                    store.calendar.isDate($0.month, equalTo: newDate, toGranularity: .month)
                                 }) {
                                     withAnimation(.easeInOut(duration: 0.3)) {
                                         proxy.scrollTo(page.id, anchor: .top)
@@ -166,7 +166,7 @@ struct CalendarScreen: View {
     private let activeCellColor = Color(.tertiarySystemFill)
     
     private func dayCell(_ cell: CalendarViewCellData) -> some View {
-        let isSelected = store.state.selectedDate.map { store.cal.isDate($0, inSameDayAs: cell.date) } ?? false
+        let isSelected = store.state.selectedDate.map { store.calendar.isDate($0, inSameDayAs: cell.date) } ?? false
         let hasContent = !cell.colors.isEmpty
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         
