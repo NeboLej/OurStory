@@ -134,9 +134,22 @@ final class AppStore {
             let stories = await storyRepository.getStories(startDate: Date().getOffsetDate(-1, component: .month),
                                                            endDate: Date().getOffsetDate(1, component: .month))
             
+            
             stories.forEach { story in
                 self.stories[BaseDate(date: story.date)] = story
             }
+            
+            self.stories = {
+                let ff = (0..<100).map { offset in
+                    let date = Calendar.current.date(byAdding: .day, value: -offset, to: .now)!
+                    let notes: [Note] = Bool.random() ? [
+                        Note(rootStoryID: UUID(), date: date, text: "Test note text флывфл тывлофтыл втфолывт флоывол фтволфт ыовтф ловтфлыотв олфыв фщызвзфщылв зщфылв фышв щфштвщф щвы шфщовшщ", friends: Friend.getRandomFriends()),
+                        Note(rootStoryID: UUID(), date: date, text: "Test note 2", friends: Friend.getRandomFriends())
+                    ] : []
+                    return Story(date: date, notes: notes)
+                }
+                return Dictionary(uniqueKeysWithValues: ff.map { ($0.baseDate, $0) })
+            }()
             
             selectedStory = getSelectedStory()
         }
