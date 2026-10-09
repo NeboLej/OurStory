@@ -6,8 +6,7 @@
 //
 
 import SwiftUI
-
-import SwiftUI
+import Lottie
 
 struct FriendListScreen: View {
     
@@ -28,11 +27,7 @@ struct FriendListScreen: View {
                         .padding(.top, 16)
                     
                     if store.state.allFriends.isEmpty {
-                        Text("СПИСОК ПУСТ")
-                            .font(.mySemiBold(size: 11))
-                            .tracking(1.5)
-                            .foregroundStyle(.textMulticolor.opacity(0.4))
-                            .padding(.top, 40)
+                        emptyStateView
                     } else {
                         ForEach(store.state.allFriends, id: \.self) { friend in
                             friendRow(friend: friend)
@@ -44,7 +39,6 @@ struct FriendListScreen: View {
                 }
             }
             .background(.backgroundFill)
-            
             
             VStack(spacing: 0) {
                 LinearGradient(
@@ -69,15 +63,18 @@ struct FriendListScreen: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color.myPrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                     .overlay {
-                        Rectangle()
-                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                            .padding(3)
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                            .padding(4)
                     }
                 }
                 .buttonStyle(.plain)
+                
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+                
             }
         }
         .frame(maxWidth: .infinity)
@@ -85,6 +82,37 @@ struct FriendListScreen: View {
         .navigationBarTitleDisplayMode(.large)
     }
     
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 24) {
+            
+            LottieView(animation: .named("storytellers"))
+                .playing(loopMode: .loop)
+                .animationSpeed(0.9)
+                .frame(width: 300, height: 300)
+                .opacity(0.8)
+            
+            VStack(spacing: 24) {
+                
+                Text("Добавь друга")
+                    .font(.myMedium(size: 22))
+                    .foregroundStyle(.textMulticolor.opacity(0.8))
+                
+                Text("Упоминай его в своих историях, даже если он ещё не установил приложение")
+                    .font(.myRegular(size: 16))
+                    .foregroundStyle(.textMulticolor.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                
+                Text("Вы сможете обменяться воспоминаниями позже, когда будете рядом")
+                    .font(.myRegular(size: 16))
+                    .foregroundStyle(.textMulticolor.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+        }
+        .padding(.horizontal, 32)
+    }
     
     @ViewBuilder
     private func friendRow(friend: Friend) -> some View {
