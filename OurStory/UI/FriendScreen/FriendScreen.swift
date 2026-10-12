@@ -157,6 +157,15 @@ struct FriendScreen: View {
                         .font(.myItalic(size: 12))
                         .foregroundStyle(.textMulticolor.opacity(0.4))
                 }
+            case .friendReady:
+                VStack(spacing: 2) {
+                    Text("\(store.state.friend.name) рядом")
+                        .font(.myItalic(size: 14))
+                        .foregroundStyle(.textMulticolor.opacity(0.7))
+                    Text("и хочет обменяться историями")
+                        .font(.myItalic(size: 12))
+                        .foregroundStyle(.textMulticolor.opacity(0.6))
+                }
             case .notFound:
                 VStack(spacing: 10) {
                     Text("не удалось найти")
@@ -328,6 +337,19 @@ struct FriendScreen: View {
                             .onAppear {
                                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                                     searchPulse = 1.3
+                                }
+                            }
+                            .onDisappear {
+                                searchPulse = 1.0
+                            }
+                    } else if store.state.searchStatus == .friendReady {
+                        Circle()
+                            .fill(Color(hex: store.state.friend.color).opacity(0.25))
+                            .frame(width: 68, height: 68)
+                            .scaleEffect(searchPulse)
+                            .onAppear {
+                                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                                    searchPulse = 1.15
                                 }
                             }
                             .onDisappear {
@@ -537,10 +559,12 @@ struct FriendScreen: View {
                     .tracking(2)
                     .foregroundStyle(.black.opacity(isEnabled ? 1 : 0.3))
                 
-                if store.state.searchStatus == .found {
-                    Text("начать обмен историями")
+                if store.state.searchStatus == .found || store.state.searchStatus == .friendReady {
+                    Text(store.state.searchStatus == .friendReady
+                         ? "\(store.state.friend.name) ждёт"
+                         : "начать обмен историями")
                         .font(.myRegular(size: 10))
-                        .opacity(0.5)
+                        .opacity(store.state.searchStatus == .friendReady ? 0.7 : 0.5)
                         .foregroundStyle(.black)
                         .transition(.opacity)
                 }

@@ -60,7 +60,9 @@ struct NoteListContent: View {
                     store.send(.selectFriendsNote(nil))
                 }
             }
+            .padding(.bottom, 200)
         }
+        .scrollIndicators(.hidden)
         .contentShape(Rectangle())
         .onTapGesture {
             withAnimation(.snappy) {

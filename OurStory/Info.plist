@@ -9,6 +9,7 @@
     <key>NSBonjourServices</key>
     <array>
         <string>_user-exchange._tcp</string>
+        <string>_ourstory._tcp</string>
     </array>
 	<key>UIAppFonts</key>
 	<array>

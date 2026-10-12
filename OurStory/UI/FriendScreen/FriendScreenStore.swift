@@ -12,9 +12,8 @@ final class FriendScreenStore: BaseStore {
     
     private var friend: Friend
     
-    var syncService: SyncService!
+    var syncService: SyncService3!
     var syncPgogressStates: [SyncProgressState] = []
-    var sendNotes: [Note] = []
     var newNoteCount: Int = 0
     var totalNotes: [Note] = []
     var unsentNotes: [Note] = []
@@ -60,7 +59,7 @@ final class FriendScreenStore: BaseStore {
         self.noteRepositpry = noteRepositpry
         super.init(appStore: appStore)
         
-        syncService = SyncService(profile: self.appStore.user)
+        syncService = SyncService3(profile: self.appStore.user)
         loadData()
     }
     
@@ -81,7 +80,7 @@ final class FriendScreenStore: BaseStore {
             case .syncFriend:
                 syncFriend()
             case .confirmSyncFriend(let isConfirm):
-                syncService.confirmUser(isConfirm)
+                syncService?.confirmUser(isConfirm)
             case .toNewNotes:
                 appStore.send(.toNotesList(title: "Истории от \(friend.name)", notes: appStore.sortedNotes))
             case .exitSync:
@@ -89,12 +88,18 @@ final class FriendScreenStore: BaseStore {
                 syncAnimationTask = nil
                 approachingDelayTask?.cancel()
                 approachingDelayTask = nil
-                syncService.cancelSync()
+                syncService?.cancelSync()
                 syncPgogressStates = []
                 syncPhase = .idle
                 searchStatus = .idle
                 loadData()
-                startSearching()
+                // Delay before restarting discovery to let Bonjour fully deregister
+                discoveryRetryTask?.cancel()
+                discoveryRetryTask = Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    guard let self, !Task.isCancelled else { return }
+                    self.startSearching()
+                }
             case .applyUserProfile:
                 guard let user = friend.user else { return }
                 let newFriend = Friend(id: friend.id, name: user.name, color: user.color, user: friend.user, lastSyncDate: friend.lastSyncDate)
@@ -128,20 +133,18 @@ final class FriendScreenStore: BaseStore {
     
     private func startSearching() {
         guard searchStatus == .idle || searchStatus == .notFound else { return }
-        
-        // Без привязанного user невозможно идентифицировать друга — не ищем
         guard friend.user?.id != nil else { return }
         
         searchStatus = .searching
         discoveryActive = true
         
         setupSyncCallbacks()
-        syncService.startDiscovery(friend: friend, notes: sendNotes)
+        syncService.startDiscovery(friend: friend, notes: unsentNotes)
         startSearchTimeout()
     }
     
     private func retrySearching() {
-        syncService.cancelSync()
+        syncService?.cancelSync()
         searchTimeoutTask?.cancel()
         searchTimeoutTask = nil
         discoveryRetryTask?.cancel()
@@ -154,17 +157,20 @@ final class FriendScreenStore: BaseStore {
     }
     
     private func setupSyncCallbacks() {
-        syncService.onEvent = { [weak self] event in
+        syncService.onStateChanged = { [weak self] event in
             guard let self else { return }
-            DispatchQueue.main.async {
-                self.handleDiscoveryEvent(event)
-            }
+            self.handleDiscoveryEvent(event)
         }
         
         syncService.onSyncCompleted = { [weak self] result in
             guard let self else { return }
-            DispatchQueue.main.async {
-                self.handleSyncCompleted(result)
+            self.handleSyncCompleted(result)
+        }
+        
+        syncService.onFriendReady = { [weak self] in
+            guard let self else { return }
+            withAnimation(.easeInOut(duration: 0.5)) {
+                self.searchStatus = .friendReady
             }
         }
     }
@@ -186,45 +192,43 @@ final class FriendScreenStore: BaseStore {
     
     private func handleDiscoveryEvent(_ event: SyncProgressState) {
         if discoveryActive {
-            // В режиме discovery — ждём только friendNearby
             switch event {
             case .friendNearby:
                 searchTimeoutTask?.cancel()
                 searchTimeoutTask = nil
-                discoveryRetryTask?.cancel()
-                discoveryRetryTask = nil
                 withAnimation(.easeInOut(duration: 0.5)) {
                     self.searchStatus = .found
                 }
-                // Планируем повторную проверку через 30 секунд
                 scheduleRecheck()
-            case .failed:
-                // Ошибка/disconnect во время discovery
-                guard friend.user?.id != nil else { return }
-                // Если друг был найден — соединение умерло, перепроверяем через 30 секунд
+                
+            case .searching:
+                // SyncSession is reconnecting after a disconnect
                 if searchStatus == .found {
-                    scheduleRecheck()
-                } else {
-                    // Ещё не нашли — перезапускаем с небольшой задержкой
-                    discoveryRetryTask?.cancel()
-                    discoveryRetryTask = Task { @MainActor [weak self] in
-                        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 секунды
-                        guard let self, !Task.isCancelled, self.discoveryActive else { return }
-                        self.syncService.startDiscovery(friend: self.friend, notes: self.sendNotes)
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        self.searchStatus = .searching
                     }
+                    startSearchTimeout()
                 }
+                
+            case .failed:
+                guard friend.user?.id != nil else { return }
+                searchTimeoutTask?.cancel()
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    self.searchStatus = .notFound
+                }
+                discoveryActive = false
+                
             default:
                 break
             }
         } else {
-            // Уже нажали кнопку — показываем анимацию
             syncPgogressStates.append(event)
             mapSyncEventToAnimationPhase(event)
         }
     }
     
     private func handleSyncCompleted(_ result: SyncResult) {
-        let sentNoteIDs = sendNotes.map { $0.id }
+        let sentNoteIDs = unsentNotes.map { $0.id }
         
         Task {
             await noteRepositpry.updateSentStatus(noteIDs: sentNoteIDs, friendID: friend.id, isSent: true)
@@ -238,20 +242,26 @@ final class FriendScreenStore: BaseStore {
         newNoteCount = newNotes.count
     }
     
-    /// Через 30 секунд тихо перезапускает discovery для проверки, что друг ещё рядом
+    /// SyncSession2 handles reconnection internally, so recheck just verifies the status
     private func scheduleRecheck() {
         recheckTask?.cancel()
         recheckTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 секунд
+            try? await Task.sleep(nanoseconds: 30_000_000_000)
             guard let self, !Task.isCancelled, self.discoveryActive else { return }
-            self.syncService.cancelSync()
-            self.syncService.startDiscovery(friend: self.friend, notes: self.sendNotes)
-            self.startSearchTimeout()
+            // SyncService2 handles keep-alive internally;
+            // if friend is no longer nearby, SyncSession will transition to .searching and
+            // handleDiscoveryEvent will update searchStatus accordingly
+            guard self.syncService.isFriendNearby else {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    self.searchStatus = .searching
+                }
+                return
+            }
         }
     }
     
     func stopSearching() {
-        syncService.cancelSync()
+        syncService?.cancelSync()
         searchTimeoutTask?.cancel()
         searchTimeoutTask = nil
         discoveryRetryTask?.cancel()
@@ -268,47 +278,47 @@ final class FriendScreenStore: BaseStore {
         recheckTask?.cancel()
         recheckTask = nil
         
-        Logger.log("SyncFriend: started, discoveryActive: \(discoveryActive), friend.user: \(friend.user?.name ?? "nil"), sendNotes: \(sendNotes.count)")
+        Logger.log("SyncFriend: started, discoveryActive: \(discoveryActive), friend.user: \(friend.user?.name ?? "nil"), sendNotes: \(unsentNotes.count)")
         
         if discoveryActive {
-            // Discovery уже нашла друга, соединение установлено — подтверждаем
-            // Оверлей открывается сразу с «поиском», точки стоят на месте
-            // Когда начнётся реальный обмен — точки поедут навстречу
+            // Discovery нашла друга — начинаем обмен
             discoveryActive = false
+            syncPhase = .searching
             
-            let confirmed = syncService.confirmUser(true)
-            Logger.log("SyncFriend: discovery path, confirmUser result: \(confirmed)")
-            if confirmed {
-                syncPhase = .searching
-            } else {
-                // Соединение умерло — перезапускаем discovery
-                searchStatus = .idle
-                startSearching()
-                return
+            syncService.onStateChanged = { [weak self] event in
+                guard let self else { return }
+                Logger.log("SyncFriend: received event: \(event.descriptionText)")
+                self.syncPgogressStates.append(event)
+                self.mapSyncEventToAnimationPhase(event)
             }
+            
+            syncService.onSyncCompleted = { [weak self] result in
+                guard let self else { return }
+                Logger.log("SyncFriend: sync completed, received \(result.notes.count) notes from \(result.user.name)")
+                self.handleSyncCompleted(result)
+            }
+            
+            syncService.beginExchange(notes: unsentNotes)
+            
         } else {
             // Первая синхронизация (friend.user == nil) — запускаем полный sync
             Logger.log("SyncFriend: first sync path (no discovery), starting full sync")
             syncPhase = .searching
             
-            syncService.onEvent = { [weak self] event in
+            syncService.onStateChanged = { [weak self] event in
                 guard let self else { return }
-                DispatchQueue.main.async {
-                    Logger.log("SyncFriend: received event: \(event.descriptionText)")
-                    self.syncPgogressStates.append(event)
-                    self.mapSyncEventToAnimationPhase(event)
-                }
+                Logger.log("SyncFriend: received event: \(event.descriptionText)")
+                self.syncPgogressStates.append(event)
+                self.mapSyncEventToAnimationPhase(event)
             }
             
             syncService.onSyncCompleted = { [weak self] result in
                 guard let self else { return }
-                DispatchQueue.main.async {
-                    Logger.log("SyncFriend: sync completed, received \(result.notes.count) notes from \(result.user.name)")
-                    self.handleSyncCompleted(result)
-                }
+                Logger.log("SyncFriend: sync completed, received \(result.notes.count) notes from \(result.user.name)")
+                self.handleSyncCompleted(result)
             }
             
-            syncService.startDiscovery(friend: friend, notes: sendNotes)
+            syncService.startFirstSync(friend: friend, notes: unsentNotes)
         }
     }
     
@@ -377,24 +387,23 @@ final class FriendScreenStore: BaseStore {
     }
     
     func testSyncFriends() {
-        newNoteCount = 0
-        syncPhase = .searching
-        let eventList: [SyncProgressState] = [.searching, .connecting, .exchangingUsers, .exchangingNotes, .completed]
-        
-        (1...5).forEach { ddd in
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(ddd)) {
-                if eventList[ddd - 1] == .completed {
-                    self.newNoteCount = self.sendNotes.count
-                }
-                self.syncPgogressStates.append((eventList[ddd - 1]))
-                self.mapSyncEventToAnimationPhase(eventList[ddd - 1])
-            }
-        }
+//        newNoteCount = 0
+//        syncPhase = .searching
+//        let eventList: [SyncProgressState] = [.searching, .connecting, .exchangingUsers, .exchangingNotes, .completed]
+//        
+//        (1...5).forEach { ddd in
+//            DispatchQueue.main.asyncAfter(deadline: .now() + Double(ddd)) {
+//                if eventList[ddd - 1] == .completed {
+//                    self.newNoteCount = self.sendNotes.count
+//                }
+//                self.syncPgogressStates.append((eventList[ddd - 1]))
+//                self.mapSyncEventToAnimationPhase(eventList[ddd - 1])
+//            }
+//        }
     }
     
     private func loadData() {
         Task {
-            sendNotes = await noteRepositpry.getUnsentNotes(friendID: friend.id)
             totalNotes = await noteRepositpry.getTotalNotes(friendID: friend.id)
             unsentNotes = await noteRepositpry.getUnsentNotes(friendID: friend.id)
         }

@@ -41,6 +41,7 @@ enum FriendSearchStatus: Equatable {
     case idle
     case searching
     case found
+    case friendReady  // Friend found AND already pressed "tell stories"
     case notFound
 }
 
@@ -62,7 +63,7 @@ struct FriendScreenState {
         // Первая синхронизация (user ещё не привязан) — кнопка всегда доступна
         if friend.user == nil { return true }
         // Повторная синхронизация — только когда друг найден поблизости
-        return searchStatus == .found
+        return searchStatus == .found || searchStatus == .friendReady
     }
     
     var isInSync: Bool {

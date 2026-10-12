@@ -108,5 +108,18 @@ final class DatabaseManager {
             t.column("key", .text).primaryKey()
             t.column("value", .text)
         }
+        
+        // Migration 4: Mark all notes as unsent to force re-sync in next version
+        let migrationKey = "migration_4_reset_isSent"
+        let alreadyApplied = try CloudSyncMetadataGRDB
+            .filter(Column("key") == migrationKey)
+            .fetchOne(db) != nil
+        
+        if !alreadyApplied {
+            try db.execute(sql: "UPDATE noteFriend SET isSent = 0, updatedDate = ?",
+                          arguments: [Date().timeIntervalSinceReferenceDate])
+            var metadata = CloudSyncMetadataGRDB(key: migrationKey, value: "1")
+            try metadata.insert(db)
+        }
     }
 }
