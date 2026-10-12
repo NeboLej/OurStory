@@ -301,7 +301,7 @@ struct NoteListContent: View {
         .overlay {
             if store.showMenuNote != note {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(.textMulticolor.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+                    .stroke(.textMulticolor.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
