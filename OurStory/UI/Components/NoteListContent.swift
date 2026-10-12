@@ -110,73 +110,75 @@ struct NoteListContent: View {
     
     @ViewBuilder
     private func noteView(_ note: Note) -> some View {
-        if note.owner == nil {
-            HStack(alignment: .top, spacing: 0) {
-                
-                Button {
-                    withAnimation(.snappy) {
-                        store.send(.selectFriendsNote(note))
-                    }
-                } label: {
-                    friendsIndicatorView(note.friends)
-                        .transition(.scale(scale: 0.1).combined(with: .opacity))
-                        .frame(width: store.showFriendsNote == note ? 0 : store.showMenuNote == note ? 4 : 16)
-                        .padding(.vertical, store.showMenuNote == note ? 8 : 0)
-                }
-  
-                if store.showMenuNote != note {
+        HStack(alignment: .top, spacing: 0) {
+            if note.owner == nil {
+                HStack(alignment: .top, spacing: 0) {
                     Button {
                         withAnimation(.snappy) {
                             store.send(.selectFriendsNote(note))
                         }
                     } label: {
-                        Group {
-                            if store.showFriendsNote == note {
-                                VStack {
-                                    friendsList(friends: note.friends)
-                                        .transition(.scale(scale: 0.95).combined(with: .opacity))
-                                    Rectangle()
-                                        .opacity(0.001)
-                                        .onTapGesture {
-                                            withAnimation(.snappy) {
-                                                store.send(.selectFriendsNote(nil))
-                                            }
-                                        }
-                                }
-                            }
-                        }
-                    }.disabled(note.friends.isEmpty)
-                }
-                VStack(alignment: .leading, spacing: 0) {
-                    if let noteTitle = note.title, !noteTitle.isEmpty {
-                        Text(noteTitle)
-                            .font(.mySemiBold(size: 16))
-                            .foregroundStyle(.textMulticolor)
-                            .padding(.bottom, 4)
+                        friendsIndicatorView(note.friends)
+                            .transition(.scale(scale: 0.1).combined(with: .opacity))
+                            .frame(width: store.showFriendsNote == note ? 0 : store.showMenuNote == note ? 4 : 16)
+                            .padding(.vertical, store.showMenuNote == note ? 8 : 0)
                     }
                     
-                    Text(note.text)
-                        .font(.myRegular(size: 16))
-                        .foregroundStyle(.textMulticolor)
-                }
-                .padding(.horizontal, 16)
-                .onTapGesture {
-                    withAnimation(.snappy) {
-                        if store.showMenuNote == note {
-                            store.send(.selectMenuNote(nil))
-                        } else {
-                            store.send(.selectMenuNote(note.id))
+                    if store.showMenuNote != note {
+                        Button {
+                            withAnimation(.snappy) {
+                                store.send(.selectFriendsNote(note))
+                            }
+                        } label: {
+                            Group {
+                                if store.showFriendsNote == note {
+                                    VStack {
+                                        friendsList(friends: note.friends)
+                                            .transition(.scale(scale: 0.95).combined(with: .opacity))
+                                        Rectangle()
+                                            .opacity(0.001)
+                                            .onTapGesture {
+                                                withAnimation(.snappy) {
+                                                    store.send(.selectFriendsNote(nil))
+                                                }
+                                            }
+                                    }
+                                }
+                            }
+                        }.disabled(note.friends.isEmpty)
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        if let noteTitle = note.title, !noteTitle.isEmpty {
+                            Text(noteTitle)
+                                .font(.mySemiBold(size: 16))
+                                .foregroundStyle(.textMulticolor)
+                                .padding(.bottom, 4)
+                        }
+                        
+                        Text(note.text)
+                            .font(.myRegular(size: 16))
+                            .foregroundStyle(.textMulticolor)
+                    }
+                    .padding(.horizontal, 16)
+                    .onTapGesture {
+                        withAnimation(.snappy) {
+                            if store.showMenuNote == note {
+                                store.send(.selectMenuNote(nil))
+                            } else {
+                                store.send(.selectMenuNote(note.id))
+                            }
                         }
                     }
+                    
                 }
-                
-                if store.showMenuNote == note {
-                    noteMenu(note: note)
-                        .transition(.scale(scale: 0.1).combined(with: .opacity))
-                }
+            } else {
+                friendNoteView(note)
             }
-        } else {
-            friendNoteView(note)
+            
+            if store.showMenuNote == note {
+                noteMenu(note: note)
+                    .transition(.scale(scale: 0.1).combined(with: .opacity))
+            }
         }
     }
     
@@ -187,14 +189,16 @@ struct NoteListContent: View {
                 .frame(width: 1)
                 .foregroundStyle(.black.opacity(0.2))
             VStack(alignment: .trailing, spacing: 12) {
-                noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {
-                    store.send(.editNote(note))
-                })
-                noteMenuItem(image: "person.badge.plus", text: "Отметить друга", action: {
-                    withAnimation(.snappy) {
-                        isShowFriendsList.toggle()
-                    }
-                })
+                if note.owner == nil {
+                    noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {
+                        store.send(.editNote(note))
+                    })
+                    noteMenuItem(image: "person.badge.plus", text: "Отметить друга", action: {
+                        withAnimation(.snappy) {
+                            isShowFriendsList.toggle()
+                        }
+                    })
+                }
                 noteMenuItem(image: "trash", text: "Удалить", action: {
                     store.send(.deleteNote(note))
                 })
@@ -294,10 +298,22 @@ struct NoteListContent: View {
         }
         .padding(.leading, 30)
         .padding([.top, .bottom, .trailing], 8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(.black, style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
-        )
+        .overlay {
+            if store.showMenuNote != note {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.textMulticolor.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .onTapGesture {
+            withAnimation(.snappy) {
+                if store.showMenuNote == note {
+                    store.send(.selectMenuNote(nil))
+                } else {
+                    store.send(.selectMenuNote(note.id))
+                }
+            }
+        }
     }
 }
 
@@ -306,10 +322,10 @@ struct NoteListContent: View {
 
    
     NavigationStack {
-        ScreenBuilder.previewBuilder.getScreen(type: .home)
-//        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
-//            
-//        })))
+//        ScreenBuilder.previewBuilder.getScreen(type: .home)
+        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff1", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
+            
+        })))
     }
 
 }
