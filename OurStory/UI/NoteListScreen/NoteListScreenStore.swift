@@ -42,6 +42,10 @@ final class NoteListScreenStore: BaseStore {
             switch action {
             case .editNote(let note):
                 appStore.send(.toNote(note))
+            case .deleteNote(let note):
+                showMenuNoteId = nil
+                localNotes.removeAll { $0.id == note.id }
+                appStore.send(.deleteNote(note))
             case .updateFriendInNote(let note, let friend):
                 let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
                 appStore.send(.editNote(newNote))

@@ -121,5 +121,12 @@ final class DatabaseManager {
             var metadata = CloudSyncMetadataGRDB(key: migrationKey, value: "1")
             try metadata.insert(db)
         }
+        
+        // Migration 5: Add isHidden column to friend table
+        if try db.columns(in: "friend").contains(where: { $0.name == "isHidden" }) == false {
+            try db.alter(table: "friend") { t in
+                t.add(column: "isHidden", .boolean).notNull().defaults(to: false)
+            }
+        }
     }
 }

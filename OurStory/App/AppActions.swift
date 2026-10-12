@@ -12,9 +12,12 @@ enum AppAction {
     case addNewNote(Note)
     case syncNotes([SyncNote], Friend)
     case editNote(Note)
+    case deleteNote(Note)
     case addNewFriend(Friend)
     case editFriend(Friend)
     case deleteFriend(Friend)
+    case deleteFriendWithStories(Friend)
+    case hideFriend(Friend)
     case editProfile(name: String, color: String)
 }
 

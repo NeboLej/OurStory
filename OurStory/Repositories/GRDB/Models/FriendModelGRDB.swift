@@ -19,6 +19,7 @@ struct FriendModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, Tabl
     var user: UserModelGRDB?
     var lastSyncDate: Date?
     var updatedDate: Date?
+    var isHidden: Bool
     
     mutating func didInsert(with rowID: Int64, for column: String?) { }
     
@@ -29,10 +30,11 @@ struct FriendModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, Tabl
         self.userID = userID
         self.lastSyncDate = from.lastSyncDate
         self.updatedDate = Date()
+        self.isHidden = from.isHidden
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, color, userID, user, lastSyncDate, updatedDate
+        case id, name, color, userID, user, lastSyncDate, updatedDate, isHidden
     }
 }
 
@@ -44,6 +46,7 @@ extension FriendModelGRDB {
         container["userID"] = userID
         container["lastSyncDate"] = lastSyncDate
         container["updatedDate"] = updatedDate
+        container["isHidden"] = isHidden
     }
 }
 

@@ -14,6 +14,7 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
         do {
             return try await dbPool.read { db in
                 let friends = try FriendModelGRDB
+                    .filter(Column("isHidden") == false)
                     .including(optional: FriendModelGRDB.user)
                     .fetchAll(db).map { Friend(from: $0) }
                 Logger.log("get \(friends.count) friends", location: .GRDB, event: .success)
@@ -54,6 +55,20 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
         } catch {
             Logger.log("save new user", location: .GRDB, event: .error(error))
             fatalError()
+        }
+    }
+    
+    func hideFriend(_ friend: Friend) async {
+        do {
+            try await dbPool.write { db in
+                try db.execute(
+                    sql: "UPDATE friend SET isHidden = 1, updatedDate = ? WHERE id = ?",
+                    arguments: [Date().timeIntervalSinceReferenceDate, friend.id]
+                )
+                Logger.log("hide friend \(friend.name)", location: .GRDB, event: .success)
+            }
+        } catch {
+            Logger.log("Failed to hide friend", location: .GRDB, event: .error(error))
         }
     }
     

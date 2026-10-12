@@ -18,6 +18,9 @@ protocol NoteRepositoryProtocol {
     func getTotalNotes(friendID: UUID) async -> [Note]
     func updateSentStatus(noteIDs: [UUID], friendID: UUID, isSent: Bool) async
     func resetSentStatus(noteID: UUID) async
+    func deleteNote(_ noteID: UUID) async
+    func deleteNotesOwnedByFriend(friendID: UUID) async
+    func removeNoteFriendLinks(friendID: UUID) async
 }
 
 final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
@@ -217,6 +220,92 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
             }
         } catch {
             Logger.log("saveOrUpdateNote error", location: .GRDB, event: .error(error))
+        }
+    }
+    
+    func deleteNote(_ noteID: UUID) async {
+        do {
+            try await dbPool.write { db in
+                let now = Date().timeIntervalSinceReferenceDate
+                
+                // Track noteFriend deletions for cloud sync
+                let noteFriendRows = try NoteFriend
+                    .filter(Column("noteID") == noteID)
+                    .fetchAll(db)
+                for nf in noteFriendRows {
+                    let compositeKey = "\(nf.noteId.uuidString)_\(nf.friendId.uuidString)"
+                    try db.execute(
+                        sql: "INSERT OR REPLACE INTO deletedRecord (recordType, recordID, deletionDate) VALUES (?, ?, ?)",
+                        arguments: ["CD_NoteFriend", compositeKey, now]
+                    )
+                }
+                
+                // Track note deletion for cloud sync
+                try db.execute(
+                    sql: "INSERT OR REPLACE INTO deletedRecord (recordType, recordID, deletionDate) VALUES (?, ?, ?)",
+                    arguments: ["CD_Note", noteID.uuidString, now]
+                )
+                
+                if try NoteModelGRDB.deleteOne(db, key: noteID) {
+                    Logger.log("deleteNote: success", location: .GRDB, event: .success)
+                }
+            }
+        } catch {
+            Logger.log("deleteNote error", location: .GRDB, event: .error(error))
+        }
+    }
+    
+    func deleteNotesOwnedByFriend(friendID: UUID) async {
+        do {
+            try await dbPool.write { db in
+                let notes = try NoteModelGRDB
+                    .filter(Column("ownerID") == friendID)
+                    .fetchAll(db)
+                
+                let now = Date().timeIntervalSinceReferenceDate
+                for note in notes {
+                    // Track deletion for cloud sync
+                    try db.execute(
+                        sql: "INSERT OR REPLACE INTO deletedRecord (recordType, recordID, deletionDate) VALUES (?, ?, ?)",
+                        arguments: ["CD_Note", note.id.uuidString, now]
+                    )
+                }
+                
+                let deletedCount = try NoteModelGRDB
+                    .filter(Column("ownerID") == friendID)
+                    .deleteAll(db)
+                
+                Logger.log("deleteNotesOwnedByFriend: deleted \(deletedCount) notes", location: .GRDB, event: .success)
+            }
+        } catch {
+            Logger.log("deleteNotesOwnedByFriend error", location: .GRDB, event: .error(error))
+        }
+    }
+    
+    func removeNoteFriendLinks(friendID: UUID) async {
+        do {
+            try await dbPool.write { db in
+                let rows = try NoteFriend
+                    .filter(Column("friendID") == friendID)
+                    .fetchAll(db)
+                
+                let now = Date().timeIntervalSinceReferenceDate
+                for nf in rows {
+                    let compositeKey = "\(nf.noteId.uuidString)_\(nf.friendId.uuidString)"
+                    try db.execute(
+                        sql: "INSERT OR REPLACE INTO deletedRecord (recordType, recordID, deletionDate) VALUES (?, ?, ?)",
+                        arguments: ["CD_NoteFriend", compositeKey, now]
+                    )
+                }
+                
+                let deletedCount = try NoteFriend
+                    .filter(Column("friendID") == friendID)
+                    .deleteAll(db)
+                
+                Logger.log("removeNoteFriendLinks: deleted \(deletedCount) links", location: .GRDB, event: .success)
+            }
+        } catch {
+            Logger.log("removeNoteFriendLinks error", location: .GRDB, event: .error(error))
         }
     }
 }

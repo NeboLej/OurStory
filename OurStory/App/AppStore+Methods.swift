@@ -102,6 +102,20 @@ extension AppStore {
         }
     }
     
+    func deleteNote(_ note: Note) {
+        let baseDate = BaseDate(date: note.date)
+        if let story = stories[baseDate] {
+            let updatedStory = story.removeNote(note.id)
+            stories[baseDate] = updatedStory
+            if selectedStory?.id == story.id {
+                selectedStory = updatedStory
+            }
+        }
+        Task {
+            await noteRepository.deleteNote(note.id)
+        }
+    }
+    
     //MARK: FRIENDS -
     func addNewFriend(_ friend: Friend) {
         Task {
@@ -125,6 +139,25 @@ extension AppStore {
         Task {
             await friendsRepository.deleteFriend(friend)
             allFriends.removeAll { $0.id == friend.id }
+        }
+    }
+    
+    func deleteFriendWithStories(_ friend: Friend) {
+        Task {
+            await noteRepository.deleteNotesOwnedByFriend(friendID: friend.id)
+            await friendsRepository.deleteFriend(friend)
+            allFriends.removeAll { $0.id == friend.id }
+            // Reload stories to reflect deleted notes
+            loadData()
+        }
+    }
+    
+    func hideFriend(_ friend: Friend) {
+        Task {
+            await noteRepository.removeNoteFriendLinks(friendID: friend.id)
+            await friendsRepository.hideFriend(friend)
+            allFriends.removeAll { $0.id == friend.id }
+            loadData()
         }
     }
     

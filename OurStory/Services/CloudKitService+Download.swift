@@ -100,6 +100,7 @@ extension CloudKitService {
                 let cloudUserIDStr = record["userID"] as? String
                 let cloudUserID = cloudUserIDStr.flatMap { UUID(uuidString: $0) }
                 let cloudLastSync = record["lastSyncDate"] as? Date
+                let cloudIsHidden = (record["isHidden"] as? NSNumber)?.boolValue ?? false
                 let cloudUpdated = record["updatedDate"] as? Date ?? Date.distantPast
                 
                 if let existing = try FriendModelGRDB.filter(key: id).fetchOne(db) {
@@ -110,11 +111,12 @@ extension CloudKitService {
                         model.color = cloudColor
                         model.userID = cloudUserID
                         model.lastSyncDate = cloudLastSync
+                        model.isHidden = cloudIsHidden
                         model.updatedDate = cloudUpdated
                         try model.update(db)
                     }
                 } else {
-                    let friend = Friend(id: id, name: cloudName, color: cloudColor, lastSyncDate: cloudLastSync)
+                    let friend = Friend(id: id, name: cloudName, color: cloudColor, lastSyncDate: cloudLastSync, isHidden: cloudIsHidden)
                     var model = FriendModelGRDB(from: friend, userID: cloudUserID)
                     model.updatedDate = cloudUpdated
                     try model.insert(db)

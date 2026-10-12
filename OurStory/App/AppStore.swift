@@ -86,6 +86,8 @@ final class AppStore {
                 }
                 updateNote(note)
             }
+        case .deleteNote(let note):
+            deleteNote(note)
         case .syncNotes(let notes, let friend):
             syncNotes(notes, friend: friend)
         case .addNewFriend(let friend):
@@ -94,6 +96,10 @@ final class AppStore {
             editFriend(friend)
         case .deleteFriend(let friend):
             deleteFriend(friend)
+        case .deleteFriendWithStories(let friend):
+            deleteFriendWithStories(friend)
+        case .hideFriend(let friend):
+            hideFriend(friend)
         case .editProfile(name: let name, color: let color):
             user = userDefaultsManager.editUser(name: name, color: color)
         }

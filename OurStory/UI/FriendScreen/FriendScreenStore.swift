@@ -75,8 +75,12 @@ final class FriendScreenStore: BaseStore {
                 let newFriend = Friend(id: friend.id, name: name, color: color, user: friend.user, lastSyncDate: friend.lastSyncDate)
                 friend = newFriend
                 appStore.send(.editFriend(newFriend))
-            case .deleteFriend:
-                appStore.send(.deleteFriend(friend))
+            case .deleteFriendWithStories:
+                stopSearching()
+                appStore.send(.deleteFriendWithStories(friend))
+            case .hideFriend:
+                stopSearching()
+                appStore.send(.hideFriend(friend))
             case .syncFriend:
                 syncFriend()
             case .confirmSyncFriend(let isConfirm):

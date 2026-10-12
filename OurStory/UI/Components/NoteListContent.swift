@@ -195,7 +195,9 @@ struct NoteListContent: View {
                         isShowFriendsList.toggle()
                     }
                 })
-                noteMenuItem(image: "trash", text: "Удалить", action: {})
+                noteMenuItem(image: "trash", text: "Удалить", action: {
+                    store.send(.deleteNote(note))
+                })
                 Spacer()
                 Text(note.date.toHourMinuteDate())
                     .font(.myItalic(size: 12))

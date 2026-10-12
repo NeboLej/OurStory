@@ -70,6 +70,7 @@ extension CloudKitService {
             record["color"] = friend.color as NSString
             record["userID"] = friend.userID?.uuidString as NSString?
             record["lastSyncDate"] = friend.lastSyncDate as NSDate?
+            record["isHidden"] = NSNumber(value: friend.isHidden)
             record["updatedDate"] = (friend.updatedDate ?? Date()) as NSDate
             records.append(record)
         }

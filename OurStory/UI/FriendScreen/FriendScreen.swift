@@ -15,6 +15,7 @@ struct FriendScreen: View {
     @State var selectedColor: Color = .red
     
     @State private var showUserSuggestion: Bool = false
+    @State private var showDeleteAlert: Bool = false
     
     // Анимация поиска (пульс вокруг аватара)
     @State private var searchPulse: CGFloat = 1.0
@@ -128,6 +129,17 @@ struct FriendScreen: View {
         }
         .onDisappear {
             store.send(.stopSearching, animation: nil)
+        }
+        .alert("Вы хотите удалить друга и все полученные от него истории?", isPresented: $showDeleteAlert) {
+            Button("Удалить друга и все истории", role: .destructive) {
+                store.send(.deleteFriendWithStories)
+                dismiss()
+            }
+            Button("Удалить друга", role: .destructive) {
+                store.send(.hideFriend)
+                dismiss()
+            }
+            Button("Отмена", role: .cancel) { }
         }
         .onChange(of: store.syncPgogressStates) {
             if store.syncPgogressStates.last == .completed && store.hasUserProfileDifference {
@@ -588,8 +600,7 @@ struct FriendScreen: View {
     @ViewBuilder
     private func deleteButton() -> some View {
         Button {
-            store.send(.deleteFriend)
-            dismiss()
+            showDeleteAlert = true
         } label: {
             VStack(spacing: 2) {
                 Text("УДАЛИТЬ ДРУГА")
