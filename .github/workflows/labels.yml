@@ -1,0 +1,68 @@
+name: Label actions
+
+on:
+  pull_request:
+    types: [labeled]
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+env:
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+
+jobs:
+  # Лейбл build: сборка + тесты
+  build:
+    if: >
+      github.event.label.name == 'build' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: bundle config set path vendor/bundle && bundle install
+      - run: bundle exec fastlane tests
+
+  # Лейбл testFlight: тесты + TestFlight (только внутреннее тестирование)
+  testflight:
+    if: >
+      github.event.label.name == 'testFlight' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 90
+    concurrency:
+      group: upload
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - run: bundle config set path vendor/bundle && bundle install
+      - run: bundle exec fastlane tf_internal
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+
+  # Лейбл release: обычная выгрузка в TestFlight
+  release:
+    if: >
+      github.event.label.name == 'release' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 90
+    concurrency:
+      group: upload
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - run: bundle config set path vendor/bundle && bundle install
+      - run: bundle exec fastlane release
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
