@@ -44,7 +44,8 @@ final class Logger {
     static var allLogs = [String]()
     
     static func log(_ text: String = "", location: Location = .unowned, event: Status = .unowned) {
-        let log = ["LOG: ", location.text, event.text, " ---- ",  text].joined()
+        let time = Date().toHourMinuteDate()
+        let log = ["[\(time)] LOG: ", location.text, event.text, " ---- ",  text].joined()
         allLogs.append(log)
         print(log)
     }
