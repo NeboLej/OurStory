@@ -9,7 +9,6 @@ import Foundation
 
 extension AppStore {
     
-    
     //MARK: NOTE -
     func addNewNote(_ note: Note) {
         guard let selectedStory else { fatalError() }
