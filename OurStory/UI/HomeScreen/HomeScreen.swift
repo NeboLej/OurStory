@@ -70,6 +70,8 @@ struct HomeScreen: View {
                     store.send(.toFriendsList)
                 } onSettings: {
                     store.send(.toSettings)
+                } onSearch: {
+                    store.send(.toSearch)
                 } onNewNote: {
                     store.send(.createNewNote)
                 }

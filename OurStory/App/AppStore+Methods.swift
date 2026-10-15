@@ -200,4 +200,74 @@ extension AppStore {
             appCoordinator.fullScreenCover = .onboarding
         }
     }
+    
+    // MARK: - Search
+    
+    func searchNotes(query: String) -> [Note] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        
+        let tokens = trimmed
+            .lowercased()
+            .components(separatedBy: .whitespaces)
+            .filter { !$0.isEmpty }
+        
+        let allNotes = stories.values.flatMap(\.notes)
+        
+        return allNotes
+            .compactMap { note -> (Note, Double)? in
+                let score = searchScore(note: note, tokens: tokens)
+                return score > 0 ? (note, score) : nil
+            }
+            .sorted { $0.1 > $1.1 }
+            .map(\.0)
+    }
+    
+    private func searchScore(note: Note, tokens: [String]) -> Double {
+        var totalScore: Double = 0
+        
+        let titleLower = note.title?.lowercased() ?? ""
+        let textLower = note.text.lowercased()
+        let friendNames = note.friends.map { $0.name.lowercased() }
+        let ownerName = note.owner?.name.lowercased()
+        
+        for token in tokens {
+            var tokenScore: Double = 0
+            
+            // Title — highest priority
+            if titleLower.contains(token) {
+                tokenScore = max(tokenScore, 3.0)
+            } else if !titleLower.isEmpty, titleLower.commonPrefix(with: token).count >= min(3, token.count) {
+                tokenScore = max(tokenScore, 2.0)
+            }
+            
+            // Text body
+            if textLower.contains(token) {
+                tokenScore = max(tokenScore, 1.5)
+            }
+            
+            // Friend names — fuzzy prefix match
+            for name in friendNames {
+                if name.contains(token) {
+                    tokenScore = max(tokenScore, 2.0)
+                } else if token.fuzzyMatchesName(name) {
+                    tokenScore = max(tokenScore, 1.5)
+                }
+            }
+            
+            // Owner name
+            if let ownerName {
+                if ownerName.contains(token) {
+                    tokenScore = max(tokenScore, 2.0)
+                } else if token.fuzzyMatchesName(ownerName) {
+                    tokenScore = max(tokenScore, 1.5)
+                }
+            }
+            
+            guard tokenScore > 0 else { return 0 }
+            totalScore += tokenScore
+        }
+        
+        return totalScore
+    }
 }

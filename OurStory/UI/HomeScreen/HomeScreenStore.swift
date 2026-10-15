@@ -19,6 +19,7 @@ final class HomeScreenStore: BaseStore {
             case .toFriendsList: appStore.send(.toFriendsList)
             case .toSettings: appStore.send(.toSettings)
             case .toCalendar: appStore.send(.toCalendar)
+            case .toSearch: appStore.send(.toSearch)
             }
         }
     }

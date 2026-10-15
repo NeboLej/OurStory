@@ -12,4 +12,5 @@ enum HomeScreenAction {
     case toFriendsList
     case toSettings
     case toCalendar
+    case toSearch
 }

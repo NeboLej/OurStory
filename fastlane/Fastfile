@@ -1,3 +1,4 @@
+require "securerandom"
 default_platform(:ios)
 
 APP_ID  = "Nebo.OurStory"
@@ -7,10 +8,11 @@ TARGET  = "OurStory"
 TEAM_ID = "955DP87LHM"
 DEVICE = "iPhone 17 (26.0)"
 
+# Временная связка ключей для CI (не становится основной и удаляется после сборки)
+CI_KEYCHAIN = "ci_build_keychain"
+CI_KEYCHAIN_PASSWORD = SecureRandom.hex(16)
+
 platform :ios do
-  before_all do
-    setup_ci if ENV["CI"]
-  end
 
   desc "Сборка проекта и запуск тестов"
   lane :tests do
@@ -25,7 +27,7 @@ platform :ios do
     )
   end
 
-  desc "Тесты + выгрузка в TestFlight только для внутреннего тестирования"
+  desc "Тесты + TestFlight только для внутреннего тестирования (нельзя отправить в Store)"
   lane :tf_internal do
     tests
     upload(internal_only: true)
@@ -33,52 +35,97 @@ platform :ios do
 
   desc "Выгрузка в TestFlight с возможностью отправить в App Store"
   lane :release do
+    # tests   # раскомментируйте, если перед релизом тоже нужны тесты
     upload(internal_only: false)
   end
 
-  # Общая логика сборки и выгрузки
+  # ---------- Общая логика сборки и выгрузки ----------
   private_lane :upload do |options|
     internal_only = options[:internal_only]
+    on_ci = !ENV["CI"].to_s.empty?
 
-    api_key = app_store_connect_api_key(
-      key_id: ENV["ASC_KEY_ID"],
-      issuer_id: ENV["ASC_ISSUER_ID"],
-      key_content: ENV["ASC_KEY_CONTENT"],
-      is_key_content_base64: true
-    )
+    prepare_ci_keychain if on_ci
 
-    match(type: "appstore", app_identifier: APP_ID, readonly: true, api_key: api_key)
-    profile_name = ENV["sigh_#{APP_ID}_appstore_profile-name"]
+    begin
+      api_key = app_store_connect_api_key(
+        key_id: ENV["ASC_KEY_ID"],
+        issuer_id: ENV["ASC_ISSUER_ID"],
+        key_content: ENV["ASC_KEY_CONTENT"],
+        is_key_content_base64: true
+      )
 
-    update_code_signing_settings(
-      path: PROJECT,
-      targets: [TARGET],
-      build_configurations: ["Release"],
-      use_automatic_signing: false,
-      team_id: TEAM_ID,
-      code_sign_identity: "Apple Distribution",
-      profile_name: profile_name
-    )
-
-    build_number = latest_testflight_build_number(
-      app_identifier: APP_ID,
-      api_key: api_key,
-      initial_build_number: 0
-    ) + 1
-    increment_build_number(xcodeproj: PROJECT, build_number: build_number)
-
-    build_app(
-      project: PROJECT,
-      scheme: SCHEME,
-      configuration: "Release",
-      output_directory: "build",
-      export_options: {
-        method: "app-store",
-        provisioningProfiles: { APP_ID => profile_name },
-        testFlightInternalTestingOnly: internal_only
+      # 1. Сертификат и профиль из match
+      match_options = {
+        type: "appstore",
+        app_identifier: APP_ID,
+        readonly: true,
+        api_key: api_key
       }
-    )
+      if on_ci
+        match_options[:keychain_name] = CI_KEYCHAIN
+        match_options[:keychain_password] = CI_KEYCHAIN_PASSWORD
+      end
+      match(match_options)
 
-    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+      profile_name = ENV["sigh_#{APP_ID}_appstore_profile-name"]
+
+      # 2. Ручная подпись Release только на время сборки
+      update_code_signing_settings(
+        path: PROJECT,
+        targets: [TARGET],
+        build_configurations: ["Release"],
+        use_automatic_signing: false,
+        team_id: TEAM_ID,
+        code_sign_identity: "Apple Distribution",
+        profile_name: profile_name
+      )
+
+      # 3. Номер сборки = последний в TestFlight + 1
+      build_number = latest_testflight_build_number(
+        app_identifier: APP_ID,
+        api_key: api_key,
+        initial_build_number: 0
+      ) + 1
+      increment_build_number(xcodeproj: PROJECT, build_number: build_number)
+
+      # 4. Сборка .ipa
+      build_app(
+        project: PROJECT,
+        scheme: SCHEME,
+        configuration: "Release",
+        output_directory: "build",
+        export_options: {
+          method: "app-store",
+          provisioningProfiles: { APP_ID => profile_name },
+          testFlightInternalTestingOnly: internal_only
+        }
+      )
+
+      # 5. Выгрузка в TestFlight
+      upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+
+    ensure
+      # Удаляем временную связку, даже если сборка упала
+      cleanup_ci_keychain if on_ci
+    end
+  end
+
+  # ---------- Вспомогательные лейны для связки ключей ----------
+  private_lane :prepare_ci_keychain do
+    cleanup_ci_keychain   # на случай, если осталась от прошлого упавшего запуска
+    create_keychain(
+      name: CI_KEYCHAIN,
+      password: CI_KEYCHAIN_PASSWORD,
+      default_keychain: false,   # основная связка login остаётся основной
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false,
+      add_to_search_list: true
+    )
+  end
+
+  private_lane :cleanup_ci_keychain do
+    path = File.expand_path("~/Library/Keychains/#{CI_KEYCHAIN}-db")
+    delete_keychain(name: CI_KEYCHAIN) if File.exist?(path)
   end
 end

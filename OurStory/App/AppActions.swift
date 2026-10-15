@@ -31,4 +31,5 @@ enum NavigateAction {
     case toNotesList(title: String, notes: [Note])
     case toLogs
     case toCalendar
+    case toSearch
 }
