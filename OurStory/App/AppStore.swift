@@ -119,7 +119,14 @@ final class AppStore {
             appCoordinator.navigate(to: .friendList)
         case .toFriend(let friend):
             appCoordinator.navigate(to: .friend(friend))
-        case .toNewFriend: 
+            if !userDefaultsManager.isShowSupportEvent(.exchangeStory) {
+                Task {
+                    try await Task.sleep(for: .seconds(2))
+                    appCoordinator.navigate(to: .help(HelpType.exhangeStory))
+                    userDefaultsManager.setShowSupportEvent(.exchangeStory)
+                }
+            }
+        case .toNewFriend:
             appCoordinator.navigate(to: .newFriend)
         case .toSettings:
             appCoordinator.navigate(to: .setting)
@@ -133,6 +140,8 @@ final class AppStore {
             appCoordinator.navigate(to: .calendar)
         case .toSearch:
             appCoordinator.present(to: .search)
+        case .toHelpListScreen:
+            appCoordinator.navigate(to: .helpList)
         }
     }
     

@@ -87,7 +87,7 @@ final class NoteScreenStore: BaseStore {
     
     private func checkForFriendMention(in text: String) {
         suggestionTask?.cancel()
-        suggestionTask = Task { @MainActor [weak self] in
+        suggestionTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled, let self else { return }
             self.suggestedFriend = self.findMatchingFriend(in: text)

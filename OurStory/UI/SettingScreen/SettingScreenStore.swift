@@ -25,6 +25,8 @@ final class SettingScreenStore: BaseStore {
                 appStore.syncDownload()
             case .toLogScreen:
                 appStore.send(.toLogs)
+            case .toHelpListScreen:
+                appStore.send(.toHelpListScreen)
             }
         }
     }

@@ -12,4 +12,5 @@ enum SettingScreenAction {
     case toEditProfile
     case toLogScreen
     case syncFromCloud
+    case toHelpListScreen
 }

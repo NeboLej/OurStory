@@ -15,6 +15,7 @@ struct OurStoryApp: App {
     var appStore: AppStore
     
     @Environment(\.scenePhase) private var scenePhase
+    @State private var isLaunchCompleted = false
     
     init() {
         let repositoryFactory: RepositoryFactoryProtocol = RepositoryFactory()
@@ -26,7 +27,16 @@ struct OurStoryApp: App {
     
     var body: some Scene {
         WindowGroup {
-            content()
+            if isLaunchCompleted {
+                content()
+                    .transition(.opacity)
+            } else {
+                LaunchScreen {
+                    withAnimation {
+                        isLaunchCompleted = true
+                    }
+                }
+            }
         }
     }
     

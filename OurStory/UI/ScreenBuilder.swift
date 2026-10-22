@@ -10,7 +10,7 @@ import SwiftUI
 enum ScreenType: Identifiable, Hashable {
     
     case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, notes: [Note], isShowFriendsList: Binding<Bool>)
-    case log, onboarding, calendar, search
+    case log, onboarding, calendar, search, helpList, help(Help)
     
     var id: String {
         switch self {
@@ -26,6 +26,8 @@ enum ScreenType: Identifiable, Hashable {
         case .onboarding: "onboarding"
         case .calendar: "calendar"
         case .search: "search___!"
+        case .helpList: "helpList"
+        case .help(let help): "help_\(help.id)"
         }
     }
     
@@ -47,6 +49,8 @@ enum ScreenType: Identifiable, Hashable {
         case (.onboarding, .onboarding): true
         case (.calendar, .calendar): true
         case (.search, .search): true
+        case (.help, .help): true
+        case (.helpList, .helpList): true
         default: false
         }
     }
@@ -106,6 +110,8 @@ final class ScreenBuilder {
         case .onboarding: OnboardingScreen(store: OnboardingScreenStore(appStore: appStore))
         case .calendar: CalendarScreen(store: CalendarScreenStore(appStore: appStore), screenBuilder: self)
         case .search: SearchScreen(store: SearchScreenStore(appStore: appStore), screenBuilder: self)
+        case .helpList: HelpListScreen()
+        case .help(let help): HelpScreen(help: help)
         }
     }
     

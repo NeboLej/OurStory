@@ -11,6 +11,7 @@ import Lottie
 struct FriendListScreen: View {
     
     @State private var store: FriendListScreenStore
+    @State private var playback: LottiePlaybackMode = .playing(.marker("intro", loopMode: .playOnce))
     
     init(store: FriendListScreenStore) {
         self.store = store
@@ -82,15 +83,22 @@ struct FriendListScreen: View {
         .navigationBarTitleDisplayMode(.large)
     }
     
-    
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             
+//            LottieView(animation: .named("our_story_launch_1"))
+//                .playing(loopMode: .playOnce)
+//                .animationSpeed(0.9)
+//                .frame(width: 300, height: 300)
+//            
             LottieView(animation: .named("storytellers"))
-                .playing(loopMode: .loop)
+                .playbackMode(playback)
+                .animationDidFinish { completed in
+                    guard completed else { return }
+                    playback = .playing(.marker("loop", loopMode: .loop))
+                }
                 .animationSpeed(0.9)
                 .frame(width: 300, height: 300)
-                .opacity(0.8)
             
             VStack(spacing: 24) {
                 

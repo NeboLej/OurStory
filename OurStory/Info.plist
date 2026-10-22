@@ -11,6 +11,11 @@
         <string>_user-exchange._tcp</string>
         <string>_ourstory._tcp</string>
     </array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>backgroundFill</string>
+	</dict>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Lora-Bold.ttf</string>

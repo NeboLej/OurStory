@@ -100,6 +100,10 @@ struct SettingScreen: View {
                 store.send(.syncFromCloud)
             }
             
+            settingsRow(icon: "questionmark.circle", title: "Помощь") {
+                store.send(.toHelpListScreen)
+            }
+            
             settingsRow(icon: "note", title: "Логи") {
                 store.send(.toLogScreen)
             }

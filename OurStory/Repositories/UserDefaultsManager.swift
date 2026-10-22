@@ -7,6 +7,10 @@
 
 import Foundation
 
+enum SupportEvent: String {
+    case exchangeStory
+}
+
 class UserDefaultsManager {
     
     let db = UserDefaults.standard
@@ -28,6 +32,14 @@ class UserDefaultsManager {
         } else {
             return createNewUser()
         }
+    }
+    
+    func isShowSupportEvent(_ event: SupportEvent) -> Bool {
+        db.bool(forKey: event.rawValue)
+    }
+    
+    func setShowSupportEvent(_ event: SupportEvent) {
+        db.set(true, forKey: event.rawValue)
     }
     
     func editUser(name: String, color: String) -> User {
