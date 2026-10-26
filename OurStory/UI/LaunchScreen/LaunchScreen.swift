@@ -15,7 +15,7 @@ struct LaunchScreen: View {
             Color.backgroundFill
                 .ignoresSafeArea()
 
-            LottieView(animation: Bool.random() ? .named("our_story_launch_1") : .named("our_story_launch_v2_1"))
+            LottieView(animation: Bool.random() ? .named("our_story_launch") : .named("our_story_launch_v2"))
                 .playing(loopMode: .playOnce)
                 .animationDidFinish { completed in
                     guard completed else { return }

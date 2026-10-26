@@ -31,7 +31,7 @@ struct HelpScreen: View {
                         BlockView(block: help.blocks[index])
                     }
                 }
-                .padding(.bottom, 80)
+                .padding(.bottom, 100)
             }
             .scrollIndicators(.hidden)
             
@@ -89,23 +89,42 @@ struct InteractiveBlockView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
+        VStack {
+            LottieView(animation: .named(block.animationName))
+                .resizable()
+                .playbackMode(lottiePlayback)
+                .animationSpeed(currentPlayback.animationSpeed)
+                .frame(maxWidth: 400)
+                .aspectRatio(4 / 3, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+            
+            pageIndicators()
+                .padding(.bottom, 16)
+            
             VStack {
-                LottieView(animation: .named(block.animationName))
-                    .resizable()
-                    .playbackMode(lottiePlayback)
-                    .animationSpeed(currentPlayback.animationSpeed)
-                    .frame(maxWidth: 400)
-                    .aspectRatio(4 / 3, contentMode: .fit)
-                    .frame(maxWidth: .infinity)
-                
                 ForEach(currentPlayback.blocks.indices, id: \.self) { index in
                     BlockView(block: currentPlayback.blocks[index])
                 }
-            }.onChange(of: playbackIndex) { oldValue, newValue in
-                withAnimation {
-                    currentPlayback = block.playbackBlocks[playbackIndex]
-                }
+            }
+            .id(playbackIndex)
+
+        }
+        .clipped()
+        .onChange(of: playbackIndex) { oldValue, newValue in
+            withAnimation(.easeInOut(duration: 0.35)) {
+                currentPlayback = block.playbackBlocks[playbackIndex]
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func pageIndicators() -> some View {
+        HStack(spacing: 6) {
+            ForEach(0..<block.playbackBlocks.count, id: \.self) { index in
+                Capsule()
+                    .foregroundColor(index == playbackIndex ? .myPrimary : .gray.opacity(0.3))
+                    .frame(width: index == playbackIndex ? 16 : 8, height: 8)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: playbackIndex)
             }
         }
     }

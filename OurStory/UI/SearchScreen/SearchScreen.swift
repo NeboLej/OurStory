@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import Lottie
 
 struct SearchScreen: View {
     
@@ -14,6 +15,16 @@ struct SearchScreen: View {
     @State private var isShowFriendsList = false
     @State private var keyboardHeight: CGFloat = 0
     
+    private var playback: LottiePlaybackMode {
+        if searchText.count < 3 {
+            .playing(.marker("idle", loopMode: .loop))
+        } else if store.state.notes.isEmpty {
+            .playing(.marker("not_found", loopMode: .loop))
+        } else {
+            .playing(.marker("", loopMode: .loop))
+        }
+    }
+    
     init(store: SearchScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
         self.screenBuilder = screenBuilder
@@ -22,11 +33,20 @@ struct SearchScreen: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
-                screenBuilder.getComponent(type: .notesList(notes: store.state.notes, storyID: UUID(), isShowFriendsList: $isShowFriendsList))
+                screenBuilder.getComponent(type: .notesList(notes: store.state.notes, storyID: UUID(), isShowDate: true, isShowFriendsList: $isShowFriendsList))
                     .id(store.state.notes)
                     .onScrollPhaseChange { _, newPhase in
                         if newPhase == .interacting {
                             isSearchFocused = false
+                        }
+                    }.overlay(alignment: .top) {
+                        if store.state.notes.isEmpty {
+                            LottieView(animation: .named("search_empty"))
+                                .resizable()
+                                .playbackMode(playback)
+                                .aspectRatio(1, contentMode: .fit)
+                                .frame(maxWidth: 180)
+                                .padding(.top, 70)
                         }
                     }
                 

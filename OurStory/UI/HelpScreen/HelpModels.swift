@@ -9,12 +9,13 @@ import Foundation
 
 enum HelpType {
     static let helps: [Help] = [
-        HelpType.exhangeStory
+        HelpType.addedFriend,
+        HelpType.exhangeStory,
     ]
     
-    static let exhangeStory = Help(id: 1, title: "Обмен историями", subtitle: "", blocks: [], internactiveBlock:
-        InteractiveHelpBlock(animationName: "phones_exchange_1", playbackBlocks: [
-            PlaybackHelpBlocks(playbackName: "approach", animationSpeed: 0.45, blocks: [
+    static let exhangeStory = Help(id: 2, title: "Обмен историями", subtitle: "", blocks: [], internactiveBlock:
+        InteractiveHelpBlock(animationName: "phones_exchange", playbackBlocks: [
+            PlaybackHelpBlocks(playbackName: "approach", animationSpeed: 0.55, blocks: [
                 .text("""
                     **Встретьтесь с другом**
                     Чтобы рассказать истории нужно *физически* быть рядом с вашим другом.
@@ -22,7 +23,7 @@ enum HelpType {
                     Не переживайте, что не смогли передать историю сразу как только написали ее. Истории любят когда их вспоминают немного позже
                     """),
                 .note("Не обязательно приближать телефоны друг к другу вплутную, достаточно быть в радиусе 10-15 метров"),
-                .warning("Если приблизить телефоны в упор - сработает *Apple AirDrop* и вы обменяетесь своими контактами, это не то что там нужно")
+                .warning("Если приблизить телефоны в упор - сработает *Apple AirDrop* и вы обменяетесь своими контактами, это не то, что там нужно")
             ]),
             PlaybackHelpBlocks(playbackName: "press", animationSpeed: 0.6, blocks: [
                 .text("""
@@ -38,6 +39,42 @@ enum HelpType {
                 .note("Если связь оборвалась попробуйте вернуться на экран друга и обменяться историями заново"),
             ]),
         ]))
+    
+    static let addedFriend = Help(id: 1, title: "Добавление друга", subtitle: "", blocks: [], internactiveBlock:
+        InteractiveHelpBlock(animationName: "friends_guide", playbackBlocks: [
+            PlaybackHelpBlocks(playbackName: "storytellers", animationSpeed: 1.4, blocks: [
+                .text("Чтобы упомянать друга в историх нужно добавить его в список вашех друзей"),
+                .note("Не переживайте, чтобы начать записывать общие истории друг не обязательно должен быть рядом. И даже не обязательно должен скачивать приложение")
+            ]),
+            
+            PlaybackHelpBlocks(playbackName: "add_remote", animationSpeed: 1, blocks: [
+                .text("""
+                    **Если друга сейчас нет рядом** 
+                    
+                     1.  Нажмите кнопку "Добавить друга" и пункт "Друг сейчас не рядом"
+                     2.  Укажите имя и выберите цвет
+                     3.  **Отлично!** С этого момента друга можно упомнянать в ваших историях
+                    
+                     4.  Когда вы встретитесь просто одновременно нажмите на кнопку "Поделиться историями" в созданном профиле
+                     5.  Дождитесь окончания обмена данными
+                    """),
+                .note("После этого профиль друга, который создали вы, будет связан с профилем, созданным вашим другом")
+            ]),
+            
+            PlaybackHelpBlocks(playbackName: "add_nearby", animationSpeed: 1, blocks: [
+                .text("""
+                    **Если друг сейчас рядом** 
+                    
+                     1.  Нажмите кнопку "Добавить друга" и пункт "Друг сейчас рядом"
+                     2.  Одновременно нажмите на кнопку "Поиск друга"
+                     3.  Дождитесь синхронизации
+                     4.  **Отлично!** С этого момента друга можно упомнянать в ваших историях
+                    
+                    """),
+                .warning("Если во время поиска друга не удалось найти, вы можете вернуться и нажать на кнопку \"Поиск друга\" еще раз")
+            ]),
+        ])
+    )
 }
 
 struct Help: Identifiable {
@@ -67,5 +104,13 @@ enum HelpBlock {
     case note(String)
     case warning(String)
     case button(String)
+}
+
+import SwiftUI
+
+#Preview {
+    NavigationStack {
+        HelpScreen(help: HelpType.addedFriend)
+    }
 }
 

@@ -301,9 +301,10 @@ struct CalendarScreen: View {
             Divider()
                 .opacity(0.3)
             
-            screenBuilder.getComponent(
-                type: .notesList(notes: story.notes, storyID: story.id, isShowFriendsList: $isShowFriendsList)
-            )
+            screenBuilder.getComponent(type: .notesList(notes: story.notes,
+                                                        storyID: story.id,
+                                                        isShowDate: false,
+                                                        isShowFriendsList: $isShowFriendsList))
             .id(story.id)
         }
     }
