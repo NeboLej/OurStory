@@ -20,6 +20,7 @@ struct CalendarViewCellData: Identifiable {
     let dayNumber: Int
     let isToday: Bool
     let colors: [Color]
+    let dots: [Dot]
     let noteCount: Int
 }
 
@@ -29,4 +30,13 @@ struct CalendarViewMonthData: Identifiable {
     let weeks: [[CalendarViewCellData]]
     let totalNotes: Int
     let activeDays: Int
+}
+
+struct Dot {
+    enum Style {
+        case fill, stroke
+    }
+    
+    let color: Color
+    let style: Style
 }

@@ -171,23 +171,19 @@ struct CalendarScreen: View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         
         return ZStack {
-            // Base fill
             shape.fill(hasContent ? activeCellColor : baseCellColor)
             
-            // Friend color border
             if cell.colors.count >= 2 {
                 shape
-                    .strokeBorder(
-                        AngularGradient(gradient: Gradient(stops: angularStops(for: cell.colors)), center: .center ), lineWidth: 2.5)
+                    .strokeBorder(AngularGradient(gradient: Gradient(stops: angularStops(for: cell.colors)),
+                                                  center: .center ), lineWidth: 2.5)
                     .padding(1)
-                //                    .opacity(0.8)
             } else if let color = cell.colors.first {
                 shape
                     .strokeBorder(color, lineWidth: 2.5)
                     .padding(1)
             }
             
-            // Selected state
             if isSelected {
                 shape.fill(Color.myPrimary)
             }
@@ -201,15 +197,19 @@ struct CalendarScreen: View {
                             (hasContent ? Color.primary : Color.textMulticolor.opacity(0.6))
                     )
                 
-                if cell.noteCount > 0 {
+                if !cell.dots.isEmpty {
                     HStack(spacing: 2) {
-                        ForEach(0..<min(cell.noteCount, 3), id: \.self) { _ in
-                            Circle()
-                                .fill(
-                                    isSelected ? Color.black.opacity(0.5) :
-                                        (cell.colors.first ?? .white).opacity(0.8)
-                                )
-                                .frame(width: 3, height: 3)
+                        ForEach(Array(cell.dots.prefix(5).enumerated()), id: \.offset) { _, dot in
+                            if dot.style == .fill {
+                                Circle()
+                                    .fill(isSelected ? Color.black.opacity(0.7) : dot.color)
+                                    .frame(width: 4, height: 4)
+                            } else {
+                                Circle()
+                                    .stroke(isSelected ? Color.black.opacity(0.7) : dot.color, lineWidth: 0.5)
+                                    .frame(width: 4, height: 4)
+                            }
+
                         }
                     }
                 }

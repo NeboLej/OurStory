@@ -70,7 +70,7 @@ final class CalendarScreenStore: BaseStore {
                 let wd = calendar.component(.weekday, from: firstDay)
                 let offset = wd == 1 ? 6 : wd - 2
                 for _ in 0..<offset {
-                    cells.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], noteCount: 0))
+                    cells.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], dots: [], noteCount: 0))
                     cellIndex += 1
                 }
             }
@@ -79,7 +79,8 @@ final class CalendarScreenStore: BaseStore {
                 guard let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
                 
                 let story = storyMap[BaseDate(date: dayDate)]
-                let colors = extractColors(from: story)
+                let colors = extractBorderColors(from: story)
+                let dots = extractDots(from: story)
                 let noteCount = story?.notes.count ?? 0
                 
                 if noteCount > 0 {
@@ -93,6 +94,7 @@ final class CalendarScreenStore: BaseStore {
                                         dayNumber: day,
                                         isToday: calendar.isDateInToday(dayDate),
                                         colors: colors,
+                                        dots: dots,
                                         noteCount: noteCount))
                 cellIndex += 1
             }
@@ -109,7 +111,7 @@ final class CalendarScreenStore: BaseStore {
             }
             if !week.isEmpty {
                 while week.count < 7 {
-                    week.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], noteCount: 0))
+                    week.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], dots: [], noteCount: 0))
                     cellIndex += 1
                 }
                 weeks.append(week)
@@ -148,11 +150,57 @@ final class CalendarScreenStore: BaseStore {
         return result
     }
     
-    private func extractColors(from story: Story?) -> [Color] {
+    private var profileColor: Color {
+        Color(hex: appStore.user.color)
+    }
+    
+    private func extractBorderColors(from story: Story?) -> [Color] {
         guard let story, !story.notes.isEmpty else { return [] }
-        let unique = Array(Set(story.notes.flatMap(\.friends).map(\.color)))
-        guard !unique.isEmpty else { return [.red.opacity(0.8)] }
-        return unique.sorted(by: <).map { Color(hex: $0) }
+        
+        var colorHexes = Set<String>()
+        
+        for note in story.notes {
+            if let owner = note.owner {
+                colorHexes.insert(owner.color)
+            } else {
+                note.friends.forEach { colorHexes.insert($0.color) }
+                colorHexes.insert(appStore.user.color)
+            }
+        }
+        
+        return colorHexes.sorted().map { Color(hex: $0) }
+    }
+    
+    private func extractDots(from story: Story?) -> [Dot] {
+        guard let story, !story.notes.isEmpty else { return [] }
+        
+        var dots: [Dot] = []
+        var hasProfileDot = false
+        var friendHexes = Set<String>()
+        var ownerHexes = Set<String>()
+        
+        for note in story.notes {
+            if let owner = note.owner {
+                ownerHexes.insert(owner.color)
+            } else {
+                note.friends.forEach { friendHexes.insert($0.color) }
+                hasProfileDot = true
+            }
+        }
+        
+        for hex in ownerHexes.sorted() {
+            dots.append(Dot(color: Color(hex: hex), style: .stroke))
+        }
+        
+        for hex in friendHexes.sorted() {
+            dots.append(Dot(color: Color(hex: hex), style: .fill))
+        }
+
+        if hasProfileDot {
+            dots.append(Dot(color: profileColor, style: .fill))
+        }
+        
+        return dots
     }
 }
 
