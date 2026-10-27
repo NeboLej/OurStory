@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Lottie
 
 struct HomeScreen: View {
     
@@ -31,9 +32,9 @@ struct HomeScreen: View {
                         }
                         
                         Button {
-                            store.send(.toCalendar)
+                            store.send(.toSettings)
                         } label: {
-                           Image(systemName: "calendar")
+                           Image(systemName: "gearshape.fill")
                                 .foregroundStyle(.myPrimary)
                         }
                     }
@@ -47,18 +48,38 @@ struct HomeScreen: View {
                 storyView(currentStory)
                     .id(store.state.selectedStory?.id ?? UUID())
             } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Историй пока нет")
-                        .font(.myMedium(size: 18))
-                        .foregroundStyle(.textMulticolor)
-                        .padding(.bottom, 4)
+                VStack(alignment: .center, spacing: 0) {
+                    Spacer()
+                    ZStack {
+                        LottieView(animation: .named("day_empty"))
+                            .resizable()
+                            .playing(loopMode: .loop)
+                            .aspectRatio(1, contentMode: .fit)
+                            .frame(maxWidth: 150)
+                            .opacity(0.6)
+                        VStack {
+                            Text(store.state.selectedDate.toDay())
+                                .font(.mySemiBold(size: 20))
+                                .foregroundStyle(.myPrimary)
+                            
+                            Text(store.state.selectedDate.toMonth())
+                                .font(.myRegular(size: 14))
+                                .foregroundStyle(.myPrimary)
+                        }
+                        .padding(.trailing, 12)
                         .padding(.top, 20)
-                    Text(store.state.selectedDate.toReadable())
-                        .font(.myItalic(size: 14))
+                    }
+                    .padding(.leading, 12)
+                
+                    Text(TextFactory.shared.getEmptyDayText(date: store.state.selectedDate))
+                        .font(.myRegular(size: 16))
                         .foregroundStyle(.textMulticolor.opacity(0.6))
                         .padding(.bottom, 36)
+                        .multilineTextAlignment(.center)
                     Spacer()
                 }
+                .padding(.bottom, 80)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, 42)
             }
         }
@@ -68,8 +89,8 @@ struct HomeScreen: View {
             if !isShowFriendsList {
                 HomeScreenToolbar {
                     store.send(.toFriendsList)
-                } onSettings: {
-                    store.send(.toSettings)
+                } onCalendar: {
+                    store.send(.toCalendar)
                 } onSearch: {
                     store.send(.toSearch)
                 } onNewNote: {
@@ -82,17 +103,12 @@ struct HomeScreen: View {
     @ViewBuilder
     private func storyView(_ story: Story) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Group {
-                Text(story.title)
-                    .font(.myMedium(size: 18))
-                    .foregroundStyle(.textMulticolor)
-                    .padding(.top, 20)
-                Text(story.date.toReadable())
-                    .font(.myItalic(size: 14))
-                    .foregroundStyle(.textMulticolor.opacity(0.6))
-                    .padding(.bottom, 36)
-            }
-            .padding(.leading, 16)
+            Text(story.date.toReadable())
+                .font(.myItalic(size: 14))
+                .foregroundStyle(.textMulticolor.opacity(0.6))
+                .padding(.bottom, 36)
+                .padding(.leading, 12)
+                .padding(.top, 16)
             
             screenBuilder.getComponent(type: .notesList(notes: story.notes, storyID: story.id, isShowDate: false, isShowFriendsList: $isShowFriendsList))
         }

@@ -169,7 +169,7 @@ final class AppStore {
 //                return Dictionary(uniqueKeysWithValues: ff.map { ($0.baseDate, $0) })
 //            }()
             
-            selectedStory = getSelectedStory()
+            selectedStory = self.stories[BaseDate(date: selectedDate)]
         }
     }
 }

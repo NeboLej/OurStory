@@ -38,6 +38,21 @@ extension Date {
         return formatter.string(from: self)
     }
     
+    func toDay() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd"
+        
+        return formatter.string(from: self)
+    }
+    
+    func toMonth() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "MMMM"
+        
+        return formatter.string(from: self)
+    }
+    
     
     func isCurrentMonth() -> Bool {
         Calendar.current.isDate(self, equalTo: Date(), toGranularity: .month)

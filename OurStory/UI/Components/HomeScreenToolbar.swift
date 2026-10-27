@@ -10,12 +10,12 @@ import SwiftUI
 struct HomeScreenToolbar: View {
     
     enum MenuItem {
-        case friends, settings, search
+        case friends, calendar, search
         
         var iconName: String {
             switch self {
             case .friends: return "person.3.sequence"
-            case .settings: return "gearshape"
+            case .calendar: return "calendar"
             case .search: return "magnifyingglass"
             }
         }
@@ -23,14 +23,14 @@ struct HomeScreenToolbar: View {
         var name: String {
             switch self {
             case .friends: return "Друзья"
-            case .settings: return "Настройки"
+            case .calendar: return "Календарь"
             case .search: return "Поиск"
             }
         }
     }
     
     let onFriends: () -> Void
-    let onSettings: () -> Void
+    let onCalendar: () -> Void
     let onSearch: () -> Void
     let onNewNote: () -> Void
     
@@ -39,8 +39,8 @@ struct HomeScreenToolbar: View {
             GlassEffectContainer(spacing: 8) {
 
                 HStack(alignment: .bottom, spacing: 16) {
-                    munuItem(.settings, action: onSettings)
                     munuItem(.friends, action: onFriends)
+                    munuItem(.calendar, action: onCalendar)
                     munuItem(.search, action: onSearch)
                 }
                 .padding(.horizontal, 20)
@@ -89,7 +89,7 @@ struct HomeScreenToolbar: View {
 #Preview {
     HomeScreenToolbar {
         
-    } onSettings: {
+    } onCalendar: {
         
     } onSearch: {
         
