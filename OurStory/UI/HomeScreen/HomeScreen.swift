@@ -61,10 +61,14 @@ struct HomeScreen: View {
                             Text(store.state.selectedDate.toDay())
                                 .font(.mySemiBold(size: 20))
                                 .foregroundStyle(.myPrimary)
+                                .contentTransition(.numericText())
+                                .animation(.easeInOut(duration: 0.2), value: store.state.selectedDate)
                             
                             Text(store.state.selectedDate.toMonth())
                                 .font(.myRegular(size: 14))
                                 .foregroundStyle(.myPrimary)
+                                .contentTransition(.numericText())
+                                .animation(.easeInOut(duration: 0.2), value: store.state.selectedDate)
                         }
                         .padding(.trailing, 12)
                         .padding(.top, 20)
