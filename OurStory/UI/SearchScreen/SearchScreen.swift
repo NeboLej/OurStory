@@ -56,8 +56,9 @@ struct SearchScreen: View {
             }
             .background(.backgroundFill)
             .ignoresSafeArea(.keyboard)
+            .navigationBarTitleDisplayMode(.large)
             .navigationTitle("Поиск")
-            .navigationBarTitleDisplayMode(.automatic)
+            .toolbarBackground(.backgroundFill, for: .navigationBar)
         }
         .onAppear {
             isSearchFocused = true
