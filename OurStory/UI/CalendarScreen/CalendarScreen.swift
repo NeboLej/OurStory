@@ -176,11 +176,11 @@ struct CalendarScreen: View {
             if cell.colors.count >= 2 {
                 shape
                     .strokeBorder(AngularGradient(gradient: Gradient(stops: angularStops(for: cell.colors)),
-                                                  center: .center ), lineWidth: 2.5)
+                                                  center: .center ), lineWidth: 1)
                     .padding(1)
             } else if let color = cell.colors.first {
                 shape
-                    .strokeBorder(color, lineWidth: 2.5)
+                    .strokeBorder(color, lineWidth: 1)
                     .padding(1)
             }
             
