@@ -177,6 +177,7 @@ struct NoteListContent: View {
             
             if store.showMenuNote == note {
                 noteMenu(note: note)
+                    .frame(maxWidth: 160)
                     .transition(.scale(scale: 0.1).combined(with: .opacity))
             }
         }
@@ -265,43 +266,49 @@ struct NoteListContent: View {
     }
     
     private func friendNoteView(_ note: Note) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let noteTitle = note.title {
-                Text(noteTitle)
-                    .font(.mySemiBoldItalic(size: 16))
+        HStack(alignment: .top, spacing: 0) {
+            let isSelected = store.showMenuNote == note
+            WavyLine(amplitude: isSelected ? 0 : 6, wavelength: isSelected ? 100 : 20)
+                .stroke(Color(hex: note.owner?.color ?? ""), lineWidth: 2)
+                .frame(width: isSelected ? 2 : 16)
+                .padding(.leading, isSelected ? 1 : 6)
+                .padding(.bottom, 18)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                if let noteTitle = note.title {
+                    Text(noteTitle)
+                        .font(.mySemiBold(size: 16))
+                        .foregroundStyle(.textMulticolor)
+                }
+                
+                Text(note.text)
+                    .font(.myRegular(size: 16))
                     .foregroundStyle(.textMulticolor)
+                    .padding(.top, 2)
+                
+                HStack(alignment: .center, spacing: 3) {
+                    Spacer()
+                    Circle()
+                        .fill(Color(hex: note.owner?.color ?? ""))
+                        .frame(width: 16)
+                        .overlay {
+                            Circle()
+                                .stroke(.textMulticolor, lineWidth: 1)
+                        }
+                    Text("\(note.owner?.name ?? "")")
+                        .font(.myRegular(size: 14))
+                        .foregroundStyle(.textMulticolor.opacity(0.6))
+                        .padding(.horizontal, 4)
+                }
+                .padding(.top, 6)
             }
-            
-            Text(note.text)
-                .font(.myItalic(size: 16))
-                .foregroundStyle(.textMulticolor)
-                .padding(.top, 2)
-            
-            HStack(alignment: .center, spacing: 3) {
-                Spacer()
-                Text(note.date.toHourMinuteDate())
-                    .font(.myItalic(size: 12))
-                    .foregroundStyle(.textMulticolor.opacity(0.5))
-                    .padding(.trailing, 12)
-                Circle()
-                    .fill(Color(hex: note.owner?.color ?? ""))
-                    .frame(width: 16)
-                    .overlay {
-                        Circle()
-                            .stroke(.black, lineWidth: 0.5)
-                    }
-                Text("\(note.owner?.name ?? "")")
-                    .font(.myRegular(size: 14))
-                    .foregroundStyle(.textMulticolor.opacity(0.6))
-            }
-            .padding(.top, 2)
+            .padding(.horizontal, 8)
         }
-        .padding(.leading, 30)
         .padding([.top, .bottom, .trailing], 8)
         .overlay {
             if store.showMenuNote != note {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(.textMulticolor.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+                    .stroke(.textMulticolor.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -316,7 +323,6 @@ struct NoteListContent: View {
         }
     }
 }
-
 
 #Preview {
 

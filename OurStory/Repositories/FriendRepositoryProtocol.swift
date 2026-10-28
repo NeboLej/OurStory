@@ -13,4 +13,5 @@ protocol FriendRepositoryProtocol {
     func editFriend(_ friend: Friend) async
     func deleteFriend(_ friend: Friend) async
     func hideFriend(_ friend: Friend) async
+    func friendExists(id: UUID) async -> Bool
 }

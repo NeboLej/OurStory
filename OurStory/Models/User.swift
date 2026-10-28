@@ -80,4 +80,11 @@ struct Friend: Hashable, Identifiable {
         }
         return friends.map { $0 }
     }
+    
+    static let ourStory = Friend(
+        id: UUID(uuidString: "00000000-0000-0000-0000-4F5552535459")!,
+        name: "Our Story 🦖",
+        color: "B6D6BF",
+        isHidden: true
+    )
 }

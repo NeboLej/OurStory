@@ -9,6 +9,7 @@ import Foundation
 
 enum SupportEvent: String {
     case exchangeStory
+    case welcomeMessage
 }
 
 class UserDefaultsManager {

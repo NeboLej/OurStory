@@ -107,6 +107,7 @@ final class AppStore {
             hideFriend(friend)
         case .editProfile(name: let name, color: let color):
             user = userDefaultsManager.editUser(name: name, color: color)
+            createWelcomeMessageIfNeeded()
         }
     }
     

@@ -205,6 +205,44 @@ extension AppStore {
         }
     }
     
+    // MARK: - Welcome Message
+    
+    func createWelcomeMessageIfNeeded() {
+        guard !userDefaultsManager.isShowSupportEvent(.welcomeMessage) else { return }
+        guard stories.isEmpty else {
+            userDefaultsManager.setShowSupportEvent(.welcomeMessage)
+            return
+        }
+        
+        userDefaultsManager.setShowSupportEvent(.welcomeMessage)
+        
+        Task {
+            let ourStoryFriend = Friend.ourStory
+            
+            let exists = await friendsRepository.friendExists(id: ourStoryFriend.id)
+            if !exists {
+                await friendsRepository.addNewFriend(ourStoryFriend)
+            }
+            
+            let story = Story(date: .now)
+            await storyRepository.newStory(story)
+            
+            let welcomeNote = Note(
+                rootStoryID: story.id,
+                title: "Ура! Теперь ты с нами! 🎉",
+                date: .now,
+                text: "\(user.name), это твоё пространство для историй. Сохраняй яркие моменты, отмечай друзей и делись воспоминаниями при встрече.\n\nЗнакомо чувство, когда листаешь галерею на телефоне и вдруг натыкаешься на фото, которое возвращает тебя в давно забытый момент? Воспоминания, которые, казалось бы, затерялись где-то в глубинах памяти, снова оживают\n\nЭто приложение создано именно для этого. Чтобы сохранять больше счастливых моментов, собирать их в истории и возвращаться к ним одному или вместе с друзьями.",
+                friends: [],
+                owner: ourStoryFriend
+            )
+            await noteRepository.addNote(welcomeNote)
+            
+            let updatedStory = story.addNewNote(welcomeNote)
+            stories[BaseDate(date: updatedStory.date)] = updatedStory
+            selectedStory = updatedStory
+        }
+    }
+    
     // MARK: - Search
     
     func searchNotes(query: String) -> [Note] {

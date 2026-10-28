@@ -72,6 +72,17 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
         }
     }
     
+    func friendExists(id: UUID) async -> Bool {
+        do {
+            return try await dbPool.read { db in
+                try FriendModelGRDB.filter(key: id).fetchCount(db) > 0
+            }
+        } catch {
+            Logger.log("friendExists error", location: .GRDB, event: .error(error))
+            return false
+        }
+    }
+    
     func deleteFriend(_ friend: Friend) async {
         do {
             try await dbPool.write { db in
