@@ -31,37 +31,45 @@ struct SearchScreen: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .bottom) {
-                screenBuilder.getComponent(type: .notesList(notes: store.state.notes, storyID: UUID(), isShowDate: true, isShowFriendsList: $isShowFriendsList))
-                    .id(store.state.notes)
-                    .onScrollPhaseChange { _, newPhase in
-                        if newPhase == .interacting {
-                            isSearchFocused = false
-                        }
-                    }.overlay(alignment: .top) {
-                        if store.state.notes.isEmpty {
-                            LottieView(animation: .named("search_empty"))
-                                .resizable()
-                                .playbackMode(playback)
-                                .aspectRatio(1, contentMode: .fit)
-                                .frame(maxWidth: 180)
-                                .padding(.top, 70)
-                        }
+        ZStack(alignment: .bottom) {
+            screenBuilder.getComponent(type: .notesList(notes: store.state.notes, storyID: UUID(), isShowDate: true, isShowFriendsList: $isShowFriendsList))
+                .id(store.state.notes)
+                .onScrollPhaseChange { _, newPhase in
+                    if newPhase == .interacting {
+                        isSearchFocused = false
                     }
+                }.overlay(alignment: .top) {
+                    if store.state.notes.isEmpty {
+                        LottieView(animation: .named("search_empty"))
+                            .resizable()
+                            .playbackMode(playback)
+                            .aspectRatio(1, contentMode: .fit)
+                            .frame(maxWidth: 180)
+                            .padding(.top, 70)
+                    }
+                }
+            //от слйчайных нажатий во круг searchBar
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: 20)
+                    .contentShape(Rectangle())
+                    .onTapGesture { }
                 
                 searchBar
-                    .padding(.bottom, keyboardHeight > 0 ? keyboardHeight - bottomSafeArea : 0)
-                    .animation(.easeOut(duration: 0.25), value: keyboardHeight)
             }
-            .background(.backgroundFill)
-            .ignoresSafeArea(.keyboard)
-            .navigationBarTitleDisplayMode(.large)
-            .navigationTitle("Поиск")
-            .toolbarBackground(.backgroundFill, for: .navigationBar)
+            .padding(.bottom, keyboardHeight > 0 ? keyboardHeight - bottomSafeArea : 0)
+            .animation(.easeOut(duration: 0.25), value: keyboardHeight)
         }
+        .background(.backgroundFill)
+        .ignoresSafeArea(.keyboard)
+        .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("Поиск")
+        .toolbarBackground(.backgroundFill, for: .navigationBar)
         .onAppear {
-            isSearchFocused = true
+            withAnimation {
+                isSearchFocused = true
+            }
         }
         .onChange(of: searchText) { _, newValue in
             store.send(.search(newValue))
@@ -121,8 +129,7 @@ struct SearchScreen: View {
             .clipShape(Circle())
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .padding(.bottom, 4)
+        .padding(.bottom, 12)
 //        .background(.backgroundFill)
     }
 }

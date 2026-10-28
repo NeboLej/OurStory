@@ -23,7 +23,9 @@ final class SearchScreenStore: BaseStore {
             }
             searchResults = appStore.searchNotes(query: query)
         case .close:
-            appStore.appCoordinator.fullScreenCover = nil
+            if !appStore.appCoordinator.path.isEmpty {
+                appStore.appCoordinator.path.removeLast()
+            }
         }
     }
 }

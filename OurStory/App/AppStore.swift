@@ -145,7 +145,7 @@ final class AppStore {
         case .toCalendar:
             appCoordinator.navigate(to: .calendar)
         case .toSearch:
-            appCoordinator.present(to: .search)
+            appCoordinator.navigate(to: .search)
         case .toHelpListScreen:
             appCoordinator.navigate(to: .helpList)
         }
