@@ -107,6 +107,7 @@ final class DatabaseManager {
         try db.create(table: "cloudSyncMetadata", ifNotExists: true) { t in
             t.column("key", .text).primaryKey()
             t.column("value", .text)
+            t.column("dataValue", .blob)
         }
         
         // Migration 4: Mark all notes as unsent to force re-sync in next version
@@ -126,6 +127,13 @@ final class DatabaseManager {
         if try db.columns(in: "friend").contains(where: { $0.name == "isHidden" }) == false {
             try db.alter(table: "friend") { t in
                 t.add(column: "isHidden", .boolean).notNull().defaults(to: false)
+            }
+        }
+        
+        // Migration 6: Add dataValue column to cloudSyncMetadata for binary data (CKServerChangeToken)
+        if try db.columns(in: "cloudSyncMetadata").contains(where: { $0.name == "dataValue" }) == false {
+            try db.alter(table: "cloudSyncMetadata") { t in
+                t.add(column: "dataValue", .blob)
             }
         }
     }

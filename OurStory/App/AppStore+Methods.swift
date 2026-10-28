@@ -177,9 +177,13 @@ extension AppStore {
         }
     }
     
-    func syncDownloadAndUpload() {
+    func syncDownloadAndUpload(force: Bool = false) {
         guard !isSyncing else { return }
+        if !force, let last = lastSyncDate, Date().timeIntervalSince(last) < syncCooldown {
+            return
+        }
         isSyncing = true
+        lastSyncDate = Date()
         Task {
             await cloudKitService.downloadAll()
             await MainActor.run {

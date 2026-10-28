@@ -11,9 +11,11 @@ struct CloudSyncMetadataGRDB: Codable, FetchableRecord, MutablePersistableRecord
     
     var key: String
     var value: String?
+    var dataValue: Data?
     
     func encode(to container: inout PersistenceContainer) {
         container["key"] = key
         container["value"] = value
+        container["dataValue"] = dataValue
     }
 }

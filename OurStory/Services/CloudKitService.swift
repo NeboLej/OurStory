@@ -108,19 +108,46 @@ final class CloudKitService {
             Logger.log("downloadAll: ensureZoneExists...", location: .cloudKit, event: .processing)
             try await ensureZoneExists()
             
-            // Process pending deletions BEFORE downloading to prevent re-importing deleted records
+            // Process pending local deletions BEFORE downloading
             Logger.log("downloadAll: processing pending deletions...", location: .cloudKit, event: .processing)
             try await processDeletions()
             
-            Logger.log("downloadAll: fetching all records from zone...", location: .cloudKit, event: .processing)
-            let allRecords = try await fetchAllRecordsFromZone()
+            // Load saved change token for delta download
+            let savedToken = await loadZoneChangeToken()
+            Logger.log("downloadAll: fetching changes (token: \(savedToken != nil ? "saved" : "nil"))...", location: .cloudKit, event: .processing)
+            let changes = try await fetchChangedRecordsFromZone(since: savedToken)
             
-            // Load locally pending deletions as safety net (in case processDeletions partially failed)
+            // Safety: count local notes BEFORE applying any deletions
+            let localNoteCount = try await dbPool.read { db in try NoteModelGRDB.fetchCount(db) }
+            
+            // Filter deletions: never apply mass deletions that would wipe local data
+            var safeDeletions = changes.deletedRecordIDs
+            if !safeDeletions.isEmpty && localNoteCount > 0 {
+                // Count how many deletion IDs target notes (UUID format, not composite key)
+                let noteDeleteCount = safeDeletions.filter { !$0.recordName.contains("_") && UUID(uuidString: $0.recordName) != nil }.count
+                let totalModifications = changes.recordsByType.values.reduce(0) { $0 + $1.count }
+                
+                // Block ALL deletions if they would remove >50% of local notes OR
+                // if there are only deletions with no modifications (cloud wipe scenario)
+                if noteDeleteCount > localNoteCount / 2 || (totalModifications == 0 && safeDeletions.count > 0) {
+                    Logger.log("SAFETY: Blocked \(safeDeletions.count) remote deletions (would delete \(noteDeleteCount)/\(localNoteCount) notes, modifications: \(totalModifications)). Resetting token.", location: .cloudKit, event: .processing)
+                    safeDeletions = []
+                    try await resetZoneChangeToken()
+                }
+            }
+            
+            // Load locally pending deletions as safety net
             let pendingDeletionIDs = try await loadPendingDeletionIDs()
             
             func filterDeleted(_ records: [CKRecord]) -> [CKRecord] {
                 records.filter { !pendingDeletionIDs.contains($0.recordID.recordName) }
             }
+            
+            // Process safe remote deletions
+            Logger.log("downloadAll: processing remote deletions (\(safeDeletions.count))...", location: .cloudKit, event: .processing)
+            try await processRemoteDeletions(safeDeletions)
+            
+            let allRecords = changes.recordsByType
             
             Logger.log("downloadAll: downloadProfile...", location: .cloudKit, event: .processing)
             try await downloadProfile(from: allRecords["CD_Profile"] ?? [])
@@ -134,6 +161,9 @@ final class CloudKitService {
             try await downloadNotes(from: filterDeleted(allRecords["CD_Note"] ?? []))
             Logger.log("downloadAll: downloadNoteFriends...", location: .cloudKit, event: .processing)
             try await downloadNoteFriends(from: filterDeleted(allRecords["CD_NoteFriend"] ?? []))
+            
+            // Persist the new change token for next delta download
+            try await saveZoneChangeToken(changes.newToken)
             
             // Save last download date
             try await dbPool.write { db in
@@ -153,16 +183,30 @@ final class CloudKitService {
     
     // MARK: - Helpers
     
-    func fetchAllRecordsFromZone() async throws -> [String: [CKRecord]] {
+    struct ZoneChangesResult {
+        let recordsByType: [String: [CKRecord]]
+        let deletedRecordIDs: [CKRecord.ID]
+        let newToken: CKServerChangeToken?
+    }
+    
+    func fetchChangedRecordsFromZone(since savedToken: CKServerChangeToken?) async throws -> ZoneChangesResult {
         var recordsByType: [String: [CKRecord]] = [:]
+        var deletedRecordIDs: [CKRecord.ID] = []
         var moreComing = true
-        var changeToken: CKServerChangeToken? = nil
+        var changeToken = savedToken
+        var latestToken: CKServerChangeToken?
         
         while moreComing {
-            let result = try await privateDB.recordZoneChanges(
-                inZoneWith: zoneID,
-                since: changeToken
-            )
+            let result: (modificationResultsByID: [CKRecord.ID: Result<CKDatabase.RecordZoneChange.Modification, Error>], deletions: [CKDatabase.RecordZoneChange.Deletion], changeToken: CKServerChangeToken, moreComing: Bool)
+            do {
+                result = try await privateDB.recordZoneChanges(
+                    inZoneWith: zoneID,
+                    since: changeToken
+                )
+            } catch let error as CKError where error.code == .changeTokenExpired {
+                Logger.log("Change token expired, performing full download", location: .cloudKit, event: .processing)
+                return try await fetchChangedRecordsFromZone(since: nil)
+            }
             
             for (_, recordResult) in result.modificationResultsByID {
                 if case .success(let modification) = recordResult {
@@ -171,12 +215,17 @@ final class CloudKitService {
                 }
             }
             
+            for deletion in result.deletions {
+                deletedRecordIDs.append(deletion.recordID)
+            }
+            
+            latestToken = result.changeToken
             changeToken = result.changeToken
             moreComing = result.moreComing
         }
         
-        Logger.log("Fetched records from zone: \(recordsByType.mapValues { $0.count })", location: .cloudKit, event: .success)
-        return recordsByType
+        Logger.log("Fetched changes from zone: \(recordsByType.mapValues { $0.count }), deletions: \(deletedRecordIDs.count)", location: .cloudKit, event: .success)
+        return ZoneChangesResult(recordsByType: recordsByType, deletedRecordIDs: deletedRecordIDs, newToken: latestToken)
     }
     
     func batchSave(records: [CKRecord]) async throws {
@@ -229,5 +278,43 @@ final class CloudKitService {
         } catch {
             return nil
         }
+    }
+    
+    // MARK: - Zone Change Token Persistence
+    
+    func loadZoneChangeToken() async -> CKServerChangeToken? {
+        do {
+            return try await dbPool.read { db in
+                guard let row = try Row.fetchOne(db, sql: "SELECT dataValue FROM cloudSyncMetadata WHERE key = ?", arguments: ["zoneChangeToken"]),
+                      let data = row["dataValue"] as? Data else {
+                    return nil
+                }
+                return try NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
+            }
+        } catch {
+            Logger.log("Failed to load zone change token: \(error)", location: .cloudKit, event: .error(error))
+            return nil
+        }
+    }
+    
+    func saveZoneChangeToken(_ token: CKServerChangeToken?) async throws {
+        guard let token else { return }
+        let data = try NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true)
+        try await dbPool.write { db in
+            try db.execute(
+                sql: "INSERT OR REPLACE INTO cloudSyncMetadata (key, dataValue) VALUES (?, ?)",
+                arguments: ["zoneChangeToken", data]
+            )
+        }
+    }
+    
+    func resetZoneChangeToken() async throws {
+        try await dbPool.write { db in
+            try db.execute(
+                sql: "DELETE FROM cloudSyncMetadata WHERE key = ?",
+                arguments: ["zoneChangeToken"]
+            )
+        }
+        Logger.log("Zone change token reset, next download will be full", location: .cloudKit, event: .processing)
     }
 }

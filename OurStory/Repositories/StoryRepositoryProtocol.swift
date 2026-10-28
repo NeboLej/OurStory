@@ -10,6 +10,7 @@ import GRDB
 
 protocol StoryRepositoryProtocol {
     func getStories(startDate: Date, endDate: Date) async -> [Story]
+    func getAllStories() async -> [Story]
     func newStory(_ story: Story) async
 }
 
@@ -27,6 +28,29 @@ final class StoryRepository: BaseRepository, StoryRepositoryProtocol {
                 let request = StoryModelGRDB
                     .filter(Column("date") >= startDate && Column("date") < endDate)
                     .including(all: notesAssociation)
+
+                let stories = try StoryWithNotes.fetchAll(db, request)
+                
+                Logger.log("get \(stories.count) stories", location: .GRDB, event: .success)
+                
+                return stories.map { Story(from: $0) }
+            }
+
+        } catch {
+            Logger.log("getStories error", location: .GRDB, event: .error(error))
+            fatalError("\(error)")
+        }
+    }
+    
+    func getAllStories() async -> [Story] {
+        do {
+            return try await dbPool.read { db in
+                
+                let notesAssociation = StoryModelGRDB.notes
+                    .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
+                    .including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
+                
+                let request = StoryModelGRDB.including(all: notesAssociation)
 
                 let stories = try StoryWithNotes.fetchAll(db, request)
                 

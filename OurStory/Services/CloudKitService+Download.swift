@@ -9,6 +9,51 @@ import GRDB
 
 extension CloudKitService {
     
+    // MARK: - Process Remote Deletions
+    
+    func processRemoteDeletions(_ deletedIDs: [CKRecord.ID]) async throws {
+        guard !deletedIDs.isEmpty else { return }
+        
+        var failedCount = 0
+        
+        try await dbPool.write { db in
+            for recordID in deletedIDs {
+                let name = recordID.recordName
+                
+                do {
+                    // NoteFriend uses composite key "noteID_friendID"
+                    if name.contains("_") {
+                        let parts = name.split(separator: "_")
+                        if parts.count == 2,
+                           let noteID = UUID(uuidString: String(parts[0])),
+                           let friendID = UUID(uuidString: String(parts[1])) {
+                            try db.execute(
+                                sql: "DELETE FROM noteFriend WHERE noteID = ? AND friendID = ?",
+                                arguments: [noteID, friendID]
+                            )
+                        }
+                        continue
+                    }
+                    
+                    // Other entities use UUID as recordName — try all tables with id PK
+                    guard let uuid = UUID(uuidString: name) else { continue }
+                    
+                    for table in ["note", "story", "friend", "user"] {
+                        try db.execute(
+                            sql: "DELETE FROM \(table) WHERE id = ?",
+                            arguments: [uuid]
+                        )
+                    }
+                } catch {
+                    failedCount += 1
+                    Logger.log("Failed to delete record \(name): \(error)", location: .cloudKit, event: .error(error))
+                }
+            }
+        }
+        
+        Logger.log("Processed \(deletedIDs.count) remote deletions (failed: \(failedCount))", location: .cloudKit, event: .success)
+    }
+    
     // MARK: - Download Profile
     
     func downloadProfile(from records: [CKRecord]) async throws {

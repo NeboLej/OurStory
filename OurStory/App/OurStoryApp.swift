@@ -67,6 +67,7 @@ struct OurStoryApp: App {
             case .active:
                 appStore.syncDownloadAndUpload()
             case .background:
+                guard !appStore.isSyncing else { break }
                 let backgroundTask = UIApplication.shared.beginBackgroundTask()
                 Task {
                     await appStore.cloudKitService.uploadAll()
