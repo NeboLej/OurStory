@@ -58,10 +58,7 @@ final class CloudKitService {
     
     // MARK: - Full Upload
     
-    func uploadAll() async {
-        //tmp
-        return
-        
+    func uploadAll() async { 
         guard await checkiCloudAvailability() else {
             Logger.log("iCloud not available, skipping upload", location: .cloudKit, event: .processing)
             return
@@ -99,10 +96,6 @@ final class CloudKitService {
     // MARK: - Full Download
     
     func downloadAll() async {
-        
-        //tmp
-        return
-        
         Logger.log("Starting downloadAll", location: .cloudKit, event: .processing)
         guard await checkiCloudAvailability() else {
             Logger.log("iCloud not available, skipping download", location: .cloudKit, event: .processing)

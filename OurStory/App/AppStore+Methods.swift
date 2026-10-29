@@ -209,11 +209,6 @@ extension AppStore {
     
     func createWelcomeMessageIfNeeded() {
         guard !userDefaultsManager.isShowSupportEvent(.welcomeMessage) else { return }
-        guard stories.isEmpty else {
-            userDefaultsManager.setShowSupportEvent(.welcomeMessage)
-            return
-        }
-        
         userDefaultsManager.setShowSupportEvent(.welcomeMessage)
         
         Task {

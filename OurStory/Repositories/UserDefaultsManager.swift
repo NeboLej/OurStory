@@ -10,6 +10,7 @@ import Foundation
 enum SupportEvent: String {
     case exchangeStory
     case welcomeMessage
+    case addFriend
 }
 
 class UserDefaultsManager {

@@ -73,17 +73,15 @@ final class AppStore {
             let dateChanged = oldStoryEntry != nil && oldStoryEntry!.key != newBaseDate
             
             if dateChanged, let oldBaseDate = oldStoryEntry?.key, let oldStory = oldStoryEntry?.value {
-                // Remove note from old story
+                
                 let updatedOldStory = oldStory.removeNote(note.id)
                 stories[oldBaseDate] = updatedOldStory
                 if selectedStory?.id == oldStory.id {
                     selectedStory = updatedOldStory
                 }
                 
-                // Add note to new story (find existing or create)
                 moveNoteToStory(note, newBaseDate: newBaseDate)
             } else if let oldBaseDate = oldStoryEntry?.key, let oldStory = oldStoryEntry?.value {
-                // Same date — just replace in place
                 let updatedStory = oldStory.replaceNote(note)
                 stories[oldBaseDate] = updatedStory
                 if selectedStory?.id == updatedStory.id {
@@ -123,11 +121,18 @@ final class AppStore {
             appCoordinator.navigate(to: .note(note))
         case .toFriendsList:
             appCoordinator.navigate(to: .friendList)
+            if !userDefaultsManager.isShowSupportEvent(.addFriend) {
+                Task {
+                    try await Task.sleep(for: .seconds(1))
+                    appCoordinator.navigate(to: .help(HelpType.addedFriend))
+                    userDefaultsManager.setShowSupportEvent(.addFriend)
+                }
+            }
         case .toFriend(let friend):
             appCoordinator.navigate(to: .friend(friend))
             if !userDefaultsManager.isShowSupportEvent(.exchangeStory) {
                 Task {
-                    try await Task.sleep(for: .seconds(2))
+                    try await Task.sleep(for: .seconds(1))
                     appCoordinator.navigate(to: .help(HelpType.exhangeStory))
                     userDefaultsManager.setShowSupportEvent(.exchangeStory)
                 }
