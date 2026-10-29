@@ -1,20 +1,13 @@
 //
-//  SyncProgressOverlay.swift
+//  SyncProgressScreen.swift
 //  OurStory
 //
 
 import SwiftUI
 
-struct SyncProgressOverlay: View {
+struct SyncProgressScreen: View {
     
-    let syncPhase: SyncPhase
-    let friendName: String
-    let friendColor: String
-    let userColor: String
-    
-    var onConfirmSync: (Bool) -> Void
-    var onToNewNotes: () -> Void
-    var onExitSync: () -> Void
+    @State var store: SyncProgressStore
     
     // Анимация — позиции точек
     @State private var leftDotOffset: CGFloat = -120
@@ -29,6 +22,8 @@ struct SyncProgressOverlay: View {
     @State private var leftDotFloatX: CGFloat = 0
     @State private var rightDotFloatY: CGFloat = 0
     @State private var rightDotFloatX: CGFloat = 0
+    
+    private var syncPhase: SyncPhase { store.state.syncPhase }
     
     private var isWaitingForConfirmation: Bool {
         if case .waitingForConfirmation = syncPhase { return true }
@@ -59,9 +54,9 @@ struct SyncProgressOverlay: View {
             .overlay(alignment: .topTrailing) {
                 switch syncPhase {
                 case .completed: EmptyView()
-                default :
+                default:
                     Button {
-                        onExitSync()
+                        store.send(.exitSync)
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 11, weight: .medium))
@@ -73,12 +68,15 @@ struct SyncProgressOverlay: View {
             }
         }
         .onAppear {
+            store.startSync()
             animateToPhase(syncPhase)
         }
         .onChange(of: syncPhase) { _, newPhase in
             animateToPhase(newPhase)
         }
     }
+    
+    // MARK: - Phase Animations
     
     private func animateToPhase(_ phase: SyncPhase) {
         switch phase {
@@ -170,8 +168,8 @@ struct SyncProgressOverlay: View {
     
     @ViewBuilder
     private func dotsAnimation() -> some View {
-        let fColor = Color(hex: friendColor)
-        let uColor = Color(hex: userColor)
+        let fColor = Color(hex: store.state.friendColor)
+        let uColor = Color(hex: store.state.userColor)
         let dotSize: CGFloat = 36
         
         ZStack {
@@ -233,7 +231,7 @@ struct SyncProgressOverlay: View {
     
     @ViewBuilder
     private func statusText() -> some View {
-        let name = friendName.lowercased()
+        let name = store.state.friendName.lowercased()
         
         VStack(spacing: 6) {
             switch syncPhase {
@@ -280,6 +278,8 @@ struct SyncProgressOverlay: View {
         .animation(.easeInOut(duration: 1.0), value: syncPhase)
     }
     
+    // MARK: - Bottom Area
+    
     @ViewBuilder
     private func bottomArea() -> some View {
         switch syncPhase {
@@ -306,7 +306,7 @@ struct SyncProgressOverlay: View {
                 
                 HStack(spacing: 20) {
                     Button {
-                        onConfirmSync(false)
+                        store.send(.confirmSync(false))
                     } label: {
                         Text("ОТМЕНИТЬ")
                             .font(.mySemiBold(size: 12))
@@ -322,7 +322,7 @@ struct SyncProgressOverlay: View {
                     .buttonStyle(.plain)
                     
                     Button {
-                        onConfirmSync(true)
+                        store.send(.confirmSync(true))
                     } label: {
                         Text("ОБМЕНЯТЬСЯ")
                             .font(.mySemiBold(size: 12))
@@ -348,7 +348,7 @@ struct SyncProgressOverlay: View {
                         .foregroundStyle(.textMulticolor.opacity(0.6))
 
                     VintageSmallButton(title: "ПОСМОТРЕТЬ ИСТОРИИ") {
-                        onToNewNotes()
+                        store.send(.toNewNotes)
                     }
                 }
                 
@@ -368,7 +368,7 @@ struct SyncProgressOverlay: View {
     @ViewBuilder
     private func exitButton() -> some View {
         Button {
-            onExitSync()
+            store.send(.exitSync)
         } label: {
             Text("ЗАКРЫТЬ")
                 .font(.mySemiBold(size: 14))
@@ -388,12 +388,15 @@ struct SyncProgressOverlay: View {
 }
 
 #Preview {
-    SyncProgressOverlay(syncPhase: .completed(newCount: 3), friendName: "sdf", friendColor: "44ff32", userColor: "33eedd") { isBool in
-        
-    } onToNewNotes: {
-        
-    } onExitSync: {
-        
-    }
-    
+    ScreenBuilder.previewBuilder.getScreen(type: .syncProgress(
+        SyncProgressConfig(
+            friend: Friend(name: "София", color: "F16C6C"),
+            unsentNotes: [],
+            syncService: SyncService3(profile: User(name: "Test", color: "33eedd")),
+            isDiscoveryActive: false,
+            noteRepository: RepositoryFactory().noteRepository,
+            onSyncFinished: nil
+        )
+    ))
 }
+

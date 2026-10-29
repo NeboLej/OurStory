@@ -14,7 +14,6 @@ struct FriendScreen: View {
     @State var name: String = ""
     @State var selectedColor: Color = .red
     
-    @State private var showUserSuggestion: Bool = false
     @State private var showDeleteAlert: Bool = false
     
     // Анимация поиска (пульс вокруг аватара)
@@ -23,50 +22,28 @@ struct FriendScreen: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        if isEditMode {
-                            editMode()
-                        } else {
-                            showMode()
-                        }
+        VStack(spacing: 0) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    if isEditMode {
+                        editMode()
+                    } else {
+                        showMode()
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 150)
                 }
-                
-                if isEditMode {
-                    deleteButton()
-                } else {
-                    syncButton()
-                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 150)
             }
             
-            if store.state.isInSync {
-                SyncProgressOverlay(
-                    syncPhase: store.state.syncPhase,
-                    friendName: store.state.friend.name,
-                    friendColor: store.state.friend.color,
-                    userColor: store.appStore.user.color,
-                    onConfirmSync: { isConfirm in
-                        store.send(.confirmSyncFriend(isConfirm))
-                    },
-                    onToNewNotes: {
-                        store.send(.toNewNotes)
-                    },
-                    onExitSync: {
-                        store.send(.exitSync)
-                    }
-                )
-                .transition(.opacity)
+            if isEditMode {
+                deleteButton()
+            } else {
+                syncButton()
             }
         }
-        .animation(.easeInOut(duration: 0.5), value: store.state.isInSync)
         .frame(maxWidth: .infinity)
         .background(.backgroundFill)
-        .navigationBarBackButtonHidden(isEditMode || store.state.isInSync)
+        .navigationBarBackButtonHidden(isEditMode)
         .toolbar {
             if isEditMode {
                 ToolbarItem(placement: .topBarLeading) {
@@ -92,39 +69,35 @@ struct FriendScreen: View {
                     .fixedSize()
                 }.sharedBackgroundVisibility(.hidden)
             }
-            if !store.state.isInSync {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        withAnimation {
-                            if isEditMode {
-                                store.send(.editFriend(name: name, color: selectedColor.toHex()))
-                            }
-                            isEditMode.toggle()
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    withAnimation {
+                        if isEditMode {
+                            store.send(.editFriend(name: name, color: selectedColor.toHex()))
                         }
-                    } label: {
-                        Text(isEditMode ? "СОХРАНИТЬ" : "ИЗМЕНИТЬ")
-                            .font(.mySemiBold(size: 11))
-                            .tracking(1.5)
-                            .foregroundStyle(Color.textMulticolor.opacity(0.85))
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 10)
-                        
-                            .overlay {
-                                Rectangle()
-                                    .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
-                            }
+                        isEditMode.toggle()
                     }
-                    .buttonStyle(.plain)
-                    .opacity(store.state.isInSync ? 0 : 1)
+                } label: {
+                    Text(isEditMode ? "СОХРАНИТЬ" : "ИЗМЕНИТЬ")
+                        .font(.mySemiBold(size: 11))
+                        .tracking(1.5)
+                        .foregroundStyle(Color.textMulticolor.opacity(0.85))
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 10)
+                    
+                        .overlay {
+                            Rectangle()
+                                .stroke(Color.textMulticolor.opacity(0.35), lineWidth: 1)
+                        }
                 }
-                .sharedBackgroundVisibility(.hidden)
+                .buttonStyle(.plain)
             }
-            
+            .sharedBackgroundVisibility(.hidden)
         }
         .onAppear {
             name = store.state.friend.name
             selectedColor = Color(hex: store.state.friend.color)
-            showUserSuggestion = false
+            store.send(.dismissUserSuggestion, animation: nil)
             store.send(.startSearching, animation: nil)
         }
         .onDisappear {
@@ -141,11 +114,7 @@ struct FriendScreen: View {
             }
             Button("Отмена", role: .cancel) { }
         }
-        .onChange(of: store.syncPgogressStates) {
-            if store.syncPgogressStates.last == .completed && store.hasUserProfileDifference {
-                showUserSuggestion = true
-            }
-        }
+
     }
     
     // MARK: - Статус поиска
@@ -165,9 +134,6 @@ struct FriendScreen: View {
                     Text("\(store.state.friend.name) рядом")
                         .font(.myItalic(size: 14))
                         .foregroundStyle(.textMulticolor.opacity(0.7))
-                    Text("и готова слушать")
-                        .font(.myItalic(size: 12))
-                        .foregroundStyle(.textMulticolor.opacity(0.4))
                 }
             case .friendReady:
                 VStack(spacing: 2) {
@@ -251,7 +217,7 @@ struct FriendScreen: View {
     // MARK: - Предложение обновить профиль
     @ViewBuilder
     private func userSuggestionBanner(showCloseButton: Bool = true) -> some View {
-        if let user = store.state.friend.user, store.hasUserProfileDifference {
+        if let user = store.state.friend.user, store.state.hasUserProfileDifference {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 0) {
                     Text("ПРЕДЛОЖЕНИЕ")
@@ -261,9 +227,7 @@ struct FriendScreen: View {
                     Spacer()
                     if showCloseButton {
                         Button {
-                            withAnimation {
-                                showUserSuggestion = false
-                            }
+                            store.send(.dismissUserSuggestion)
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 10, weight: .medium))
@@ -322,7 +286,6 @@ struct FriendScreen: View {
                     store.send(.applyUserProfile)
                     name = user.name
                     selectedColor = Color(hex: user.color)
-                    showUserSuggestion = false
                 }
             }
             .padding(14)
@@ -397,7 +360,7 @@ struct FriendScreen: View {
             .padding(.top, 32)
             .padding(.bottom, 40)
             
-            if showUserSuggestion {
+            if store.state.showUserSuggestion {
                 userSuggestionBanner()
                     .padding(.bottom, 16)
             }
@@ -479,7 +442,7 @@ struct FriendScreen: View {
                 }
             }
             
-            if store.hasUserProfileDifference {
+            if store.state.hasUserProfileDifference {
                 userSuggestionBanner(showCloseButton: false)
                     .padding(.top, 24)
             }

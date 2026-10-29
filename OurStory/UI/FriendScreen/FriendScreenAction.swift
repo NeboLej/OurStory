@@ -12,13 +12,11 @@ enum FriendScreenAction {
     case deleteFriendWithStories
     case hideFriend
     case syncFriend
-    case confirmSyncFriend(Bool)
-    case toNewNotes
-    case exitSync
     case applyUserProfile
     case toAllNotes
     case toUnsentNotes
     case unlinkFriend
+    case dismissUserSuggestion
     
     // Auto-search lifecycle
     case startSearching

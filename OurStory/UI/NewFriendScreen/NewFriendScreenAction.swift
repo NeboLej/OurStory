@@ -9,4 +9,5 @@ import Foundation
 
 enum NewFriendScreenAction {
     case saveNewFriend(name: String, color: String)
+    case startSyncNewFriend
 }

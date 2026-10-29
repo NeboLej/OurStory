@@ -190,7 +190,7 @@ extension AppStore {
                 // Re-read user from UserDefaults (may have been restored from iCloud)
                 user = userDefaultsManager.getCurrentUser()
                 loadData()
-                checkOnboardingNeeded()
+//                checkOnboardingNeeded()
             }
             await cloudKitService.uploadAll()
             await MainActor.run {

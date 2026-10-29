@@ -8,5 +8,4 @@
 import Foundation
 
 struct NewFriendScreenState {
-    let profileNumber: Int
 }

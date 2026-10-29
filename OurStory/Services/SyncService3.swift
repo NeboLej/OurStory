@@ -374,6 +374,11 @@ private final class Sync3Session {
     }
     
     private func tearDownTransport() {
+        listener?.stateUpdateHandler = nil
+        listener?.newConnectionHandler = nil
+        browser?.stateUpdateHandler = nil
+        browser?.browseResultsChangedHandler = nil
+        connection?.stateUpdateHandler = nil
         listener?.cancel()
         browser?.cancel()
         connection?.cancel()
@@ -495,6 +500,10 @@ private final class Sync3Session {
             searchReconnectAttempts = 0
             
             // Stop discovery — we have a connection
+            listener?.stateUpdateHandler = nil
+            listener?.newConnectionHandler = nil
+            browser?.stateUpdateHandler = nil
+            browser?.browseResultsChangedHandler = nil
             listener?.cancel()
             browser?.cancel()
             listener = nil

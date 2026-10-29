@@ -11,6 +11,7 @@ enum ScreenType: Identifiable, Hashable {
     
     case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, notes: [Note], isShowFriendsList: Binding<Bool>)
     case log, onboarding, calendar, search, helpList, help(Help)
+    case syncProgress(SyncProgressConfig)
     
     var id: String {
         switch self {
@@ -28,6 +29,7 @@ enum ScreenType: Identifiable, Hashable {
         case .search: "search___!"
         case .helpList: "helpList"
         case .help(let help): "help_\(help.id)"
+        case .syncProgress: "syncProgress"
         }
     }
     
@@ -51,6 +53,7 @@ enum ScreenType: Identifiable, Hashable {
         case (.search, .search): true
         case (.help, .help): true
         case (.helpList, .helpList): true
+        case (.syncProgress, .syncProgress): true
         default: false
         }
     }
@@ -99,7 +102,7 @@ final class ScreenBuilder {
         case .note(let note): NoteScreen(store: NoteScreenStore(appStore: appStore, note: note))
         case .friendList: FriendListScreen(store: FriendListScreenStore(appStore: appStore))
         case .friend(let friend): FriendScreen(store: FriendScreenStore(appStore: appStore, friend: friend, noteRepositpry: repositories.noteRepository))
-        case .newFriend: NewFriendScreen(store: NewFriendScreenStore(appStore: appStore))
+        case .newFriend: NewFriendScreen(store: NewFriendScreenStore(appStore: appStore, noteRepository: repositories.noteRepository))
         case .setting: SettingScreen(store: SettingScreenStore(appStore: appStore))
         case .editProfile: EditProfileScreen(store: SettingScreenStore(appStore: appStore))
         case .notes(title: let title, notes: let notes, isShowFriendsList: let isShowFriendsList):
@@ -112,6 +115,8 @@ final class ScreenBuilder {
         case .search: SearchScreen(store: SearchScreenStore(appStore: appStore), screenBuilder: self)
         case .helpList: HelpListScreen()
         case .help(let help): HelpScreen(help: help)
+        case .syncProgress(let config):
+            SyncProgressScreen(store: SyncProgressStore(appStore: appStore, config: config))
         }
     }
     
