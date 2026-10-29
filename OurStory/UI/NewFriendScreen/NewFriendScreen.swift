@@ -29,7 +29,7 @@ struct NewFriendScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("НОВЫЙ\nПРОФИЛЬ № 1")
+                    Text("НОВЫЙ\nПРОФИЛЬ № \(store.state.profileNumber)")
                         .font(.mySemiBold(size: 22))
                         .tracking(2)
                         .foregroundColor(.textMulticolor)

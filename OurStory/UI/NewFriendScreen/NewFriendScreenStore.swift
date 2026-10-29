@@ -11,7 +11,7 @@ import SwiftUI
 final class NewFriendScreenStore: BaseStore {
     
     var state: NewFriendScreenState {
-        NewFriendScreenState()
+        NewFriendScreenState(profileNumber: appStore.allFriends.count + 1)
     }
     
     func send(_ action: NewFriendScreenAction, animation: Animation? = .default) {
