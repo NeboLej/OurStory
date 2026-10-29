@@ -12,17 +12,12 @@ struct HomeScreenState {
     var selectedStory: Story?
     var selectedDate: Date
     var isSyncing: Bool
+    var emptyStateText: String
     
-    @MainActor init(appStore: AppStore) {
-        selectedStory = appStore.selectedStory
-        selectedDate = appStore.selectedDate
-        
-        switch appStore.cloudSyncState {
-        case .uploading, .downloading:
-            isSyncing = true
-        default:
-            isSyncing = false
-        }
+    init(selectedStory: Story? = nil, selectedDate: Date, isSyncing: Bool, emptyStateText: String) {
+        self.selectedStory = selectedStory
+        self.selectedDate = selectedDate
+        self.isSyncing = isSyncing
+        self.emptyStateText = emptyStateText
     }
-    
 }

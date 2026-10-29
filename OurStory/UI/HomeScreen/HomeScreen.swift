@@ -75,7 +75,7 @@ struct HomeScreen: View {
                     }
                     .padding(.leading, 12)
                 
-                    Text(TextFactory.shared.getEmptyDayText(date: store.state.selectedDate))
+                    Text(store.state.emptyStateText)
                         .font(.myRegular(size: 16))
                         .foregroundStyle(.textMulticolor.opacity(0.6))
                         .padding(.bottom, 36)
@@ -110,7 +110,7 @@ struct HomeScreen: View {
             Text(story.date.toReadable())
                 .font(.myItalic(size: 14))
                 .foregroundStyle(.textMulticolor.opacity(0.6))
-                .padding(.bottom, 36)
+                .padding(.bottom, 20)
                 .padding(.leading, 12)
                 .padding(.top, 16)
             

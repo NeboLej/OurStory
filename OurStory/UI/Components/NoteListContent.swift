@@ -329,9 +329,14 @@ struct NoteListContent: View {
    
     NavigationStack {
 //        ScreenBuilder.previewBuilder.getScreen(type: .home)
-        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff1", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
-            
-        })))
+//        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff1", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
+//            
+//        })))
+        
+        ScrollView {
+            ScreenBuilder.previewBuilder.getComponent(type: .notesList(notes: tmpNotes, storyID: UUID(), isShowDate: true, isShowFriendsList: .constant(true)))
+        }
+
     }
 
 }
