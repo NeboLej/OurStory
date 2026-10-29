@@ -302,7 +302,6 @@ struct FriendScreen: View {
     private func showMode() -> some View {
         VStack(spacing: 0) {
             VStack(spacing: 12) {
-                // Аватар друга с пульсирующим кольцом при поиске
                 ZStack {
                     if store.state.searchStatus == .searching {
                         Circle()
@@ -343,18 +342,19 @@ struct FriendScreen: View {
                 }
                 .animation(.easeInOut(duration: 0.4), value: store.state.searchStatus)
                 
-                let displayName: String = {
-                    guard let user = store.state.friend.user, user.name != store.state.friend.name else {
-                        return store.state.friend.name.uppercased()
+                VStack(spacing: 2) {
+                    Text(store.state.friend.name.uppercased())
+                        .font(.myMedium(size: 22))
+                        .tracking(1)
+                        .foregroundColor(.textMulticolor)
+                    
+                    if let user = store.state.friend.user, user.name != store.state.friend.name {
+                        Text("(\(user.name))")
+                            .font(.myRegular(size: 12))
+                            .foregroundColor(.textMulticolor.opacity(0.5))
                     }
-                    return store.state.friend.name.uppercased() + "/" + user.name.uppercased()
-                }()
-                Text(displayName)
-                    .font(.myMedium(size: 22))
-                    .tracking(1)
-                    .foregroundColor(.textMulticolor)
+                }
                 
-                // Статус поиска
                 searchStatusView()
             }
             .padding(.top, 32)
@@ -387,7 +387,7 @@ struct FriendScreen: View {
         VStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("РЕДАКТИРОВАТЬ\nПРОФИЛЬ")
-                    .font(.mySemiBold(size: 25))
+                    .font(.mySemiBold(size: 22))
                     .tracking(2)
                     .foregroundColor(.textMulticolor)
                 
