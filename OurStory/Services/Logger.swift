@@ -13,12 +13,14 @@ final class Logger {
         case GRDB
         case cloudKit
         case unowned
+        case userDefault
         
         var text: String {
             switch self {
             case .GRDB: return "💿"
             case .cloudKit: return "☁️"
             case .unowned: return "🧭"
+            case .userDefault: return "🥎"
             }
         }
     }

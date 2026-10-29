@@ -17,10 +17,13 @@ final class NoteScreenStore: BaseStore {
     private var selectedFriends: [Friend] = []
     private var suggestedFriend: Friend? = nil
     private var suggestionTask: Task<Void, Never>? = nil
+    private var saveDraftTask: Task<Void, Never>? = nil
+    private var isShowDraftHint: Bool = false
+    private var draftTextLength: Int = 0
     private let rootNote: Note?
     
     var state: NoteScreenState {
-        NoteScreenState(title: title, text: text, date: date, isEditing: rootNote != nil, allFriends: appStore.allFriends, selectedFriends: selectedFriends, suggestedFriend: suggestedFriend)
+        NoteScreenState(title: title, text: text, date: date, isEditing: rootNote != nil, allFriends: appStore.allFriends, selectedFriends: selectedFriends, suggestedFriend: suggestedFriend, isShowDraftHint: isShowDraftHint)
     }
     
     init(appStore: AppStore, note: Note? = nil) {
@@ -48,6 +51,8 @@ final class NoteScreenStore: BaseStore {
             text = localNote.text
             date = localNote.date
             selectedFriends = localNote.friends
+            isShowDraftHint = true
+            draftTextLength = localNote.text.count
         }
     }
     
@@ -60,6 +65,7 @@ final class NoteScreenStore: BaseStore {
                 } else {
                     selectedFriends.append(friend)
                 }
+                scheduleDraftSave()
             case .saveNote(title: let title, text: let text):
                 if let rootNote {
                     let updatedNote = rootNote.copy(title: title, date: date, text: text, friends: selectedFriends)
@@ -69,16 +75,42 @@ final class NoteScreenStore: BaseStore {
                     let newNote = Note(rootStoryID: story.id, title: title.isEmpty ? nil : title, date: date, text: text, friends: selectedFriends, owner: nil)
                     appStore.send(.addNewNote(newNote))
                 }
+                saveDraftTask?.cancel()
+                appStore.clearNoteDraft()
                 
             case .selectDate(let newDate):
                 date = newDate
+                scheduleDraftSave()
             case .addNewFriend:
                 appStore.send(.toNewFriend)
             case .updateStoryText(let text):
+                self.text = text
+                if isShowDraftHint && abs(text.count - draftTextLength) >= 5 {
+                    isShowDraftHint = false
+                }
                 checkForFriendMention(in: text)
+                scheduleDraftSave()
+            case .updateTitle(let title):
+                self.title = title.isEmpty ? nil : title
+                scheduleDraftSave()
+            case .clearDraft:
+                title = nil
+                text = ""
+                selectedFriends = []
+                let calendar = Calendar.current
+                var components = calendar.dateComponents([.year, .month, .day], from: appStore.selectedDate)
+                let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: .now)
+                components.hour = timeComponents.hour
+                components.minute = timeComponents.minute
+                components.second = timeComponents.second
+                date = calendar.date(from: components) ?? .now
+                isShowDraftHint = false
+                saveDraftTask?.cancel()
+                appStore.clearNoteDraft()
             case .acceptSuggestion:
                 if let friend = suggestedFriend, !selectedFriends.contains(friend) {
                     selectedFriends.append(friend)
+                    scheduleDraftSave()
                 }
                 suggestedFriend = nil
             }
@@ -125,6 +157,19 @@ final class NoteScreenStore: BaseStore {
     }
     
     private func loadLocalNote() -> Note? {
-        nil
+        guard let draft = appStore.loadNoteDraft(), !draft.isEmpty else { return nil }
+        let friends = appStore.allFriends.filter { draft.friendIDs.contains($0.id) }
+        return Note(title: draft.title, date: draft.date, text: draft.text, friends: friends)
+    }
+    
+    private func scheduleDraftSave() {
+        guard rootNote == nil else { return }
+        saveDraftTask?.cancel()
+        saveDraftTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled, let self else { return }
+            let draft = UserDefaultsManager.NoteDraft(title: self.title, text: self.text, date: self.date, friendIDs: self.selectedFriends.map(\.id))
+            self.appStore.saveNoteDraft(draft)
+        }
     }
 }

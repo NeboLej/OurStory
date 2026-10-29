@@ -17,4 +17,5 @@ struct NoteScreenState {
     let allFriends: [Friend]
     let selectedFriends: [Friend]
     let suggestedFriend: Friend?
+    let isShowDraftHint: Bool
 }

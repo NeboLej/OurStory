@@ -312,4 +312,19 @@ extension AppStore {
         
         return totalScore
     }
+    
+    // MARK: - Note Draft
+    
+    func saveNoteDraft(_ draft: UserDefaultsManager.NoteDraft) {
+        userDefaultsManager.saveNoteDraft(draft)
+    }
+    
+    func loadNoteDraft() -> UserDefaultsManager.NoteDraft? {
+        let draft = userDefaultsManager.loadNoteDraft()
+        return draft
+    }
+    
+    func clearNoteDraft() {
+        userDefaultsManager.clearNoteDraft()
+    }
 }

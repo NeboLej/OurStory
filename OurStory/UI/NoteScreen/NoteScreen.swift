@@ -88,6 +88,9 @@ struct NoteScreen: View {
                 .onChange(of: story) { _, newValue in
                     store.send(.updateStoryText(newValue), animation: .easeInOut(duration: 0.2))
                 }
+                .onChange(of: title) { _, newValue in
+                    store.send(.updateTitle(newValue), animation: nil)
+                }
                 .onAppear {
                     story = store.state.text
                     title = store.state.title ?? ""
@@ -214,7 +217,10 @@ struct NoteScreen: View {
             .padding(.leading, -5)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 8) {
-                    if let suggested = store.state.suggestedFriend {
+                    if store.state.isShowDraftHint {
+                        draftHintChip()
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else if let suggested = store.state.suggestedFriend {
                         friendSuggestionChip(friend: suggested)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
@@ -255,6 +261,36 @@ struct NoteScreen: View {
                     )
                 }
             }
+    }
+    
+    @ViewBuilder
+    private func draftHintChip() -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 12))
+                .foregroundStyle(.textMulticolor.opacity(0.6))
+            
+            Text("Восстановлен черновик. Очистить?")
+                .font(.myMedium(size: 13))
+                .foregroundStyle(.textMulticolor.opacity(0.85))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background {
+            Capsule()
+                .fill(Color.textMulticolor.opacity(0.06))
+                .overlay {
+                    Capsule()
+                        .stroke(Color.textMulticolor.opacity(0.12), lineWidth: 0.5)
+                }
+        }
+        .contentShape(Capsule())
+        .onTapGesture {
+            store.send(.clearDraft)
+            story = ""
+            title = ""
+            selectedDate = store.state.date
+        }
     }
     
     @ViewBuilder
