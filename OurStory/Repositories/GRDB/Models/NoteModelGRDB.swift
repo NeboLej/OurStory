@@ -15,7 +15,7 @@ struct NoteFriend: Codable, FetchableRecord, MutablePersistableRecord, TableReco
     var isSent: Bool
     var updatedDate: Date?
     
-    static let friend = belongsTo(FriendModelGRDB.self)
+    static let friend = belongsTo(FriendModelGRDB.self, using: ForeignKey(["friendID"]))
     
     func encode(to container: inout PersistenceContainer) {
         container["noteID"] = noteId
@@ -71,7 +71,7 @@ extension NoteModelGRDB {
 }
 
 extension NoteModelGRDB {
-    static let noteFriends = hasMany(NoteFriend.self)
+    static let noteFriends = hasMany(NoteFriend.self, using: ForeignKey(["noteID"]))
     static let friends = hasMany(FriendModelGRDB.self, through: noteFriends, using: NoteFriend.friend)
     static let owner = belongsTo(FriendModelGRDB.self, using: ForeignKey(["ownerID"])).forKey("owner")
 }

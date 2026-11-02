@@ -138,90 +138,36 @@ final class DatabaseManager {
             .fetchOne(db) != nil
         
         if !migration7Applied {
-            // Disable foreign keys to prevent CASCADE deletion
-            try db.execute(sql: "PRAGMA foreign_keys = OFF")
-            
-            // Clean up any leftover temp tables from a previous failed attempt
-            try db.execute(sql: "DROP TABLE IF EXISTS note_new")
-            try db.execute(sql: "DROP TABLE IF EXISTS noteFriend_new")
-            
             let noteCountBefore = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM note") ?? 0
             let nfCountBefore = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend") ?? 0
             
-            // Check if note table still has rootStoryID (might already be migrated from a partial run)
+            // Drop rootStoryID column from note using ALTER TABLE DROP COLUMN (SQLite 3.35+, iOS 15+).
+            // This preserves all data and does NOT trigger CASCADE deletes on noteFriend.
             let noteColumns = try db.columns(in: "note").map(\.name)
-            let needsNoteMigration = noteColumns.contains("rootStoryID")
-            
-            if needsNoteMigration {
-                try db.execute(sql: """
-                    CREATE TABLE note_new (
-                        id BLOB PRIMARY KEY,
-                        title TEXT,
-                        text TEXT NOT NULL,
-                        date DOUBLE NOT NULL,
-                        ownerID BLOB REFERENCES friend(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-                        updatedDate DOUBLE
-                    )
-                """)
-                
-                try db.execute(sql: """
-                    INSERT INTO note_new (id, title, text, date, ownerID, updatedDate)
-                    SELECT id, title, text, date, ownerID, updatedDate FROM note
-                """)
-                
-                // Verify note count
-                let noteCountAfter = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM note_new") ?? 0
-                guard noteCountBefore == noteCountAfter else {
-                    try db.execute(sql: "DROP TABLE IF EXISTS note_new")
-                    try db.execute(sql: "PRAGMA foreign_keys = ON")
-                    fatalError("Migration 7 ABORTED: note count mismatch (\(noteCountBefore) -> \(noteCountAfter))")
-                }
-                
-                try db.execute(sql: "DROP TABLE note")
-                try db.execute(sql: "ALTER TABLE note_new RENAME TO note")
+            if noteColumns.contains("rootStoryID") {
+                try db.execute(sql: "ALTER TABLE note DROP COLUMN rootStoryID")
             }
             
-            // Recreate noteFriend — create WITHOUT FK first so INSERT always succeeds,
-            // then drop and rename. FK enforcement resumes when foreign_keys = ON.
-            try db.execute(sql: """
-                CREATE TABLE noteFriend_new (
-                    noteID BLOB NOT NULL,
-                    friendID BLOB NOT NULL,
-                    isSent BOOLEAN NOT NULL DEFAULT 0,
-                    updatedDate DOUBLE,
-                    PRIMARY KEY (noteID, friendID)
-                )
-            """)
-            
-            // Debug: inspect old noteFriend schema and data before copy
-            let nfSchema = try String.fetchOne(db, sql: "SELECT sql FROM sqlite_master WHERE name = 'noteFriend'") ?? "nil"
-            let nfSample = try Row.fetchAll(db, sql: "SELECT typeof(noteID) as ntype, typeof(friendID) as ftype, noteID, friendID FROM noteFriend LIMIT 5")
-            Logger.log("Migration 7 debug: noteFriend schema=\(nfSchema), sample=\(nfSample)", location: .GRDB, event: .processing)
-            
-            try db.execute(sql: """
-                INSERT INTO noteFriend_new (noteID, friendID, isSent, updatedDate)
-                SELECT noteID, friendID, isSent, updatedDate FROM noteFriend
-            """)
-            
-            let nfCountAfter = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend_new") ?? 0
-            if nfCountBefore != nfCountAfter {
-                Logger.log("Migration 7 WARNING: noteFriend count mismatch (\(nfCountBefore) -> \(nfCountAfter)), proceeding anyway", location: .GRDB, event: .processing)
-            }
-            
-            try db.execute(sql: "DROP TABLE noteFriend")
-            try db.execute(sql: "ALTER TABLE noteFriend_new RENAME TO noteFriend")
-            
-            // Drop story table (safe — no more FKs pointing to it)
+            // Drop story table — noteFriend has no FK to story, safe to drop.
+            // note no longer references story either (rootStoryID column removed above).
             try db.execute(sql: "DROP TABLE IF EXISTS story")
             
-            // Re-enable foreign keys
-            try db.execute(sql: "PRAGMA foreign_keys = ON")
+            // Verify data integrity
+            let noteCountAfter = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM note") ?? 0
+            let nfCountAfter = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend") ?? 0
+            
+            guard noteCountBefore == noteCountAfter else {
+                fatalError("Migration 7 ABORTED: note count mismatch (\(noteCountBefore) -> \(noteCountAfter))")
+            }
+            guard nfCountBefore == nfCountAfter else {
+                fatalError("Migration 7 ABORTED: noteFriend count mismatch (\(nfCountBefore) -> \(nfCountAfter))")
+            }
             
             // Mark migration as applied
             var metadata = CloudSyncMetadataGRDB(key: migration7Key, value: "1")
             try metadata.insert(db)
             
-            Logger.log("Migration 7: removed story table, dropped rootStoryID from note (notes: \(noteCountBefore), noteFriends: \(nfCountAfter))", location: .GRDB, event: .success)
+            Logger.log("Migration 7: dropped rootStoryID column, removed story table (notes: \(noteCountAfter), noteFriends: \(nfCountAfter))", location: .GRDB, event: .success)
         }
     }
 }
