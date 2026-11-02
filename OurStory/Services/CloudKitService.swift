@@ -181,6 +181,9 @@ final class CloudKitService {
     
     // MARK: - Helpers
     
+    /// Record types that no longer exist locally — skip their deletions
+    private static let ignoredRecordTypes: Set<String> = ["CD_Story"]
+    
     struct ZoneChangesResult {
         let recordsByType: [String: [CKRecord]]
         let deletedRecordIDs: [CKRecord.ID]
@@ -214,6 +217,7 @@ final class CloudKitService {
             }
             
             for deletion in result.deletions {
+                guard !Self.ignoredRecordTypes.contains(deletion.recordType) else { continue }
                 deletedRecordIDs.append(deletion.recordID)
             }
             
