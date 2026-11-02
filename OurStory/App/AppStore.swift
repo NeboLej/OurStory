@@ -12,12 +12,24 @@ import SwiftUI
 final class AppStore {
     
     var selectedDate: Date = .now
-    var selectedNotes: [Note]?
-    var notesByDate: [BaseDate: [Note]] = [:]
+    
+    var currentNotes: [Note] {
+        notesByDate[BaseDate(date: selectedDate)] ?? []
+    }
+    
+    private(set) var notesByDate: [BaseDate: [Note]] = [:]
+    
     var allFriends: [Friend] = []
     var user: User
     var sortedNotes: [Note] = []
     var isShowNoteFriendsList: Bool = false
+    
+    var allNotes: [Note] = [] {
+        didSet {
+            notesByDate = Dictionary(grouping: allNotes, by: \.baseDate)
+                .mapValues { $0.sorted { $0.date > $1.date } }
+        }
+    }
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     var cloudSyncState: CloudSyncState = .idle
@@ -61,28 +73,12 @@ final class AppStore {
         switch action {
         case .selectedDate(let date):
             selectedDate = date
-            selectedNotes = notesByDate[BaseDate(date: selectedDate)]
         case .addNewNote(let newNote):
             addNewNote(newNote)
         case .editNote(let note):
-            let oldBaseDate = findBaseDate(for: note.id)
-            let newBaseDate = note.baseDate
-            
-            if let oldBaseDate, oldBaseDate != newBaseDate {
-                // Date changed — move between buckets
-                notesByDate[oldBaseDate]?.removeAll { $0.id == note.id }
-                if notesByDate[oldBaseDate]?.isEmpty == true { notesByDate[oldBaseDate] = nil }
-                
-                var newBucket = notesByDate[newBaseDate] ?? []
-                newBucket.insert(note, at: 0)
-                notesByDate[newBaseDate] = newBucket
-            } else {
-                // Same date — replace in place
-                let bd = oldBaseDate ?? newBaseDate
-                notesByDate[bd] = notesByDate[bd]?.map { $0.id == note.id ? note : $0 }
+            if let index = allNotes.firstIndex(where: { $0.id == note.id }) {
+                allNotes[index] = note
             }
-            
-            selectedNotes = notesByDate[BaseDate(date: selectedDate)]
             updateNote(note)
         case .deleteNote(let note):
             deleteNote(note)
@@ -108,10 +104,20 @@ final class AppStore {
         notesByDate[BaseDate(date: selectedDate)] ?? []
     }
     
-    private func findBaseDate(for noteID: UUID) -> BaseDate? {
-        notesByDate.first(where: { $0.value.contains(where: { $0.id == noteID }) })?.key
+    func notes(for filter: NoteFilter) -> [Note] {
+        switch filter {
+        case .byDate(let baseDate):
+            return notesByDate[baseDate] ?? []
+        case .byFriend(let friendID):
+            return allNotes
+                .filter { $0.friends.contains(where: { $0.id == friendID }) || $0.owner?.id == friendID }
+                .sorted { $0.date > $1.date }
+        case .bySearch(let query):
+            guard query.count >= 3 else { return [] }
+            return searchNotes(query: query)
+        }
     }
-
+    
     func send(_ action: NavigateAction) {
         switch action {
         case .toNote(let note):
@@ -140,8 +146,8 @@ final class AppStore {
             appCoordinator.navigate(to: .setting)
         case .toEditProfile:
             appCoordinator.navigate(to: .editProfile)
-        case .toNotesList(title: let title, notes: let notes):
-            appCoordinator.navigate(to: .notes(title: title, notes: notes, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
+        case .toNotesList(title: let title, filter: let filter):
+            appCoordinator.navigate(to: .notes(title: title, filter: filter, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
         case .toLogs:
             appCoordinator.navigate(to: .log)
         case .toCalendar:
@@ -156,18 +162,7 @@ final class AppStore {
     func loadData() {
         Task {
             allFriends = await friendsRepository.getAllFriends()
-            
-            let allNotes = await noteRepository.getAllNotes()
-            
-            var grouped: [BaseDate: [Note]] = [:]
-            for note in allNotes {
-                grouped[note.baseDate, default: []].append(note)
-            }
-            for (key, value) in grouped {
-                grouped[key] = value.sorted { $0.date > $1.date }
-            }
-            notesByDate = grouped
-            selectedNotes = notesByDate[BaseDate(date: selectedDate)]
+            allNotes = await noteRepository.getAllNotes()
         }
     }
 }

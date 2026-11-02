@@ -11,12 +11,7 @@ extension AppStore {
     
     //MARK: NOTE -
     func addNewNote(_ note: Note) {
-        let baseDate = note.baseDate
-        var bucket = notesByDate[baseDate] ?? []
-        bucket.insert(note, at: 0)
-        notesByDate[baseDate] = bucket
-        selectedNotes = notesByDate[BaseDate(date: selectedDate)]
-        
+        allNotes.append(note)
         Task {
             await noteRepository.addNote(note)
         }
@@ -30,16 +25,10 @@ extension AppStore {
             for note in notes {
                 let newNote = Note(id: note.id, title: note.title, date: note.date, text: note.text, friends: [], owner: friend)
                 allNewNotes.append(newNote)
-                
-                let baseDate = newNote.baseDate
-                var bucket = notesByDate[baseDate] ?? []
-                bucket.insert(newNote, at: 0)
-                notesByDate[baseDate] = bucket
-                
+                allNotes.append(newNote)
                 await noteRepository.saveOrUpdateNote(newNote)
             }
             sortedNotes = allNewNotes
-            selectedNotes = notesByDate[BaseDate(date: selectedDate)]
         }
         
         Task {
@@ -55,10 +44,7 @@ extension AppStore {
     }
     
     func deleteNote(_ note: Note) {
-        let baseDate = note.baseDate
-        notesByDate[baseDate]?.removeAll { $0.id == note.id }
-        if notesByDate[baseDate]?.isEmpty == true { notesByDate[baseDate] = nil }
-        selectedNotes = notesByDate[BaseDate(date: selectedDate)]
+        allNotes.removeAll { $0.id == note.id }
         Task {
             await noteRepository.deleteNote(note.id)
         }
@@ -175,10 +161,7 @@ extension AppStore {
                 owner: ourStoryFriend
             )
             await noteRepository.addNote(welcomeNote)
-            
-            let baseDate = welcomeNote.baseDate
-            notesByDate[baseDate] = [welcomeNote]
-            selectedNotes = notesByDate[baseDate]
+            allNotes.append(welcomeNote)
         }
     }
     
@@ -192,8 +175,6 @@ extension AppStore {
             .lowercased()
             .components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
-        
-        let allNotes = notesByDate.values.flatMap { $0 }
         
         return allNotes
             .compactMap { note -> (Note, Double)? in

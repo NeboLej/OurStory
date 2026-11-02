@@ -28,7 +28,7 @@ enum NavigateAction {
     case toNewFriend
     case toSettings
     case toEditProfile
-    case toNotesList(title: String, notes: [Note])
+    case toNotesList(title: String, filter: NoteFilter)
     case toLogs
     case toCalendar
     case toSearch

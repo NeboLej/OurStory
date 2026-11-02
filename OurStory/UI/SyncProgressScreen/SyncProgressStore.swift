@@ -79,7 +79,7 @@ final class SyncProgressStore: BaseStore {
                 guard let self else { return }
                 self.appStore.send(.toNotesList(
                     title: "Истории от \(friendName)",
-                    notes: self.appStore.sortedNotes
+                    filter: .byFriend(self.friend.id)
                 ))
             }
         }

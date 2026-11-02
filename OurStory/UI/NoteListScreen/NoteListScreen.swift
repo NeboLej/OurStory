@@ -23,12 +23,6 @@ struct NoteListScreen: View {
 
 #Preview {
     NavigationStack {
-        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "Notes", notes: [
-            Note(id: UUID(), title: "ndfsfd", date: Date(), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: Friend(name: "Вася", color: "44fd21")),
-            
-            Note(id: UUID(), title: "", date: Date().getOffsetDate(-3), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [Friend(name: "Вася", color: "44fd21")], owner: nil),
-            
-            Note(id: UUID(), title: nil, date: Date().getOffsetDate(-5), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: nil)
-        ], isShowFriendsList: .constant(false)))
+        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "Notes", filter: .byDate(BaseDate(date: .now)), isShowFriendsList: .constant(false)))
     }
 }

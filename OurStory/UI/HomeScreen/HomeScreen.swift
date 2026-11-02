@@ -44,9 +44,9 @@ struct HomeScreen: View {
                 .animation(.easeInOut(duration: 0.3), value: store.state.isSyncing)
                 .padding(.top, 16)
             
-            if let notes = store.state.selectedNotes, !notes.isEmpty {
-                notesView(notes: notes, date: store.state.selectedDate)
-                    .id(store.state.selectedDate)
+            if !store.state.selectedNotes.isEmpty {
+                notesView(date: store.state.selectedDate)
+//                    .id(store.state.selectedNotes)
             } else {
                 VStack(alignment: .center, spacing: 0) {
                     Spacer()
@@ -105,7 +105,7 @@ struct HomeScreen: View {
     }
     
     @ViewBuilder
-    private func notesView(notes: [Note], date: Date) -> some View {
+    private func notesView(date: Date) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(date.toReadable())
                 .font(.myItalic(size: 14))
@@ -114,7 +114,7 @@ struct HomeScreen: View {
                 .padding(.leading, 12)
                 .padding(.top, 16)
             
-            screenBuilder.getComponent(type: .notesList(notes: notes, isShowDate: false, isShowFriendsList: $isShowFriendsList))
+            screenBuilder.getComponent(type: .notesList(filter: .byDate(BaseDate(date: date)), isShowDate: false, isShowFriendsList: $isShowFriendsList))
         }
         .padding(.bottom, 80)
     }

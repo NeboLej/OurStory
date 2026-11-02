@@ -334,7 +334,7 @@ struct NoteListContent: View {
 //        })))
         
         ScrollView {
-            ScreenBuilder.previewBuilder.getComponent(type: .notesList(notes: tmpNotes, isShowDate: true, isShowFriendsList: .constant(true)))
+            ScreenBuilder.previewBuilder.getComponent(type: .notesList(filter: .byDate(BaseDate(date: .now)), isShowDate: true, isShowFriendsList: .constant(true)))
         }
 
     }

@@ -80,12 +80,6 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                 let request = NoteModelGRDB.including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
                     .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
                 let results = try NoteWithFriends.fetchAll(db, request)
-                
-                // Diagnostic: check raw noteFriend count vs loaded friends
-                let nfCount = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend") ?? 0
-                let totalFriendsLoaded = results.reduce(0) { $0 + $1.friends.count }
-                Logger.log("getAllNotes: \(results.count) notes, noteFriend rows: \(nfCount), friends loaded: \(totalFriendsLoaded)", location: .GRDB, event: .success)
-                
                 return results.map { Note(from: $0) }
             }
         } catch {
