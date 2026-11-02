@@ -79,32 +79,6 @@ extension CloudKitService {
         Logger.log("Uploaded \(records.count) friends", location: .cloudKit, event: .success)
     }
     
-    // MARK: - Upload Stories
-    
-    func uploadStories(since lastUpload: Date?) async throws {
-        let stories = try await dbPool.read { db in
-            if let lastUpload {
-                try StoryModelGRDB.filter(Column("updatedDate") > lastUpload).fetchAll(db)
-            } else {
-                try StoryModelGRDB.fetchAll(db)
-            }
-        }
-        
-        var records: [CKRecord] = []
-        for story in stories {
-            let recordID = CKRecord.ID(recordName: story.id.uuidString, zoneID: zoneID)
-            let record = CKRecord(recordType: "CD_Story", recordID: recordID)
-            record["date"] = story.date as NSDate
-            record["title"] = story.title as NSString
-            record["isUserTitle"] = NSNumber(value: story.isUserTitle)
-            record["updatedDate"] = (story.updatedDate ?? Date()) as NSDate
-            records.append(record)
-        }
-        
-        try await batchSave(records: records)
-        Logger.log("Uploaded \(records.count) stories", location: .cloudKit, event: .success)
-    }
-    
     // MARK: - Upload Notes
     
     func uploadNotes(since lastUpload: Date?) async throws {
@@ -123,7 +97,6 @@ extension CloudKitService {
             record["title"] = note.title as NSString?
             record["text"] = note.text as NSString
             record["date"] = note.date as NSDate
-            record["rootStoryID"] = note.rootStoryID.uuidString as NSString
             record["ownerID"] = note.ownerID?.uuidString as NSString?
             record["updatedDate"] = (note.updatedDate ?? Date()) as NSDate
             records.append(record)

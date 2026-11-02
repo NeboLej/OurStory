@@ -10,7 +10,7 @@ import SwiftUI
 struct CalendarScreenState {
     var monthPages: [CalendarViewMonthData]
     var selectedDate: Date?
-    var selectedStory: Story?
+    var selectedNotes: [Note]?
 }
 
 struct CalendarViewCellData: Identifiable {

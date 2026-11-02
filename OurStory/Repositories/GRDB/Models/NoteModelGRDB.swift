@@ -38,7 +38,6 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
     var date: Date
     var text: String
     
-    var rootStoryID: UUID
     var ownerID: UUID?
     var owner: FriendModelGRDB?
     var updatedDate: Date?
@@ -50,13 +49,12 @@ struct NoteModelGRDB: Codable, FetchableRecord, MutablePersistableRecord, TableR
         title = from.title
         date = from.date
         text = from.text
-        rootStoryID = from.rootStoryID
         ownerID = from.owner?.id
         updatedDate = Date()
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, title, date, text, rootStoryID, ownerID, updatedDate
+        case id, title, date, text, ownerID, updatedDate
         case owner
     }
 }
@@ -67,7 +65,6 @@ extension NoteModelGRDB {
         container["title"] = title
         container["date"] = date
         container["text"] = text
-        container["rootStoryID"] = rootStoryID
         container["ownerID"] = ownerID
         container["updatedDate"] = updatedDate
     }

@@ -33,7 +33,7 @@ struct CalendarScreen: View {
     }
     
     private var hasSelectedNotes: Bool {
-        store.state.selectedStory?.notes.isEmpty == false
+        store.state.selectedNotes?.isEmpty == false
     }
     
     var body: some View {
@@ -84,13 +84,14 @@ struct CalendarScreen: View {
                     }
                     
                     // Notes panel pinned to bottom
-                    if let story = store.state.selectedStory, !story.notes.isEmpty {
+                    if let notes = store.state.selectedNotes, !notes.isEmpty,
+                       let selectedDate = store.state.selectedDate {
                         VStack(spacing: 0) {
                             Rectangle()
                                 .fill(.black)
                                 .frame(height: 8)
                             
-                            notesPanel(story: story, totalHeight: geo.size.height)
+                            notesPanel(notes: notes, date: selectedDate, totalHeight: geo.size.height)
                                 .frame(height: panelHeight)
                                 .frame(maxWidth: .infinity)
                                 .background(.backgroundFill)
@@ -228,7 +229,7 @@ struct CalendarScreen: View {
         }
     }
     
-    private func notesPanel(story: Story, totalHeight: CGFloat) -> some View {
+    private func notesPanel(notes: [Note], date: Date, totalHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
             // Drag handle
             Capsule()
@@ -240,11 +241,11 @@ struct CalendarScreen: View {
             // Header
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(story.date.toReadable())
+                    Text(date.toReadable())
                         .font(.mySemiBold(size: 15))
                         .foregroundStyle(.textMulticolor)
                     
-                    Text("\(story.notes.count) \(story.notes.count == 1 ? "запись" : "записей")")
+                    Text("\(notes.count) \(notes.count == 1 ? "запись" : "записей")")
                         .font(.myRegular(size: 12))
                         .foregroundStyle(.textMulticolor.opacity(0.4))
                 }
@@ -301,11 +302,10 @@ struct CalendarScreen: View {
             Divider()
                 .opacity(0.3)
             
-            screenBuilder.getComponent(type: .notesList(notes: story.notes,
-                                                        storyID: story.id,
+            screenBuilder.getComponent(type: .notesList(notes: notes,
                                                         isShowDate: false,
                                                         isShowFriendsList: $isShowFriendsList))
-            .id(story.id)
+            .id(date)
         }
     }
     

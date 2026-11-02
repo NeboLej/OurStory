@@ -61,7 +61,7 @@ enum ScreenType: Identifiable, Hashable {
 
 enum ComponentType: Hashable {
     case horizontalCalendar
-    case notesList(notes: [Note], storyID: UUID, isShowDate: Bool, isShowFriendsList: Binding<Bool>)
+    case notesList(notes: [Note], isShowDate: Bool, isShowFriendsList: Binding<Bool>)
     
     func hash(into hasher: inout Hasher) {
         switch self {
@@ -124,8 +124,8 @@ final class ScreenBuilder {
     func getComponent(type: ComponentType) -> some View {
         switch type {
         case .horizontalCalendar: HorizontalCalendar(store: HorizontalCalendarStore(appStore: appStore))
-        case .notesList(notes: let notes, storyID: let storyID, isShowDate: let isShowDate, isShowFriendsList: let isShowFriendsList):
-            NoteListContent(store: NoteListScreenStore(appStore: appStore, notes: notes, storyID: storyID),
+        case .notesList(notes: let notes, isShowDate: let isShowDate, isShowFriendsList: let isShowFriendsList):
+            NoteListContent(store: NoteListScreenStore(appStore: appStore, notes: notes),
                             isShowFriendsList: isShowFriendsList,
                             isShowDate: isShowDate)
         }

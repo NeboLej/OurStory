@@ -38,7 +38,7 @@ extension CloudKitService {
                     // Other entities use UUID as recordName — try all tables with id PK
                     guard let uuid = UUID(uuidString: name) else { continue }
                     
-                    for table in ["note", "story", "friend", "user"] {
+                    for table in ["note", "friend", "user"] {
                         try db.execute(
                             sql: "DELETE FROM \(table) WHERE id = ?",
                             arguments: [uuid]
@@ -184,59 +184,6 @@ extension CloudKitService {
         Logger.log("Downloaded \(records.count) friends", location: .cloudKit, event: .success)
     }
     
-    // MARK: - Download Stories
-    
-    func downloadStories(from records: [CKRecord]) async throws {
-//        let lastSync = await getLastDownloadDate()
-        
-        try await dbPool.write { db in
-//            let localStories = try StoryModelGRDB.fetchAll(db)
-            var cloudIDSet = Set<UUID>()
-            
-            for record in records {
-                guard let id = UUID(uuidString: record.recordID.recordName) else { continue }
-                cloudIDSet.insert(id)
-                
-                let cloudDate = record["date"] as? Date ?? Date()
-                let cloudTitle = record["title"] as? String ?? ""
-                let cloudIsUserTitle = (record["isUserTitle"] as? NSNumber)?.boolValue ?? false
-                let cloudUpdated = record["updatedDate"] as? Date ?? Date.distantPast
-                
-                if let existing = try StoryModelGRDB.filter(key: id).fetchOne(db) {
-                    let localUpdated = existing.updatedDate ?? Date.distantPast
-                    if cloudUpdated > localUpdated {
-                        var model = existing
-                        model.date = cloudDate
-                        model.title = cloudTitle
-                        model.isUserTitle = cloudIsUserTitle
-                        model.updatedDate = cloudUpdated
-                        try model.update(db)
-                    }
-                } else {
-                    let story = Story(id: id, date: cloudDate, title: cloudTitle, isUserTitle: cloudIsUserTitle)
-                    var model = StoryModelGRDB(from: story)
-                    model.updatedDate = cloudUpdated
-                    try model.insert(db)
-                }
-            }
-            
-            // Handle remote deletions
-//            if let lastSync {
-//                for local in localStories {
-//                    if !cloudIDSet.contains(local.id) {
-//                        let localUpdated = local.updatedDate ?? Date.distantPast
-//                        if localUpdated < lastSync {
-//                            // CASCADE will delete associated notes and noteFriends
-//                            try StoryModelGRDB.deleteOne(db, key: local.id)
-//                        }
-//                    }
-//                }
-//            }
-        }
-        
-        Logger.log("Downloaded \(records.count) stories", location: .cloudKit, event: .success)
-    }
-    
     // MARK: - Download Notes
     
     func downloadNotes(from records: [CKRecord]) async throws {
@@ -253,15 +200,10 @@ extension CloudKitService {
                 let cloudTitle = record["title"] as? String
                 let cloudText = record["text"] as? String ?? ""
                 let cloudDate = record["date"] as? Date ?? Date()
-                let cloudRootStoryIDStr = record["rootStoryID"] as? String ?? ""
                 let cloudOwnerIDStr = record["ownerID"] as? String
                 let cloudUpdated = record["updatedDate"] as? Date ?? Date.distantPast
                 
-                guard let cloudRootStoryID = UUID(uuidString: cloudRootStoryIDStr) else { continue }
                 let cloudOwnerID = cloudOwnerIDStr.flatMap { UUID(uuidString: $0) }
-                
-                // Verify that the referenced story exists
-                guard try StoryModelGRDB.filter(key: cloudRootStoryID).fetchCount(db) > 0 else { continue }
                 
                 // Verify owner exists if specified
                 if let ownerID = cloudOwnerID {
@@ -275,13 +217,12 @@ extension CloudKitService {
                         model.title = cloudTitle
                         model.text = cloudText
                         model.date = cloudDate
-                        model.rootStoryID = cloudRootStoryID
                         model.ownerID = cloudOwnerID
                         model.updatedDate = cloudUpdated
                         try model.update(db)
                     }
                 } else {
-                    let note = Note(id: id, rootStoryID: cloudRootStoryID, title: cloudTitle, date: cloudDate, text: cloudText, friends: [], owner: nil)
+                    let note = Note(id: id, title: cloudTitle, date: cloudDate, text: cloudText, friends: [], owner: nil)
                     var model = NoteModelGRDB(from: note)
                     model.ownerID = cloudOwnerID
                     model.updatedDate = cloudUpdated

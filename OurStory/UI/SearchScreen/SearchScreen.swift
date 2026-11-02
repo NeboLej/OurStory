@@ -32,7 +32,7 @@ struct SearchScreen: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            screenBuilder.getComponent(type: .notesList(notes: store.state.notes, storyID: UUID(), isShowDate: true, isShowFriendsList: $isShowFriendsList))
+            screenBuilder.getComponent(type: .notesList(notes: store.state.notes, isShowDate: true, isShowFriendsList: $isShowFriendsList))
                 .id(store.state.notes)
                 .onScrollPhaseChange { _, newPhase in
                     if newPhase == .interacting {

@@ -11,16 +11,11 @@ import SwiftUI
 final class NoteListScreenStore: BaseStore {
     
     private var localNotes: [Note]
-    private var storyID: UUID?
     private(set) var showMenuNoteId: UUID? = nil
     private(set) var showFriendsNote: Note? = nil
     
     private var notes: [Note] {
-        if let storyID,
-           let story = appStore.stories.values.first(where: { $0.id == storyID }) {
-            return story.notes
-        }
-        return localNotes
+        localNotes
     }
     
     var showMenuNote: Note? {
@@ -31,9 +26,8 @@ final class NoteListScreenStore: BaseStore {
         NoteListScreenState(notes: notes, allFriends: appStore.allFriends)
     }
     
-    init(appStore: AppStore, notes: [Note] = [], storyID: UUID? = nil) {
+    init(appStore: AppStore, notes: [Note] = []) {
         self.localNotes = notes
-        self.storyID = storyID
         super.init(appStore: appStore)
     }
     

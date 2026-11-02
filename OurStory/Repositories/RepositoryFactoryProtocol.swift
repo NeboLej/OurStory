@@ -12,15 +12,12 @@ protocol RepositoryFactoryProtocol {
     var userRepository: UserRepositoryProtocol { get }
     var friendRepository: FriendRepositoryProtocol { get }
     var noteRepository: NoteRepositoryProtocol { get }
-    var storyRepository: StoryRepositoryProtocol { get }
-    
 }
 
 class RepositoryFactory: RepositoryFactoryProtocol {
     let userRepository: UserRepositoryProtocol
     let friendRepository: FriendRepositoryProtocol
     let noteRepository: NoteRepositoryProtocol
-    let storyRepository: StoryRepositoryProtocol
     
     init() {
         let dbPool: DatabasePool = DatabaseManager.shared.dbPool
@@ -28,7 +25,6 @@ class RepositoryFactory: RepositoryFactoryProtocol {
         self.userRepository = UserRepository(dbPool: dbPool)
         self.friendRepository = FriendRepository(dbPool: dbPool)
         self.noteRepository = NoteRepository(dbPool: dbPool)
-        self.storyRepository = StoryRepository(dbPool: dbPool)
     }
 }
 

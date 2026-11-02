@@ -11,18 +11,13 @@ extension AppStore {
     
     //MARK: NOTE -
     func addNewNote(_ note: Note) {
-        guard let selectedStory else { fatalError() }
-        let needSaveStory = selectedStory.notes.isEmpty
-        let updatedStory = selectedStory.addNewNote(note)
-        
-        self.selectedStory = updatedStory
-        stories[BaseDate(date: updatedStory.date)] = updatedStory
+        let baseDate = note.baseDate
+        var bucket = notesByDate[baseDate] ?? []
+        bucket.insert(note, at: 0)
+        notesByDate[baseDate] = bucket
+        selectedNotes = notesByDate[BaseDate(date: selectedDate)]
         
         Task {
-            if needSaveStory {
-                await storyRepository.newStory(updatedStory)
-            }
-            
             await noteRepository.addNote(note)
         }
     }
@@ -30,68 +25,26 @@ extension AppStore {
     func syncNotes(_ notes: [SyncNote], friend: Friend) {
         let notes = notes.sorted { $0.date < $1.date }
         var allNewNotes: [Note] = []
-        guard let firstNoteDate = notes.first?.date, let lastNoteDate = notes.last?.date else { return }
         
         Task {
-            let syncStories = await storyRepository.getStories(startDate: firstNoteDate.getOffsetDate(-1, component: .day),
-                                                               endDate: lastNoteDate.getOffsetDate(1, component: .day))
-            
             for note in notes {
-                var updatedStory: Story
-                
-                if let story = syncStories.first(where: { $0.baseDate == note.baseDate }) {
-                    updatedStory = story
-                } else {
-                    updatedStory = Story(date: note.date)
-                    await storyRepository.newStory(updatedStory)
-                }
-                    
-                let newNote = Note(id: note.id, rootStoryID: updatedStory.id, title: note.title, date: note.date, text: note.text, friends: [], owner: friend)
+                let newNote = Note(id: note.id, title: note.title, date: note.date, text: note.text, friends: [], owner: friend)
                 allNewNotes.append(newNote)
-                let currentUpdateStory = updatedStory.addNewNote(newNote)
+                
+                let baseDate = newNote.baseDate
+                var bucket = notesByDate[baseDate] ?? []
+                bucket.insert(newNote, at: 0)
+                notesByDate[baseDate] = bucket
                 
                 await noteRepository.saveOrUpdateNote(newNote)
-                stories[updatedStory.baseDate] = currentUpdateStory
-                
-                if selectedStory?.id == currentUpdateStory.id {
-                    selectedStory = currentUpdateStory
-                }
             }
             sortedNotes = allNewNotes
+            selectedNotes = notesByDate[BaseDate(date: selectedDate)]
         }
         
         Task {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
-
             await CloudKitService.shared.uploadAll()
-        }
-    }
-    
-    func moveNoteToStory(_ note: Note, newBaseDate: BaseDate) {
-        Task {
-            let dbStories = await storyRepository.getStories(
-                startDate: note.date.getOffsetDate(-1, component: .day),
-                endDate: note.date.getOffsetDate(1, component: .day)
-            )
-            
-            let existingStory = dbStories.first(where: { $0.baseDate == newBaseDate })
-            
-            if let existingStory {
-                let movedNote = note.copy(rootStoryID: existingStory.id)
-                let updatedStory = existingStory.addNewNote(movedNote)
-                stories[newBaseDate] = updatedStory
-                if selectedStory?.id == existingStory.id {
-                    selectedStory = updatedStory
-                }
-                await noteRepository.updateNote(movedNote)
-            } else {
-                let newStory = Story(date: note.date)
-                let movedNote = note.copy(rootStoryID: newStory.id)
-                let updatedStory = newStory.addNewNote(movedNote)
-                stories[newBaseDate] = updatedStory
-                await storyRepository.newStory(newStory)
-                await noteRepository.updateNote(movedNote)
-            }
         }
     }
     
@@ -102,14 +55,10 @@ extension AppStore {
     }
     
     func deleteNote(_ note: Note) {
-        let baseDate = BaseDate(date: note.date)
-        if let story = stories[baseDate] {
-            let updatedStory = story.removeNote(note.id)
-            stories[baseDate] = updatedStory
-            if selectedStory?.id == story.id {
-                selectedStory = updatedStory
-            }
-        }
+        let baseDate = note.baseDate
+        notesByDate[baseDate]?.removeAll { $0.id == note.id }
+        if notesByDate[baseDate]?.isEmpty == true { notesByDate[baseDate] = nil }
+        selectedNotes = notesByDate[BaseDate(date: selectedDate)]
         Task {
             await noteRepository.deleteNote(note.id)
         }
@@ -141,12 +90,11 @@ extension AppStore {
         }
     }
     
-    func deleteFriendWithStories(_ friend: Friend) {
+    func deleteFriendWithNotes(_ friend: Friend) {
         Task {
             await noteRepository.deleteNotesOwnedByFriend(friendID: friend.id)
             await friendsRepository.deleteFriend(friend)
             allFriends.removeAll { $0.id == friend.id }
-            // Reload stories to reflect deleted notes
             loadData()
         }
     }
@@ -219,11 +167,7 @@ extension AppStore {
                 await friendsRepository.addNewFriend(ourStoryFriend)
             }
             
-            let story = Story(date: .now)
-            await storyRepository.newStory(story)
-            
             let welcomeNote = Note(
-                rootStoryID: story.id,
                 title: "Ура! Теперь ты с нами! 🎉",
                 date: .now,
                 text: "\(user.name), это твоё пространство для историй. Сохраняй яркие моменты, отмечай друзей и делись воспоминаниями при встрече.\n\nЗнакомо чувство, когда листаешь галерею на телефоне и вдруг натыкаешься на фото, которое возвращает тебя в давно забытый момент? Воспоминания, которые, казалось бы, затерялись где-то в глубинах памяти, снова оживают\n\nЭто приложение создано именно для этого. Чтобы сохранять больше счастливых моментов, собирать их в истории и возвращаться к ним одному или вместе с друзьями.",
@@ -232,9 +176,9 @@ extension AppStore {
             )
             await noteRepository.addNote(welcomeNote)
             
-            let updatedStory = story.addNewNote(welcomeNote)
-            stories[BaseDate(date: updatedStory.date)] = updatedStory
-            selectedStory = updatedStory
+            let baseDate = welcomeNote.baseDate
+            notesByDate[baseDate] = [welcomeNote]
+            selectedNotes = notesByDate[baseDate]
         }
     }
     
@@ -249,7 +193,7 @@ extension AppStore {
             .components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
         
-        let allNotes = stories.values.flatMap(\.notes)
+        let allNotes = notesByDate.values.flatMap { $0 }
         
         return allNotes
             .compactMap { note -> (Note, Double)? in
