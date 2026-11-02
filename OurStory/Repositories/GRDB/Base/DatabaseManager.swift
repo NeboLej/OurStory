@@ -192,17 +192,18 @@ final class DatabaseManager {
                 )
             """)
             
-            // Copy all valid noteFriend rows (skip orphans with missing note/friend)
+            // Copy all noteFriend rows as-is (FK checks are OFF, orphans are harmless)
             try db.execute(sql: """
                 INSERT INTO noteFriend_new (noteID, friendID, isSent, updatedDate)
-                SELECT nf.noteID, nf.friendID, nf.isSent, nf.updatedDate
-                FROM noteFriend nf
-                WHERE EXISTS (SELECT 1 FROM note WHERE id = nf.noteID)
-                  AND EXISTS (SELECT 1 FROM friend WHERE id = nf.friendID)
+                SELECT noteID, friendID, isSent, updatedDate FROM noteFriend
             """)
             
             let nfCountAfter = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend_new") ?? 0
-            let nfOrphans = nfCountBefore - nfCountAfter
+            guard nfCountBefore == nfCountAfter else {
+                try db.execute(sql: "DROP TABLE IF EXISTS noteFriend_new")
+                try db.execute(sql: "PRAGMA foreign_keys = ON")
+                fatalError("Migration 7 ABORTED: noteFriend count mismatch (\(nfCountBefore) -> \(nfCountAfter))")
+            }
             
             try db.execute(sql: "DROP TABLE noteFriend")
             try db.execute(sql: "ALTER TABLE noteFriend_new RENAME TO noteFriend")
@@ -217,7 +218,7 @@ final class DatabaseManager {
             var metadata = CloudSyncMetadataGRDB(key: migration7Key, value: "1")
             try metadata.insert(db)
             
-            Logger.log("Migration 7: removed story table, dropped rootStoryID from note (notes: \(noteCountBefore), noteFriends: \(nfCountAfter), orphans skipped: \(nfOrphans))", location: .GRDB, event: .success)
+            Logger.log("Migration 7: removed story table, dropped rootStoryID from note (notes: \(noteCountBefore), noteFriends: \(nfCountAfter))", location: .GRDB, event: .success)
         }
     }
 }
