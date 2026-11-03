@@ -131,22 +131,15 @@ final class DatabaseManager {
     /// Migration 7:
     /// - Removes rootStoryID from note
     /// - Drops obsolete story table
-    ///
-    /// Runs outside a transaction initially because SQLite requires
-    /// PRAGMA foreign_keys = OFF to be executed outside a transaction.
     private static func runMigration7IfNeeded(in db: Database) throws {
         
         // Fresh installation — nothing to migrate.
-        guard try db.tableExists("note") else {
-            return
-        }
+        guard try db.tableExists("note") else { return }
         
         // Already migrated.
         let columns = try db.columns(in: "note")
         
-        guard columns.contains(where: { $0.name == "rootStoryID" }) else {
-            return
-        }
+        guard columns.contains(where: { $0.name == "rootStoryID" }) else { return }
         
         // Disable FK checks before starting the transaction.
         try db.execute(sql: "PRAGMA foreign_keys = OFF")
