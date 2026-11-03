@@ -12,7 +12,7 @@ final class NewFriendScreenStore: BaseStore {
     
     private let noteRepository: NoteRepositoryProtocol
     
-    init(appStore: AppStore, noteRepository: NoteRepositoryProtocol) {
+    init(appStore: AppStoreProtocol, noteRepository: NoteRepositoryProtocol) {
         self.noteRepository = noteRepository
         super.init(appStore: appStore)
     }

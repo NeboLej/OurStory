@@ -42,8 +42,6 @@ final class DatabaseManager {
         }
     }
     
-    /// Creates all tables in their FINAL schema.
-    /// Fresh installs get the complete schema; migrations only patch old installs.
     private static func createTablesIfNeeded(in db: Database) throws {
         try db.create(table: "user", ifNotExists: true) { t in
             t.column("id", .blob).primaryKey()
@@ -128,107 +126,109 @@ final class DatabaseManager {
         }
     }
     
-    /// Runs outside a transaction so PRAGMA foreign_keys = OFF actually takes effect.
-    /// Recreates `note` table without `rootStoryID`, preserving all data and noteFriend FK integrity.
+    
+    
+    /// Migration 7:
+    /// - Removes rootStoryID from note
+    /// - Drops obsolete story table
     private static func runMigration7IfNeeded(in db: Database) throws {
-        // Check if note table exists (fresh install — nothing to migrate)
+        
+        // Fresh installation — nothing to migrate.
         guard try db.tableExists("note") else { return }
         
-        let migration7Key = "migration_7_remove_story"
+        // Already migrated.
+        let columns = try db.columns(in: "note")
         
-        // cloudSyncMetadata may not exist yet on first launch after update
-        if try db.tableExists("cloudSyncMetadata") {
-            let applied = try CloudSyncMetadataGRDB
-                .filter(Column("key") == migration7Key)
-                .fetchOne(db) != nil
-            if applied { return }
-        }
+        guard columns.contains(where: { $0.name == "rootStoryID" }) else { return }
         
-        // Check if column exists
-        let noteColumns = try db.columns(in: "note").map(\.name)
-        guard noteColumns.contains("rootStoryID") else {
-            // Column already gone (e.g. partial migration) — just mark done
-            if try db.tableExists("cloudSyncMetadata") {
-                var metadata = CloudSyncMetadataGRDB(key: migration7Key, value: "1")
-                try metadata.insert(db)
-            }
-            return
-        }
-        
-        let noteCountBefore = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM note") ?? 0
-        let nfCountBefore = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend") ?? 0
-        
-        // FK OFF must be outside any transaction to take effect
+        // Disable FK checks before starting the transaction.
         try db.execute(sql: "PRAGMA foreign_keys = OFF")
         
-        defer {
-            try? db.execute(sql: "PRAGMA foreign_keys = ON")
-        }
-        
-        try db.execute(sql: "BEGIN EXCLUSIVE")
-        
         do {
-            // 1. Recreate note without rootStoryID
-            try db.execute(sql: """
-                CREATE TABLE note_new (
-                    id BLOB PRIMARY KEY,
-                    title TEXT,
-                    text TEXT NOT NULL,
-                    date REAL NOT NULL,
-                    ownerID BLOB REFERENCES friend(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-                    updatedDate REAL
+            try db.execute(sql: "BEGIN EXCLUSIVE")
+            
+            do {
+                // 1. Create a new note table without rootStoryID.
+                try db.execute(sql: """
+                    CREATE TABLE note_new (
+                        id BLOB PRIMARY KEY NOT NULL,
+                        title TEXT,
+                        text TEXT NOT NULL,
+                        date REAL NOT NULL,
+                        ownerID BLOB REFERENCES friend(id)
+                            ON DELETE RESTRICT
+                            ON UPDATE CASCADE,
+                        updatedDate REAL
+                    )
+                """)
+                
+                // 2. Copy existing notes.
+                try db.execute(sql: """
+                    INSERT INTO note_new (
+                        id,
+                        title,
+                        text,
+                        date,
+                        ownerID,
+                        updatedDate
+                    )
+                    SELECT
+                        id,
+                        title,
+                        text,
+                        date,
+                        ownerID,
+                        updatedDate
+                    FROM note
+                """)
+                
+                // 3. Replace the old note table.
+                try db.execute(sql: "DROP TABLE note")
+                
+                try db.execute(sql: """
+                    ALTER TABLE note_new RENAME TO note
+                """)
+                
+                // 4. Remove obsolete Story table.
+                try db.execute(sql: "DROP TABLE IF EXISTS story")
+                
+                // 5. Validate foreign key integrity.
+                let violations = try Row.fetchAll(
+                    db,
+                    sql: "PRAGMA foreign_key_check"
                 )
-            """)
-            
-            try db.execute(sql: """
-                INSERT INTO note_new (id, title, text, date, ownerID, updatedDate)
-                SELECT id, title, text, date, ownerID, updatedDate FROM note
-            """)
-            
-            let noteCountNew = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM note_new") ?? 0
-            guard noteCountBefore == noteCountNew else {
-                try db.execute(sql: "ROLLBACK")
-                fatalError("Migration 7: note count mismatch (\(noteCountBefore) -> \(noteCountNew))")
+                
+                guard violations.isEmpty else {
+                    throw Migration7Error.foreignKeyViolation(
+                        count: violations.count
+                    )
+                }
+                
+                // 6. Commit migration.
+                try db.execute(sql: "COMMIT")
+                
+            } catch {
+                try? db.execute(sql: "ROLLBACK")
+                throw error
             }
             
-            // 2. Recreate noteFriend pointing to note_new
-            try db.execute(sql: """
-                CREATE TABLE noteFriend_new (
-                    noteID BLOB NOT NULL REFERENCES note_new(id) ON DELETE CASCADE,
-                    friendID BLOB NOT NULL REFERENCES friend(id) ON DELETE CASCADE,
-                    isSent BOOLEAN NOT NULL DEFAULT 0,
-                    updatedDate REAL,
-                    PRIMARY KEY (noteID, friendID)
-                )
-            """)
+            // Re-enable FK checks.
+            try db.execute(sql: "PRAGMA foreign_keys = ON")
             
-            try db.execute(sql: "INSERT INTO noteFriend_new SELECT * FROM noteFriend")
+            Logger.log(
+                "Migration 7: removed rootStoryID and story",
+                location: .GRDB,
+                event: .success
+            )
             
-            let nfCountNew = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM noteFriend_new") ?? 0
-            guard nfCountBefore == nfCountNew else {
-                try db.execute(sql: "ROLLBACK")
-                fatalError("Migration 7: noteFriend count mismatch (\(nfCountBefore) -> \(nfCountNew))")
-            }
-            
-            // 3. Swap tables
-            try db.execute(sql: "DROP TABLE noteFriend")
-            try db.execute(sql: "DROP TABLE note")
-            try db.execute(sql: "DROP TABLE IF EXISTS story")
-            try db.execute(sql: "ALTER TABLE note_new RENAME TO note")
-            try db.execute(sql: "ALTER TABLE noteFriend_new RENAME TO noteFriend")
-            
-            // 4. Mark migration applied (table might not exist yet)
-            if try db.tableExists("cloudSyncMetadata") {
-                var metadata = CloudSyncMetadataGRDB(key: migration7Key, value: "1")
-                try metadata.insert(db)
-            }
-            
-            try db.execute(sql: "COMMIT")
-            
-            Logger.log("Migration 7: removed rootStoryID, dropped story (notes: \(noteCountNew), noteFriends: \(nfCountNew))", location: .GRDB, event: .success)
         } catch {
-            try? db.execute(sql: "ROLLBACK")
+            // Make sure FK checks are enabled even after failure.
+            try? db.execute(sql: "PRAGMA foreign_keys = ON")
             throw error
         }
+    }
+    
+    private enum Migration7Error: Error {
+        case foreignKeyViolation(count: Int)
     }
 }

@@ -8,8 +8,71 @@
 import SwiftUI
 
 @MainActor
+protocol AppStoreProtocol: AnyObject {
+    var selectedDate: Date { get }
+    var currentNotes: [Note] { get }
+    var allNotes: [Note] { get }
+    var allFriends: [Friend] { get }
+    var user: User { get }
+    var notesByDate: [BaseDate: [Note]] { get }
+    var cloudSyncState: CloudSyncState { get }
+    
+    var appCoordinator: AppCoordinator { get }
+    
+    func send(_ action: AppAction)
+    func send(_ action: NavigateAction)
+    func notes(for filter: NoteFilter) -> [Note]
+    func searchNotes(query: String) -> [Note]
+    func syncDownload()
+}
+
+@MainActor
 @Observable
-final class AppStore {
+final class AppStoreMock: AppStoreProtocol {
+    var selectedDate: Date = .now
+    var currentNotes: [Note] = Note.tmpNotes
+    
+    var allNotes: [Note] = [] {
+        didSet {
+            notesByDate = Dictionary(grouping: allNotes, by: \.baseDate)
+                .mapValues { $0.sorted { $0.date > $1.date } }
+        }
+    }
+    
+    var allFriends: [Friend] = Friend.mock
+    var user: User = User.init(name: "Nebo", color: "fc33dd")
+    
+    var notesByDate: [BaseDate : [Note]] = [:]
+    
+    var cloudSyncState: CloudSyncState = .completed
+    
+    var appCoordinator: AppCoordinator = AppCoordinator()
+    
+    func send(_ action: AppAction) {
+        
+    }
+    
+    func send(_ action: NavigateAction) {
+        
+    }
+    
+    func notes(for filter: NoteFilter) -> [Note] {
+        Note.tmpNotes
+    }
+    
+    func searchNotes(query: String) -> [Note] {
+        Note.tmpNotes
+    }
+    
+    func syncDownload() {
+        
+    }
+}
+
+
+@MainActor
+@Observable
+final class AppStore: AppStoreProtocol {
     
     var selectedDate: Date = .now
     
@@ -98,10 +161,6 @@ final class AppStore {
             user = userDefaultsManager.editUser(name: name, color: color)
             createWelcomeMessageIfNeeded()
         }
-    }
-    
-    func getSelectedNotes() -> [Note] {
-        notesByDate[BaseDate(date: selectedDate)] ?? []
     }
     
     func notes(for filter: NoteFilter) -> [Note] {

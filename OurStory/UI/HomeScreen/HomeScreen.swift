@@ -115,18 +115,11 @@ struct HomeScreen: View {
                 .padding(.top, 16)
             
             screenBuilder.getComponent(type: .notesList(filter: .byDate(BaseDate(date: date)), isShowDate: false, isShowFriendsList: $isShowFriendsList))
+                .id(date)
         }
         .padding(.bottom, 80)
     }
 }
-
-let tmpNotes = [
-    Note(id: UUID(), title: "ndfsfd", date: Date(), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: Friend(name: "Вася", color: "44fd21")),
-    
-    Note(id: UUID(), title: "", date: Date().getOffsetDate(-3), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [Friend(name: "Вася", color: "44fd21")], owner: nil),
-    
-    Note(id: UUID(), title: nil, date: Date().getOffsetDate(-5), text: "выоатл ыывот аоыва ываи оываорыв ивыл оатыв иаоывр авдыла ытва ", friends: [], owner: nil)
-]
 
 #Preview {
     ScreenBuilder.previewBuilder.getScreen(type: .home)

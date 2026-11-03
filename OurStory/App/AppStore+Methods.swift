@@ -53,6 +53,9 @@ extension AppStore {
     //MARK: FRIENDS -
     func addNewFriend(_ friend: Friend) {
         Task {
+            if let user = friend.user {
+                await userRepository.addNewUser(user)
+            }
             await friendsRepository.addNewFriend(friend)
             allFriends.append(friend)
         }
@@ -231,20 +234,5 @@ extension AppStore {
         }
         
         return totalScore
-    }
-    
-    // MARK: - Note Draft
-    
-    func saveNoteDraft(_ draft: UserDefaultsManager.NoteDraft) {
-        userDefaultsManager.saveNoteDraft(draft)
-    }
-    
-    func loadNoteDraft() -> UserDefaultsManager.NoteDraft? {
-        let draft = userDefaultsManager.loadNoteDraft()
-        return draft
-    }
-    
-    func clearNoteDraft() {
-        userDefaultsManager.clearNoteDraft()
     }
 }

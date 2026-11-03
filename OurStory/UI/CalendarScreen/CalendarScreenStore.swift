@@ -29,7 +29,7 @@ final class CalendarScreenStore: BaseStore {
         return c
     }()
     
-    override init(appStore: AppStore) {
+    override init(appStore: AppStoreProtocol) {
         super.init(appStore: appStore)
         monthPages = buildPages()
     }

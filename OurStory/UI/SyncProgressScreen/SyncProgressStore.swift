@@ -44,7 +44,7 @@ final class SyncProgressStore: BaseStore {
     
     // MARK: - Init
     
-    init(appStore: AppStore, config: SyncProgressConfig) {
+    init(appStore: AppStoreProtocol, config: SyncProgressConfig) {
         self.friend = config.friend
         self.unsentNotes = config.unsentNotes
         self.noteRepository = config.noteRepository

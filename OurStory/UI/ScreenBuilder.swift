@@ -83,14 +83,14 @@ enum ComponentType: Hashable {
 final class ScreenBuilder {
     
     static let previewBuilder: ScreenBuilder = {
-        let appStoreMock = AppStore(repositoryFactory: RepositoryFactory())
+        let appStoreMock = AppStoreMock()
         return ScreenBuilder(appStore: appStoreMock, repositoryFactory: RepositoryFactory())
     }()
     
-    private let appStore: AppStore
+    private let appStore: AppStoreProtocol
     private let repositories: RepositoryFactoryProtocol
     
-    init(appStore: AppStore, repositoryFactory: RepositoryFactoryProtocol) {
+    init(appStore: AppStoreProtocol, repositoryFactory: RepositoryFactoryProtocol) {
         self.appStore = appStore
         self.repositories = repositoryFactory
     }
