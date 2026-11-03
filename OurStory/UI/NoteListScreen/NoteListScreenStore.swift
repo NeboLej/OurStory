@@ -26,7 +26,7 @@ final class NoteListScreenStore: BaseStore {
         NoteListScreenState(notes: notes, allFriends: appStore.allFriends)
     }
     
-    init(appStore: AppStore, filter: NoteFilter) {
+    init(appStore: AppStoreProtocol, filter: NoteFilter) {
         self.filter = filter
         super.init(appStore: appStore)
     }

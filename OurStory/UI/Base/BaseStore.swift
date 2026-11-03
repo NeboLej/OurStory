@@ -9,9 +9,9 @@ import Foundation
 
 @MainActor
 class BaseStore {
-    let appStore: AppStore
+    let appStore: AppStoreProtocol
     
-    init(appStore: AppStore) {
+    init(appStore: AppStoreProtocol) {
         self.appStore = appStore
     }
 }

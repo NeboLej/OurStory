@@ -55,7 +55,7 @@ final class FriendScreenStore: BaseStore {
         )
     }
     
-    init(appStore: AppStore, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
+    init(appStore: AppStoreProtocol, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
         self.friend = friend
         self.noteRepositpry = noteRepositpry
         self.syncService = SyncService3(profile: appStore.user)

@@ -152,7 +152,7 @@ struct NoteListContent: View {
                             Text(noteTitle)
                                 .font(.mySemiBold(size: 16))
                                 .foregroundStyle(.textMulticolor)
-                                .padding(.bottom, 4)
+                                .padding(.bottom, 8)
                         }
                         
                         Text(note.text)
@@ -279,6 +279,7 @@ struct NoteListContent: View {
                     Text(noteTitle)
                         .font(.mySemiBold(size: 16))
                         .foregroundStyle(.textMulticolor)
+                        .padding(.bottom, 8)
                 }
                 
                 Text(note.text)
@@ -325,8 +326,6 @@ struct NoteListContent: View {
 }
 
 #Preview {
-
-   
     NavigationStack {
 //        ScreenBuilder.previewBuilder.getScreen(type: .home)
 //        ScreenBuilder.previewBuilder.getScreen(type: .notes(title: "ffff1", notes: tmpNotes, isShowFriendsList: .init(get: { true }, set: { _ in
