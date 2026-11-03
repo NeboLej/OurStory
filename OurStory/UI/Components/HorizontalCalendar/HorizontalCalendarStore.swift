@@ -18,7 +18,7 @@ final class HorizontalCalendarStore: BaseStore {
         HorizontalCalendarState(appStore: appStore, weeks: weeks)
     }
     
-    override init(appStore: AppStore) {
+    override init(appStore: AppStoreProtocol) {
         super.init(appStore: appStore)
         let loaded = (-1...1).map { loadWeek(from: Date.now, value: $0) }
         weeks = loaded

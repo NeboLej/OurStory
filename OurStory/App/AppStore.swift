@@ -8,16 +8,91 @@
 import SwiftUI
 
 @MainActor
+protocol AppStoreProtocol: AnyObject {
+    var selectedDate: Date { get }
+    var currentNotes: [Note] { get }
+    var allNotes: [Note] { get }
+    var allFriends: [Friend] { get }
+    var user: User { get }
+    var notesByDate: [BaseDate: [Note]] { get }
+    var cloudSyncState: CloudSyncState { get }
+    
+    var appCoordinator: AppCoordinator { get }
+    
+    func send(_ action: AppAction)
+    func send(_ action: NavigateAction)
+    func notes(for filter: NoteFilter) -> [Note]
+    func searchNotes(query: String) -> [Note]
+    func syncDownload()
+}
+
+@MainActor
 @Observable
-final class AppStore {
+final class AppStoreMock: AppStoreProtocol {
+    var selectedDate: Date = .now
+    var currentNotes: [Note] = Note.tmpNotes
+    
+    var allNotes: [Note] = [] {
+        didSet {
+            notesByDate = Dictionary(grouping: allNotes, by: \.baseDate)
+                .mapValues { $0.sorted { $0.date > $1.date } }
+        }
+    }
+    
+    var allFriends: [Friend] = Friend.mock
+    var user: User = User.init(name: "Nebo", color: "fc33dd")
+    
+    var notesByDate: [BaseDate : [Note]] = [:]
+    
+    var cloudSyncState: CloudSyncState = .completed
+    
+    var appCoordinator: AppCoordinator = AppCoordinator()
+    
+    func send(_ action: AppAction) {
+        
+    }
+    
+    func send(_ action: NavigateAction) {
+        
+    }
+    
+    func notes(for filter: NoteFilter) -> [Note] {
+        Note.tmpNotes
+    }
+    
+    func searchNotes(query: String) -> [Note] {
+        Note.tmpNotes
+    }
+    
+    func syncDownload() {
+        
+    }
+}
+
+
+@MainActor
+@Observable
+final class AppStore: AppStoreProtocol {
     
     var selectedDate: Date = .now
-    var selectedStory: Story?
-    var stories: [BaseDate: Story] = [:]
+    
+    var currentNotes: [Note] {
+        notesByDate[BaseDate(date: selectedDate)] ?? []
+    }
+    
+    private(set) var notesByDate: [BaseDate: [Note]] = [:]
+    
     var allFriends: [Friend] = []
     var user: User
     var sortedNotes: [Note] = []
     var isShowNoteFriendsList: Bool = false
+    
+    var allNotes: [Note] = [] {
+        didSet {
+            notesByDate = Dictionary(grouping: allNotes, by: \.baseDate)
+                .mapValues { $0.sorted { $0.date > $1.date } }
+        }
+    }
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     var cloudSyncState: CloudSyncState = .idle
@@ -30,8 +105,6 @@ final class AppStore {
     let friendsRepository: FriendRepositoryProtocol
     @ObservationIgnored
     let noteRepository: NoteRepositoryProtocol
-    @ObservationIgnored
-    let storyRepository: StoryRepositoryProtocol
     @ObservationIgnored
     let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
     
@@ -47,7 +120,6 @@ final class AppStore {
         self.userRepository = repositoryFactory.userRepository
         self.friendsRepository = repositoryFactory.friendRepository
         self.noteRepository = repositoryFactory.noteRepository
-        self.storyRepository = repositoryFactory.storyRepository
         
         user = userDefaultsManager.getCurrentUser()
         
@@ -64,31 +136,13 @@ final class AppStore {
         switch action {
         case .selectedDate(let date):
             selectedDate = date
-            selectedStory = self.stories[BaseDate(date: selectedDate)]
         case .addNewNote(let newNote):
             addNewNote(newNote)
         case .editNote(let note):
-            let oldStoryEntry = stories.first(where: { $0.value.id == note.rootStoryID })
-            let newBaseDate = BaseDate(date: note.date)
-            let dateChanged = oldStoryEntry != nil && oldStoryEntry!.key != newBaseDate
-            
-            if dateChanged, let oldBaseDate = oldStoryEntry?.key, let oldStory = oldStoryEntry?.value {
-                
-                let updatedOldStory = oldStory.removeNote(note.id)
-                stories[oldBaseDate] = updatedOldStory
-                if selectedStory?.id == oldStory.id {
-                    selectedStory = updatedOldStory
-                }
-                
-                moveNoteToStory(note, newBaseDate: newBaseDate)
-            } else if let oldBaseDate = oldStoryEntry?.key, let oldStory = oldStoryEntry?.value {
-                let updatedStory = oldStory.replaceNote(note)
-                stories[oldBaseDate] = updatedStory
-                if selectedStory?.id == updatedStory.id {
-                    selectedStory = updatedStory
-                }
-                updateNote(note)
+            if let index = allNotes.firstIndex(where: { $0.id == note.id }) {
+                allNotes[index] = note
             }
+            updateNote(note)
         case .deleteNote(let note):
             deleteNote(note)
         case .syncNotes(let notes, let friend):
@@ -99,8 +153,8 @@ final class AppStore {
             editFriend(friend)
         case .deleteFriend(let friend):
             deleteFriend(friend)
-        case .deleteFriendWithStories(let friend):
-            deleteFriendWithStories(friend)
+        case .deleteFriendWithNotes(let friend):
+            deleteFriendWithNotes(friend)
         case .hideFriend(let friend):
             hideFriend(friend)
         case .editProfile(name: let name, color: let color):
@@ -109,12 +163,20 @@ final class AppStore {
         }
     }
     
-    func getSelectedStory() -> Story {
-        let story = selectedStory ?? stories[BaseDate(date: selectedDate)] ?? Story(date: selectedDate)
-        selectedStory = story
-        return story
+    func notes(for filter: NoteFilter) -> [Note] {
+        switch filter {
+        case .byDate(let baseDate):
+            return notesByDate[baseDate] ?? []
+        case .byFriend(let friendID):
+            return allNotes
+                .filter { $0.friends.contains(where: { $0.id == friendID }) || $0.owner?.id == friendID }
+                .sorted { $0.date > $1.date }
+        case .bySearch(let query):
+            guard query.count >= 3 else { return [] }
+            return searchNotes(query: query)
+        }
     }
-
+    
     func send(_ action: NavigateAction) {
         switch action {
         case .toNote(let note):
@@ -143,8 +205,8 @@ final class AppStore {
             appCoordinator.navigate(to: .setting)
         case .toEditProfile:
             appCoordinator.navigate(to: .editProfile)
-        case .toNotesList(title: let title, notes: let notes):
-            appCoordinator.navigate(to: .notes(title: title, notes: notes, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
+        case .toNotesList(title: let title, filter: let filter):
+            appCoordinator.navigate(to: .notes(title: title, filter: filter, isShowFriendsList: Binding(get: { self.isShowNoteFriendsList }, set: { self.isShowNoteFriendsList = $0 })))
         case .toLogs:
             appCoordinator.navigate(to: .log)
         case .toCalendar:
@@ -159,13 +221,7 @@ final class AppStore {
     func loadData() {
         Task {
             allFriends = await friendsRepository.getAllFriends()
-            
-            let stories = await storyRepository.getAllStories()
-            
-            stories.forEach { story in
-                self.stories[BaseDate(date: story.date)] = story
-            }
-            selectedStory = self.stories[BaseDate(date: selectedDate)]
+            allNotes = await noteRepository.getAllNotes()
         }
     }
 }

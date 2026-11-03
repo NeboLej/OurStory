@@ -16,7 +16,7 @@ enum AppAction {
     case addNewFriend(Friend)
     case editFriend(Friend)
     case deleteFriend(Friend)
-    case deleteFriendWithStories(Friend)
+    case deleteFriendWithNotes(Friend)
     case hideFriend(Friend)
     case editProfile(name: String, color: String)
 }
@@ -28,7 +28,7 @@ enum NavigateAction {
     case toNewFriend
     case toSettings
     case toEditProfile
-    case toNotesList(title: String, notes: [Note])
+    case toNotesList(title: String, filter: NoteFilter)
     case toLogs
     case toCalendar
     case toSearch

@@ -13,7 +13,9 @@ final class HomeScreenStore: BaseStore {
     var state: HomeScreenState {
         let isSyncing = appStore.cloudSyncState == .uploading || appStore.cloudSyncState == .downloading
         let currentDate = appStore.selectedDate
-        return HomeScreenState(selectedStory: appStore.selectedStory, selectedDate: currentDate, isSyncing: isSyncing, emptyStateText: emptyTextByDate(for: currentDate))
+        let notes = appStore.currentNotes
+//        let hasNotes = notes != nil && !notes.isEmpty
+        return HomeScreenState(selectedNotes: notes, selectedDate: currentDate, isSyncing: isSyncing, emptyStateText: emptyTextByDate(for: currentDate))
     }
     
     private var emptyTextByDateDict: [BaseDate: String] = [:]

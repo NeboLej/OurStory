@@ -10,17 +10,12 @@ import SwiftUI
 @Observable
 final class NoteListScreenStore: BaseStore {
     
-    private var localNotes: [Note]
-    private var storyID: UUID?
+    private(set) var filter: NoteFilter
     private(set) var showMenuNoteId: UUID? = nil
     private(set) var showFriendsNote: Note? = nil
     
     private var notes: [Note] {
-        if let storyID,
-           let story = appStore.stories.values.first(where: { $0.id == storyID }) {
-            return story.notes
-        }
-        return localNotes
+        appStore.notes(for: filter)
     }
     
     var showMenuNote: Note? {
@@ -31,9 +26,8 @@ final class NoteListScreenStore: BaseStore {
         NoteListScreenState(notes: notes, allFriends: appStore.allFriends)
     }
     
-    init(appStore: AppStore, notes: [Note] = [], storyID: UUID? = nil) {
-        self.localNotes = notes
-        self.storyID = storyID
+    init(appStore: AppStoreProtocol, filter: NoteFilter) {
+        self.filter = filter
         super.init(appStore: appStore)
     }
     
@@ -44,7 +38,6 @@ final class NoteListScreenStore: BaseStore {
                 appStore.send(.toNote(note))
             case .deleteNote(let note):
                 showMenuNoteId = nil
-                localNotes.removeAll { $0.id == note.id }
                 appStore.send(.deleteNote(note))
             case .updateFriendInNote(let note, let friend):
                 let newNote = note.copy(friends: note.friends.deleteOrAppend(friend))
@@ -53,8 +46,8 @@ final class NoteListScreenStore: BaseStore {
                 showMenuNoteId = id
             case .selectFriendsNote(let note):
                 showFriendsNote = note
-            case .updateNotes(let notes):
-                self.localNotes = notes.sorted { $0.date > $1.date }
+            case .updateFilter(let newFilter):
+                self.filter = newFilter
             case .addNewFriend:
                 appStore.send(.toNewFriend)
             }

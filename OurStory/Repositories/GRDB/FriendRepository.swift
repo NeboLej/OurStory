@@ -35,8 +35,7 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
                 Logger.log("save new friend", location: .GRDB, event: .success)
             }
         } catch {
-            Logger.log("save new user", location: .GRDB, event: .error(error))
-            fatalError()
+            Logger.log("save new friend", location: .GRDB, event: .error(error))
         }
     }
     
@@ -53,8 +52,7 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
                 }
             }
         } catch {
-            Logger.log("save new user", location: .GRDB, event: .error(error))
-            fatalError()
+            Logger.log("edit friend", location: .GRDB, event: .error(error))
         }
     }
     

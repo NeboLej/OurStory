@@ -9,7 +9,7 @@ import Foundation
 
 enum FriendScreenAction {
     case editFriend(name: String, color: String)
-    case deleteFriendWithStories
+    case deleteFriendWithNotes
     case hideFriend
     case syncFriend
     case applyUserProfile

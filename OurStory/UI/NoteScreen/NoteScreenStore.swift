@@ -22,11 +22,14 @@ final class NoteScreenStore: BaseStore {
     private var draftTextLength: Int = 0
     private let rootNote: Note?
     
+    @ObservationIgnored
+    let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
+    
     var state: NoteScreenState {
         NoteScreenState(title: title, text: text, date: date, isEditing: rootNote != nil, allFriends: appStore.allFriends, selectedFriends: selectedFriends, suggestedFriend: suggestedFriend, isShowDraftHint: isShowDraftHint)
     }
     
-    init(appStore: AppStore, note: Note? = nil) {
+    init(appStore: AppStoreProtocol, note: Note? = nil) {
         rootNote = note
         // Combine the selected calendar day with the current time
         let selectedDay = appStore.selectedDate
@@ -71,12 +74,11 @@ final class NoteScreenStore: BaseStore {
                     let updatedNote = rootNote.copy(title: title, date: date, text: text, friends: selectedFriends)
                     appStore.send(.editNote(updatedNote))
                 } else {
-                    let story = appStore.getSelectedStory()
-                    let newNote = Note(rootStoryID: story.id, title: title.isEmpty ? nil : title, date: date, text: text, friends: selectedFriends, owner: nil)
+                    let newNote = Note(title: title.isEmpty ? nil : title, date: date, text: text, friends: selectedFriends, owner: nil)
                     appStore.send(.addNewNote(newNote))
                 }
                 saveDraftTask?.cancel()
-                appStore.clearNoteDraft()
+                clearNoteDraft()
                 
             case .selectDate(let newDate):
                 date = newDate
@@ -106,7 +108,7 @@ final class NoteScreenStore: BaseStore {
                 date = calendar.date(from: components) ?? .now
                 isShowDraftHint = false
                 saveDraftTask?.cancel()
-                appStore.clearNoteDraft()
+                clearNoteDraft()
             case .acceptSuggestion:
                 if let friend = suggestedFriend, !selectedFriends.contains(friend) {
                     selectedFriends.append(friend)
@@ -157,7 +159,7 @@ final class NoteScreenStore: BaseStore {
     }
     
     private func loadLocalNote() -> Note? {
-        guard let draft = appStore.loadNoteDraft(), !draft.isEmpty else { return nil }
+        guard let draft = loadNoteDraft(), !draft.isEmpty else { return nil }
         let friends = appStore.allFriends.filter { draft.friendIDs.contains($0.id) }
         return Note(title: draft.title, date: draft.date, text: draft.text, friends: friends)
     }
@@ -169,7 +171,22 @@ final class NoteScreenStore: BaseStore {
             try? await Task.sleep(for: .seconds(1))
             guard !Task.isCancelled, let self else { return }
             let draft = UserDefaultsManager.NoteDraft(title: self.title, text: self.text, date: self.date, friendIDs: self.selectedFriends.map(\.id))
-            self.appStore.saveNoteDraft(draft)
+            saveNoteDraft(draft)
         }
+    }
+    
+    // MARK: - Note Draft
+    
+    private func saveNoteDraft(_ draft: UserDefaultsManager.NoteDraft) {
+        userDefaultsManager.saveNoteDraft(draft)
+    }
+    
+    private func loadNoteDraft() -> UserDefaultsManager.NoteDraft? {
+        let draft = userDefaultsManager.loadNoteDraft()
+        return draft
+    }
+    
+    private func clearNoteDraft() {
+        userDefaultsManager.clearNoteDraft()
     }
 }

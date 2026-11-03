@@ -105,7 +105,7 @@ struct FriendScreen: View {
         }
         .alert("Вы хотите удалить друга и все полученные от него истории?", isPresented: $showDeleteAlert) {
             Button("Удалить друга и все истории", role: .destructive) {
-                store.send(.deleteFriendWithStories)
+                store.send(.deleteFriendWithNotes)
                 dismiss()
             }
             Button("Удалить друга", role: .destructive) {

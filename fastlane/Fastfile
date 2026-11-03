@@ -66,6 +66,17 @@ platform :ios do
         match_options[:keychain_password] = CI_KEYCHAIN_PASSWORD
       end
       match(match_options)
+      
+      # Разрешаем codesign доступ к ключам без всплывающих окон
+      if on_ci
+        sh(
+          "security", "set-key-partition-list",
+          "-S", "apple-tool:,apple:,codesign:",
+          "-s", "-k", CI_KEYCHAIN_PASSWORD,
+          File.expand_path("~/Library/Keychains/#{CI_KEYCHAIN}-db"),
+          log: false
+        )
+      end
 
       profile_name = ENV["sigh_#{APP_ID}_appstore_profile-name"]
 
@@ -122,6 +133,11 @@ platform :ios do
       lock_when_sleeps: false,
       add_to_search_list: true
     )
+
+    # Ставим временную связку ПЕРВОЙ в списке поиска, login остаётся вторым
+    ci_path    = File.expand_path("~/Library/Keychains/#{CI_KEYCHAIN}-db")
+    login_path = File.expand_path("~/Library/Keychains/login.keychain-db")
+    sh("security", "list-keychains", "-d", "user", "-s", ci_path, login_path)
   end
 
   private_lane :cleanup_ci_keychain do

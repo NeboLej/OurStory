@@ -11,17 +11,16 @@ import SwiftUI
 final class CalendarScreenStore: BaseStore {
     
     var state: CalendarScreenState {
-        CalendarScreenState(monthPages: monthPages, selectedDate: selectedDate, selectedStory: selectedStory)
+        CalendarScreenState(monthPages: monthPages, selectedDate: selectedDate, selectedNotes: selectedNotes)
     }
     
     private(set) var monthPages: [CalendarViewMonthData] = []
     
-    private var storyMap: [BaseDate: Story] {
-        appStore.stories
+    private var noteMap: [BaseDate: [Note]] {
+        appStore.notesByDate
     }
-    private var stories: [Story] { Array(storyMap.values) }
     
-    private var selectedStory: Story?
+    private var selectedNotes: [Note]?
     private var selectedDate: Date?
     
     let calendar: Calendar = {
@@ -30,7 +29,7 @@ final class CalendarScreenStore: BaseStore {
         return c
     }()
     
-    override init(appStore: AppStore) {
+    override init(appStore: AppStoreProtocol) {
         super.init(appStore: appStore)
         monthPages = buildPages()
     }
@@ -39,10 +38,10 @@ final class CalendarScreenStore: BaseStore {
         withAnimation(animation) {
             switch action {
             case .selectDate(let newDate):
-                selectedStory = storyMap[BaseDate(date: newDate)]
+                selectedNotes = noteMap[BaseDate(date: newDate)]
                 selectedDate = newDate
             case .closeNotePanel:
-                selectedStory = nil
+                selectedNotes = nil
                 selectedDate = nil
             }
         }
@@ -52,7 +51,8 @@ final class CalendarScreenStore: BaseStore {
         let today = Date.now
         var pages: [CalendarViewMonthData] = []
         
-        let monthStarts = monthRange(from: stories, today: today)
+        let allDates = noteMap.keys.compactMap { Calendar.current.date(from: DateComponents(year: $0.year, month: $0.month, day: $0.day)) }
+        let monthStarts = monthRange(from: allDates, today: today)
         
         for monthStart in monthStarts {
             guard let range = calendar.range(of: .day, in: .month, for: monthStart) else { continue }
@@ -78,10 +78,10 @@ final class CalendarScreenStore: BaseStore {
             for day in range {
                 guard let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
                 
-                let story = storyMap[BaseDate(date: dayDate)]
-                let colors = extractBorderColors(from: story)
-                let dots = extractDots(from: story)
-                let noteCount = story?.notes.count ?? 0
+                let notes = noteMap[BaseDate(date: dayDate)]
+                let colors = extractBorderColors(from: notes)
+                let dots = extractDots(from: notes)
+                let noteCount = notes?.count ?? 0
                 
                 if noteCount > 0 {
                     totalNotes += noteCount
@@ -127,8 +127,7 @@ final class CalendarScreenStore: BaseStore {
         return pages
     }
     
-    private func monthRange(from stories: [Story], today: Date) -> [Date] {
-        let dates = stories.map(\.date)
+    private func monthRange(from dates: [Date], today: Date) -> [Date] {
         guard let earliest = dates.min() else {
             // No stories — show current month only
             let comps = calendar.dateComponents([.year, .month], from: today)
@@ -154,12 +153,12 @@ final class CalendarScreenStore: BaseStore {
         Color(hex: appStore.user.color)
     }
     
-    private func extractBorderColors(from story: Story?) -> [Color] {
-        guard let story, !story.notes.isEmpty else { return [] }
+    private func extractBorderColors(from notes: [Note]?) -> [Color] {
+        guard let notes, !notes.isEmpty else { return [] }
         
         var colorHexes = Set<String>()
         
-        for note in story.notes {
+        for note in notes {
             if let owner = note.owner {
                 colorHexes.insert(owner.color)
             } else {
@@ -171,15 +170,15 @@ final class CalendarScreenStore: BaseStore {
         return colorHexes.sorted().map { Color(hex: $0) }
     }
     
-    private func extractDots(from story: Story?) -> [Dot] {
-        guard let story, !story.notes.isEmpty else { return [] }
+    private func extractDots(from notes: [Note]?) -> [Dot] {
+        guard let notes, !notes.isEmpty else { return [] }
         
         var dots: [Dot] = []
         var hasProfileDot = false
         var friendHexes = Set<String>()
         var ownerHexes = Set<String>()
         
-        for note in story.notes {
+        for note in notes {
             if let owner = note.owner {
                 ownerHexes.insert(owner.color)
             } else {

@@ -13,6 +13,6 @@ enum NoteListScreenAction {
     case updateFriendInNote(note: Note, friend: Friend)
     case selectMenuNote(UUID?)
     case selectFriendsNote(Note?)
-    case updateNotes([Note])
+    case updateFilter(NoteFilter)
     case addNewFriend
 }

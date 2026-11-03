@@ -9,7 +9,7 @@ import Foundation
 import GRDB
 
 protocol NoteRepositoryProtocol {
-//    func getAllNotes() async -> [Note]
+    func getAllNotes() async -> [Note]
     func addNote(_ note: Note) async
     func saveOrUpdateNote(_ note: Note) async
     func updateNote(_ note: Note) async
@@ -74,13 +74,12 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         }
     }
     
-    private func getAllNotes() async -> [Note] {
+    func getAllNotes() async -> [Note] {
         do {
             return try await dbPool.read { db in
                 let request = NoteModelGRDB.including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
                     .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
                 let results = try NoteWithFriends.fetchAll(db, request)
-                
                 return results.map { Note(from: $0) }
             }
         } catch {

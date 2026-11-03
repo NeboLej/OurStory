@@ -72,7 +72,6 @@ final class CloudKitService {
             try await uploadProfile()
             try await uploadUsers(since: lastUpload)
             try await uploadFriends(since: lastUpload)
-            try await uploadStories(since: lastUpload)
             try await uploadNotes(since: lastUpload)
             try await uploadNoteFriends(since: lastUpload)
             try await processDeletions()
@@ -155,8 +154,7 @@ final class CloudKitService {
             try await downloadUsers(from: filterDeleted(allRecords["CD_User"] ?? []))
             Logger.log("downloadAll: downloadFriends...", location: .cloudKit, event: .processing)
             try await downloadFriends(from: filterDeleted(allRecords["CD_Friend"] ?? []))
-            Logger.log("downloadAll: downloadStories...", location: .cloudKit, event: .processing)
-            try await downloadStories(from: filterDeleted(allRecords["CD_Story"] ?? []))
+            // CD_Story records from cloud are ignored — story table no longer exists
             Logger.log("downloadAll: downloadNotes...", location: .cloudKit, event: .processing)
             try await downloadNotes(from: filterDeleted(allRecords["CD_Note"] ?? []))
             Logger.log("downloadAll: downloadNoteFriends...", location: .cloudKit, event: .processing)
@@ -182,6 +180,9 @@ final class CloudKitService {
     }
     
     // MARK: - Helpers
+    
+    /// Record types that no longer exist locally — skip their deletions
+    private static let ignoredRecordTypes: Set<String> = ["CD_Story"]
     
     struct ZoneChangesResult {
         let recordsByType: [String: [CKRecord]]
@@ -216,6 +217,7 @@ final class CloudKitService {
             }
             
             for deletion in result.deletions {
+                guard !Self.ignoredRecordTypes.contains(deletion.recordType) else { continue }
                 deletedRecordIDs.append(deletion.recordID)
             }
             

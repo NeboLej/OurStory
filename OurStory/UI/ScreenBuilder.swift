@@ -9,7 +9,7 @@ import SwiftUI
 
 enum ScreenType: Identifiable, Hashable {
     
-    case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, notes: [Note], isShowFriendsList: Binding<Bool>)
+    case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, filter: NoteFilter, isShowFriendsList: Binding<Bool>)
     case log, onboarding, calendar, search, helpList, help(Help)
     case syncProgress(SyncProgressConfig)
     
@@ -61,7 +61,7 @@ enum ScreenType: Identifiable, Hashable {
 
 enum ComponentType: Hashable {
     case horizontalCalendar
-    case notesList(notes: [Note], storyID: UUID, isShowDate: Bool, isShowFriendsList: Binding<Bool>)
+    case notesList(filter: NoteFilter, isShowDate: Bool, isShowFriendsList: Binding<Bool>)
     
     func hash(into hasher: inout Hasher) {
         switch self {
@@ -83,14 +83,14 @@ enum ComponentType: Hashable {
 final class ScreenBuilder {
     
     static let previewBuilder: ScreenBuilder = {
-        let appStoreMock = AppStore(repositoryFactory: RepositoryFactory())
+        let appStoreMock = AppStoreMock()
         return ScreenBuilder(appStore: appStoreMock, repositoryFactory: RepositoryFactory())
     }()
     
-    private let appStore: AppStore
+    private let appStore: AppStoreProtocol
     private let repositories: RepositoryFactoryProtocol
     
-    init(appStore: AppStore, repositoryFactory: RepositoryFactoryProtocol) {
+    init(appStore: AppStoreProtocol, repositoryFactory: RepositoryFactoryProtocol) {
         self.appStore = appStore
         self.repositories = repositoryFactory
     }
@@ -105,9 +105,9 @@ final class ScreenBuilder {
         case .newFriend: NewFriendScreen(store: NewFriendScreenStore(appStore: appStore, noteRepository: repositories.noteRepository))
         case .setting: SettingScreen(store: SettingScreenStore(appStore: appStore))
         case .editProfile: EditProfileScreen(store: SettingScreenStore(appStore: appStore))
-        case .notes(title: let title, notes: let notes, isShowFriendsList: let isShowFriendsList):
+        case .notes(title: let title, filter: let filter, isShowFriendsList: let isShowFriendsList):
             NoteListScreen(title: title,
-                           store: NoteListScreenStore(appStore: appStore, notes: notes),
+                           store: NoteListScreenStore(appStore: appStore, filter: filter),
                            isShowFriendsList: isShowFriendsList)
         case .log: LogScreen()
         case .onboarding: OnboardingScreen(store: OnboardingScreenStore(appStore: appStore))
@@ -124,8 +124,8 @@ final class ScreenBuilder {
     func getComponent(type: ComponentType) -> some View {
         switch type {
         case .horizontalCalendar: HorizontalCalendar(store: HorizontalCalendarStore(appStore: appStore))
-        case .notesList(notes: let notes, storyID: let storyID, isShowDate: let isShowDate, isShowFriendsList: let isShowFriendsList):
-            NoteListContent(store: NoteListScreenStore(appStore: appStore, notes: notes, storyID: storyID),
+        case .notesList(filter: let filter, isShowDate: let isShowDate, isShowFriendsList: let isShowFriendsList):
+            NoteListContent(store: NoteListScreenStore(appStore: appStore, filter: filter),
                             isShowFriendsList: isShowFriendsList,
                             isShowDate: isShowDate)
         }

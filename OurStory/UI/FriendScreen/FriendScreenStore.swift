@@ -55,7 +55,7 @@ final class FriendScreenStore: BaseStore {
         )
     }
     
-    init(appStore: AppStore, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
+    init(appStore: AppStoreProtocol, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
         self.friend = friend
         self.noteRepositpry = noteRepositpry
         self.syncService = SyncService3(profile: appStore.user)
@@ -71,9 +71,9 @@ final class FriendScreenStore: BaseStore {
                 let newFriend = Friend(id: friend.id, name: name, color: color, user: friend.user, lastSyncDate: friend.lastSyncDate)
                 friend = newFriend
                 appStore.send(.editFriend(newFriend))
-            case .deleteFriendWithStories:
+            case .deleteFriendWithNotes:
                 stopSearching()
-                appStore.send(.deleteFriendWithStories(friend))
+                appStore.send(.deleteFriendWithNotes(friend))
             case .hideFriend:
                 stopSearching()
                 appStore.send(.hideFriend(friend))
@@ -93,11 +93,11 @@ final class FriendScreenStore: BaseStore {
                 retrySearching()
             case .toAllNotes:
                 if totalNotes.count > 0 {
-                    appStore.send(.toNotesList(title: "Наши с \(friend.name) истории", notes: totalNotes))
+                    appStore.send(.toNotesList(title: "Наши с \(friend.name) истории", filter: .byFriend(friend.id)))
                 }
             case .toUnsentNotes:
                 if unsentNotes.count > 0 {
-                    appStore.send(.toNotesList(title: "Мои нерасказанные истории", notes: unsentNotes))
+                    appStore.send(.toNotesList(title: "Мои нерасказанные истории", filter: .byFriend(friend.id)))
                 }
             case .dismissUserSuggestion:
                 showUserSuggestion = false

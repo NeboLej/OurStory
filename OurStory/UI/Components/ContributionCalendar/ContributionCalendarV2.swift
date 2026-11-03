@@ -33,9 +33,9 @@ private struct CCv2MonthData: Identifiable {
 
 struct ContributionCalendarV2: View {
     
-    private let stories: [Story]
+    private let notesByDate: [BaseDate: [Note]]
     private let monthsBack: Int
-    private let onSelectStory: ((Story?) -> Void)?
+    private let onSelectNotes: (([Note]?) -> Void)?
     
     @State private var selectedDay: Date?
     @State private var monthPages: [CCv2MonthData] = []
@@ -55,13 +55,13 @@ struct ContributionCalendarV2: View {
     }
     
     init(
-        stories: [Story],
+        notesByDate: [BaseDate: [Note]],
         monthsBack: Int = 6,
-        onSelectStory: ((Story?) -> Void)? = nil
+        onSelectNotes: (([Note]?) -> Void)? = nil
     ) {
-        self.stories = stories
+        self.notesByDate = notesByDate
         self.monthsBack = monthsBack
-        self.onSelectStory = onSelectStory
+        self.onSelectNotes = onSelectNotes
     }
     
     private var currentPageIndex: Int {
@@ -85,8 +85,7 @@ struct ContributionCalendarV2: View {
             activityStrip
         }
         .onAppear {
-            let storyMap = Dictionary(uniqueKeysWithValues: stories.map { ($0.baseDate, $0) })
-            monthPages = buildAllPages(storyMap: storyMap)
+            monthPages = buildAllPages(noteMap: notesByDate)
             currentPageID = monthPages.last?.id
         }
     }
@@ -229,7 +228,7 @@ struct ContributionCalendarV2: View {
         .frame(height: cellSize)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) { selectedDay = cell.date }
-            onSelectStory?(storyForDate(cell.date))
+            onSelectNotes?(notesForDate(cell.date))
         }
     }
     
@@ -284,17 +283,14 @@ struct ContributionCalendarV2: View {
         return stops
     }
     
-    private var storyMap: [BaseDate: Story] {
-        Dictionary(uniqueKeysWithValues: stories.map { ($0.baseDate, $0) })
-    }
-    
-    private func storyForDate(_ date: Date) -> Story? {
-        storyMap[BaseDate(date: date)]
+    private func notesForDate(_ date: Date) -> [Note]? {
+        let notes = notesByDate[BaseDate(date: date)]
+        return (notes?.isEmpty ?? true) ? nil : notes
     }
     
     // MARK: - Pre-compute all pages once
     
-    private func buildAllPages(storyMap: [BaseDate: Story]) -> [CCv2MonthData] {
+    private func buildAllPages(noteMap: [BaseDate: [Note]]) -> [CCv2MonthData] {
         let today = Date.now
         var pages: [CCv2MonthData] = []
         
@@ -323,9 +319,9 @@ struct ContributionCalendarV2: View {
             for day in range {
                 guard let dayDate = cal.date(bySetting: .day, value: day, of: monthStart) else { continue }
                 
-                let story = storyMap[BaseDate(date: dayDate)]
-                let colors = extractColors(from: story)
-                let noteCount = story?.notes.count ?? 0
+                let dayNotes = noteMap[BaseDate(date: dayDate)]
+                let colors = extractColors(from: dayNotes)
+                let noteCount = dayNotes?.count ?? 0
                 
                 if noteCount > 0 {
                     totalNotes += noteCount
@@ -388,9 +384,9 @@ struct ContributionCalendarV2: View {
         return pages
     }
     
-    private func extractColors(from story: Story?) -> [Color] {
-        guard let story, !story.notes.isEmpty else { return [] }
-        let unique = Array(Set(story.notes.flatMap(\.friends).map(\.color)))
+    private func extractColors(from notes: [Note]?) -> [Color] {
+        guard let notes, !notes.isEmpty else { return [] }
+        let unique = Array(Set(notes.flatMap(\.friends).map(\.color)))
         guard !unique.isEmpty else { return [Color.gray.opacity(0.35)] }
         return unique.sorted(by: <).map { Color(hex: $0) }
     }
@@ -406,17 +402,23 @@ struct ContributionCalendarV2: View {
 // MARK: - Preview
 
 #Preview {
-    let stories: [Story] = (0..<120).map { offset in
-        let date = Calendar.current.date(byAdding: .day, value: -offset, to: .now)!
-        let notes: [Note] = Bool.random() ? [
-            Note(rootStoryID: UUID(), date: date, text: "Test note", friends: Friend.getRandomFriends()),
-            Note(rootStoryID: UUID(), date: date, text: "Test note 2", friends: Friend.getRandomFriends())
-        ] : []
-        return Story(date: date, notes: notes)
-    }
+    let noteMap: [BaseDate: [Note]] = {
+        var map: [BaseDate: [Note]] = [:]
+        for offset in 0..<120 {
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: .now)!
+            let notes: [Note] = Bool.random() ? [
+                Note(date: date, text: "Test note", friends: Friend.getRandomFriends()),
+                Note(date: date, text: "Test note 2", friends: Friend.getRandomFriends())
+            ] : []
+            if !notes.isEmpty {
+                map[BaseDate(date: date)] = notes
+            }
+        }
+        return map
+    }()
     
-    ContributionCalendarV2(stories: stories, monthsBack: 4) { story in
-        print("Selected: \(String(describing: story?.date))")
+    ContributionCalendarV2(notesByDate: noteMap, monthsBack: 4) { notes in
+        print("Selected: \(String(describing: notes?.first?.date))")
     }
     .padding()
     .frame(maxWidth: .infinity)
