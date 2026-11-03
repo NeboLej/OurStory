@@ -115,6 +115,7 @@ struct HomeScreen: View {
                 .padding(.top, 16)
             
             screenBuilder.getComponent(type: .notesList(filter: .byDate(BaseDate(date: date)), isShowDate: false, isShowFriendsList: $isShowFriendsList))
+                .id(date)
         }
         .padding(.bottom, 80)
     }
