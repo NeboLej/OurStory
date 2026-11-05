@@ -16,6 +16,7 @@ struct OurStoryApp: App {
     
     @Environment(\.scenePhase) private var scenePhase
     @State private var isLaunchCompleted = false
+    @State private var themeManager = ThemeManager.shared
     
     init() {
         let repositoryFactory: RepositoryFactoryProtocol = RepositoryFactory()
@@ -27,16 +28,20 @@ struct OurStoryApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if isLaunchCompleted {
-                content()
-                    .transition(.opacity)
-            } else {
-                LaunchScreen {
-                    withAnimation {
-                        isLaunchCompleted = true
+            Group {
+                if isLaunchCompleted {
+                    content()
+                        .transition(.opacity)
+                } else {
+                    LaunchScreen {
+                        withAnimation {
+                            isLaunchCompleted = true
+                        }
                     }
                 }
             }
+            .environment(themeManager)
+            .preferredColorScheme(themeManager.currentTheme.colorScheme)
         }
     }
     
