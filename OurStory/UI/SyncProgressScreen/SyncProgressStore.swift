@@ -23,6 +23,7 @@ final class SyncProgressStore: BaseStore {
     
     private var syncPhase: SyncPhase = .idle
     private var newNoteCount: Int = 0
+    private var newNotes: [Note] = []
     
     // MARK: - Internal
     
@@ -79,7 +80,7 @@ final class SyncProgressStore: BaseStore {
                 guard let self else { return }
                 self.appStore.send(.toNotesList(
                     title: "Истории от \(friendName)",
-                    filter: .byFriend(self.friend.id)
+                    filter: .every(noteID: newNotes.map(\.id))
                 ))
             }
         }

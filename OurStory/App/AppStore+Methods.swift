@@ -127,12 +127,12 @@ extension AppStore {
                 // Re-read user from UserDefaults (may have been restored from iCloud)
                 user = userDefaultsManager.getCurrentUser()
                 loadData()
-//                checkOnboardingNeeded()
             }
             await cloudKitService.uploadAll()
             await MainActor.run {
                 isSyncing = false
             }
+            checkOnboardingNeeded()
         }
     }
     
@@ -146,6 +146,7 @@ extension AppStore {
     
     func createWelcomeMessageIfNeeded() {
         guard !userDefaultsManager.isShowSupportEvent(.welcomeMessage) else { return }
+        
         userDefaultsManager.setShowSupportEvent(.welcomeMessage)
         
         Task {
@@ -159,7 +160,7 @@ extension AppStore {
             let welcomeNote = Note(
                 title: "Ура! Теперь ты с нами! 🎉",
                 date: .now,
-                text: "\(user.name), это твоё пространство для историй. Сохраняй яркие моменты, отмечай друзей и делись воспоминаниями при встрече.\n\nЗнакомо чувство, когда листаешь галерею на телефоне и вдруг натыкаешься на фото, которое возвращает тебя в давно забытый момент? Воспоминания, которые, казалось бы, затерялись где-то в глубинах памяти, снова оживают\n\nЭто приложение создано именно для этого. Чтобы сохранять больше счастливых моментов, собирать их в истории и возвращаться к ним одному или вместе с друзьями.",
+                text: "\(user.name), это твоё пространство для историй. Сохраняй яркие моменты, отмечай друзей и делись воспоминаниями при встрече.\n\nЗнакомо чувство, когда листаешь галерею на телефоне и вдруг натыкаешься на фото, которое возвращает тебя в давно забытый момент? Воспоминания, которые, казалось бы, затерялись где-то в глубинах памяти, снова оживают!\n\nЭто приложение создано именно для этого. Cохраняй больше счастливых моментов, собирай их в истории и возвращайся к ним вместе с друзьями.",
                 friends: [],
                 owner: ourStoryFriend
             )

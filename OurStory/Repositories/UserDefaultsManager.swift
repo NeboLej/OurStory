@@ -39,7 +39,8 @@ class UserDefaultsManager {
     }
     
     func isShowSupportEvent(_ event: SupportEvent) -> Bool {
-        db.bool(forKey: event.rawValue)
+        let ff = db.bool(forKey: event.rawValue)
+        return ff
     }
     
     func setShowSupportEvent(_ event: SupportEvent) {

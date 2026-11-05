@@ -27,7 +27,7 @@ struct OnboardingScreen: View {
             
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("НАШИ\nИСТОРИИ")
+                    Text("OUR\nSTORY")
                         .font(.mySemiBold(size: 25))
                         .tracking(2)
                         .foregroundColor(.textMulticolor)
@@ -41,7 +41,7 @@ struct OnboardingScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("МОЕ ИМЯ")
+                    Text("ИМЯ")
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)

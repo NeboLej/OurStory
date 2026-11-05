@@ -174,6 +174,10 @@ final class AppStore: AppStoreProtocol {
         case .bySearch(let query):
             guard query.count >= 3 else { return [] }
             return searchNotes(query: query)
+        case .every(noteID: let noteIDs):
+            return allNotes
+                .filter { noteIDs.contains($0.id) }
+                .sorted { $0.date > $1.date }
         }
     }
     
@@ -184,20 +188,14 @@ final class AppStore: AppStoreProtocol {
         case .toFriendsList:
             appCoordinator.navigate(to: .friendList)
             if !userDefaultsManager.isShowSupportEvent(.addFriend) {
-                Task {
-                    try await Task.sleep(for: .seconds(1))
-                    appCoordinator.navigate(to: .help(HelpType.addedFriend))
-                    userDefaultsManager.setShowSupportEvent(.addFriend)
-                }
+                appCoordinator.navigate(to: .help(HelpType.addedFriend))
+                userDefaultsManager.setShowSupportEvent(.addFriend)
             }
         case .toFriend(let friend):
             appCoordinator.navigate(to: .friend(friend))
             if !userDefaultsManager.isShowSupportEvent(.exchangeStory) {
-                Task {
-                    try await Task.sleep(for: .seconds(1))
-                    appCoordinator.navigate(to: .help(HelpType.exhangeStory))
-                    userDefaultsManager.setShowSupportEvent(.exchangeStory)
-                }
+                appCoordinator.navigate(to: .help(HelpType.exhangeStory))
+                userDefaultsManager.setShowSupportEvent(.exchangeStory)
             }
         case .toNewFriend:
             appCoordinator.navigate(to: .newFriend)

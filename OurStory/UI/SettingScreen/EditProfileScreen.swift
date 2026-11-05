@@ -39,7 +39,7 @@ struct EditProfileScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("МОЕ ИМЯ")
+                    Text("ИМЯ")
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)
