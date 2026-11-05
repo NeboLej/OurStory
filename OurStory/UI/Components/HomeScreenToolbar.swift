@@ -9,6 +9,8 @@ import SwiftUI
 
 struct HomeScreenToolbar: View {
     
+    @Environment(LocaleManager.self) private var localeManager
+    
     enum MenuItem {
         case friends, calendar, search
         
@@ -22,9 +24,9 @@ struct HomeScreenToolbar: View {
         
         var name: String {
             switch self {
-            case .friends: return "Друзья"
-            case .calendar: return "Календарь"
-            case .search: return "Поиск"
+            case .friends: return L10n.friends
+            case .calendar: return L10n.calendar
+            case .search: return L10n.search
             }
         }
     }
@@ -35,6 +37,7 @@ struct HomeScreenToolbar: View {
     let onNewNote: () -> Void
     
     var body: some View {
+        let _ = localeManager.currentLanguage
         HStack {
             GlassEffectContainer(spacing: 8) {
 

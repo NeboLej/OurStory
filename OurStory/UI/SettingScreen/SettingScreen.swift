@@ -12,6 +12,7 @@ struct SettingScreen: View {
     
     @State private var store: SettingScreenStore
     @State private var isThemeExpanded = false
+    @State private var isLanguageExpanded = false
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @Environment(ThemeManager.self) private var themeManager
@@ -41,7 +42,7 @@ struct SettingScreen: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .navigationTitle("Настройки")
+        .navigationTitle(L10n.settings)
         .navigationBarTitleDisplayMode(.large)
     }
     
@@ -66,7 +67,7 @@ struct SettingScreen: View {
             Button {
                 store.send(.toEditProfile)
             } label: {
-                Text("ИЗМЕНИТЬ")
+                Text(L10n.edit)
                     .font(.mySemiBold(size: 11))
                     .tracking(1.5)
                     .foregroundStyle(Color.textMulticolor.opacity(0.85))
@@ -88,30 +89,111 @@ struct SettingScreen: View {
     private func settingsList() -> some View {
         VStack(spacing: 0) {
             
-            settingsRow(icon: "globe", title: "Язык") {
-                // Заглушка
-            }
+            languageSection()
             
             themeSection()
             
-            settingsRow(icon: "bell", title: "Уведомления") {
+            settingsRow(icon: "bell", title: L10n.notifications) {
                 // Заглушка
             }
             
-            settingsRow(icon: "icloud.and.arrow.down", title: "Синхронизация iCloud") {
+            settingsRow(icon: "icloud.and.arrow.down", title: L10n.icloudSync) {
                 store.send(.syncFromCloud)
             }
             
-            settingsRow(icon: "questionmark.circle", title: "Помощь") {
+            settingsRow(icon: "questionmark.circle", title: L10n.help) {
                 store.send(.toHelpListScreen)
             }
             
-            settingsRow(icon: "note", title: "Логи") {
+            settingsRow(icon: "note", title: L10n.logs) {
                 store.send(.toLogScreen)
             }
             
         }
         .padding(.horizontal, 20)
+    }
+    
+    // MARK: - Секция языка
+    @ViewBuilder
+    private func languageSection() -> some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isLanguageExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "globe")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.textMulticolor.opacity(0.7))
+                        .frame(width: 24)
+                    
+                    Text(L10n.languageLabel)
+                        .font(.myMedium(size: 16))
+                        .foregroundStyle(.textMulticolor)
+                    
+                    Spacer()
+                    
+                    Text(LocaleManager.shared.currentLanguage.title)
+                        .font(.myRegular(size: 14))
+                        .foregroundStyle(.textMulticolor.opacity(0.5))
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.textMulticolor.opacity(0.4))
+                        .rotationEffect(.degrees(isLanguageExpanded ? 90 : 0))
+                }
+                .padding(.vertical, 16)
+                .padding(.horizontal, 4)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            
+            if isLanguageExpanded {
+                languagePicker()
+            }
+        }
+        .clipped()
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .frame(height: 0.5)
+                .foregroundStyle(.textMulticolor.opacity(0.2))
+        }
+    }
+    
+    @ViewBuilder
+    private func languagePicker() -> some View {
+        VStack(spacing: 0) {
+            ForEach(AppLanguage.allCases, id: \.self) { language in
+                let isSelected = LocaleManager.shared.currentLanguage == language
+                
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        LocaleManager.shared.currentLanguage = language
+                    }
+                } label: {
+                    HStack(spacing: 12) {
+                        Text(language.title)
+                            .font(.myMedium(size: 15))
+                            .foregroundStyle(.textMulticolor)
+                        
+                        Spacer()
+                        
+                        if isSelected {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.myPrimary)
+                        }
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 4)
+                    .padding(.leading, 36)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.bottom, 8)
     }
     
     // MARK: - Секция темы
@@ -129,7 +211,7 @@ struct SettingScreen: View {
                         .foregroundStyle(.textMulticolor.opacity(0.7))
                         .frame(width: 24)
                     
-                    Text("Тема")
+                    Text(L10n.theme)
                         .font(.myMedium(size: 16))
                         .foregroundStyle(.textMulticolor)
                     

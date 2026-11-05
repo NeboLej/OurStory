@@ -9,12 +9,14 @@ import SwiftUI
 
 struct HorizontalCalendar: View {
     
+    @Environment(LocaleManager.self) private var localeManager
     @State private var store: HorizontalCalendarStore
     
     @State private var scrollPosition: ScrollPosition = .init()
     @State private var isLocked: Bool = false
     @State private var containerSize: CGSize = .zero
     @State private var monthTitle: String = ""
+    @State private var scrollViewID: UUID = UUID()
     
     private let calendar = Calendar.current
     
@@ -82,9 +84,16 @@ struct HorizontalCalendar: View {
                     }
                 }
             }
+            .id(scrollViewID)
             .onAppear {
                 scrollPosition.scrollTo(id: store.currentWeekID)
                 monthTitle = store.monthTitle(for: store.weeks[1])
+            }
+            .onChange(of: localeManager.currentLanguage) {
+                store.reloadWeeks()
+                monthTitle = store.monthTitle(for: store.weeks[1])
+                scrollPosition = .init()
+                scrollViewID = UUID()
             }
         }
     }

@@ -25,7 +25,7 @@ struct EditProfileScreen: View {
             
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("РЕДАКТИРОВАТЬ\nПРОФИЛЬ")
+                    Text(L10n.editProfileTitle)
                         .font(.mySemiBold(size: 25))
                         .tracking(2)
                         .foregroundColor(.textMulticolor)
@@ -39,12 +39,12 @@ struct EditProfileScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("ИМЯ")
+                    Text(L10n.nameLabel)
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)
                     
-                    TextField("Введите ваше имя...", text: $name)
+                    TextField(L10n.enterNamePlaceholder, text: $name)
                         .font(.myItalic(size: 20))
                         .foregroundColor(.textMulticolor)
                         .tint(.textMulticolor)
@@ -58,7 +58,7 @@ struct EditProfileScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("ЦВЕТОВАЯ МЕТКА")
+                    Text(L10n.colorLabel)
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)
@@ -77,7 +77,7 @@ struct EditProfileScreen: View {
                 Button {
                     dismiss()
                 } label: {
-                    Text("ОТМЕНА")
+                    Text(L10n.cancel)
                         .font(.mySemiBold(size: 11))
                         .tracking(1.5)
                         .foregroundStyle(Color.textMulticolor.opacity(0.6))
@@ -97,7 +97,7 @@ struct EditProfileScreen: View {
                     store.send(.saveUser(name: name, color: selectedColor.toHex()))
                     dismiss()
                 } label: {
-                    Text("СОХРАНИТЬ")
+                    Text(L10n.save)
                         .font(.mySemiBold(size: 11))
                         .tracking(1.5)
                         .foregroundStyle(Color.textMulticolor.opacity(0.85))

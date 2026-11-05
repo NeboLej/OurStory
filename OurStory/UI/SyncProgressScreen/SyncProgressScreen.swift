@@ -236,28 +236,28 @@ struct SyncProgressScreen: View {
         VStack(spacing: 6) {
             switch syncPhase {
             case .searching:
-                Text("ищу \(name)...")
+                Text(L10n.syncSearchingName(name))
                     .font(.myItalic(size: 16))
                     .foregroundStyle(.textMulticolor.opacity(0.5))
                     .transition(.opacity)
             case .approaching:
-                Text("рассказываю истории")
+                Text(L10n.syncTelling)
                     .font(.myItalic(size: 16))
                     .foregroundStyle(.textMulticolor.opacity(0.7))
                     .transition(.opacity)
             case .merging:
-                Text("истории встретились")
+                Text(L10n.syncStoriesMet)
                     .font(.myMedium(size: 17))
                     .foregroundStyle(.textMulticolor.opacity(0.85))
                     .transition(.opacity)
             case .completed:
-                Text("здорово, что поделились")
+                Text(L10n.syncGreatSharing)
                     .font(.myMedium(size: 17))
                     .foregroundStyle(.textMulticolor)
                     .transition(.opacity)
             case .failed(let message):
                 VStack(spacing: 4) {
-                    Text("не получилось")
+                    Text(L10n.syncFailed)
                         .font(.myMedium(size: 16))
                         .foregroundStyle(.textMulticolor.opacity(0.7))
                     Text(message)
@@ -267,7 +267,7 @@ struct SyncProgressScreen: View {
                 }
                 .transition(.opacity)
             case .waitingForConfirmation:
-                Text("ожидаю подтверждения")
+                Text(L10n.syncWaitingConfirmation)
                     .font(.myItalic(size: 15))
                     .foregroundStyle(.textMulticolor.opacity(0.6))
                     .transition(.opacity)
@@ -285,7 +285,7 @@ struct SyncProgressScreen: View {
         switch syncPhase {
         case .waitingForConfirmation(let user):
             VStack(spacing: 16) {
-                Text("обменяться историями с \(user.name)?")
+                Text(L10n.syncExchangeWith(user.name))
                     .font(.myRegular(size: 14))
                     .foregroundStyle(.textMulticolor.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -308,7 +308,7 @@ struct SyncProgressScreen: View {
                     Button {
                         store.send(.confirmSync(false))
                     } label: {
-                        Text("ОТМЕНИТЬ")
+                        Text(L10n.syncCancel)
                             .font(.mySemiBold(size: 12))
                             .tracking(1.5)
                             .foregroundStyle(.textMulticolor.opacity(0.5))
@@ -324,7 +324,7 @@ struct SyncProgressScreen: View {
                     Button {
                         store.send(.confirmSync(true))
                     } label: {
-                        Text("ОБМЕНЯТЬСЯ")
+                        Text(L10n.syncExchange)
                             .font(.mySemiBold(size: 12))
                             .tracking(1.5)
                             .foregroundStyle(.textMulticolor.opacity(0.85))
@@ -343,11 +343,11 @@ struct SyncProgressScreen: View {
         case .completed(let newCount):
             VStack(spacing: 16) {
                 if newCount > 0 {
-                    Text("получено историй: \(newCount)")
+                    Text(L10n.syncReceivedStories(newCount))
                         .font(.myRegular(size: 13))
                         .foregroundStyle(.textMulticolor.opacity(0.6))
 
-                    VintageSmallButton(title: "ПОСМОТРЕТЬ ИСТОРИИ") {
+                    VintageSmallButton(title: L10n.syncViewStories) {
                         store.send(.toNewNotes)
                     }
                 }
@@ -370,7 +370,7 @@ struct SyncProgressScreen: View {
         Button {
             store.send(.exitSync)
         } label: {
-            Text("ЗАКРЫТЬ")
+            Text(L10n.close)
                 .font(.mySemiBold(size: 14))
                 .tracking(2)
                 .foregroundStyle(.titleDark)

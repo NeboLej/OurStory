@@ -52,15 +52,21 @@ final class HorizontalCalendarStore: BaseStore {
     func monthTitle(for week: HCWeek) -> String {
         guard let midDate = week.days.first?.date else { return "" }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.locale = L10n.language.locale
         formatter.dateFormat = "LLLL yyyy"
         return formatter.string(from: midDate).capitalized
+    }
+    
+    func reloadWeeks() {
+        let loaded = (-1...1).map { loadWeek(from: Date.now, value: $0) }
+        weeks = loaded
+        currentWeekID = loaded[1].id
     }
     
     private func loadWeek(from date: Date, value: Int) -> HCWeek {
         var days: [HCDay] = []
         var calendar = Calendar.current
-        calendar.locale = Locale(identifier: "ru_RU")
+        calendar.locale = L10n.language.locale
         let weekdaySymbols = calendar.shortWeekdaySymbols
         
         let modifiedDate = calendar.date(byAdding: .weekOfMonth, value: value, to: date) ?? .now

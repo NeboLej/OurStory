@@ -33,14 +33,14 @@ enum SyncProgressState: Hashable {
     
     var descriptionText: String {
         switch self {
-        case .searching: "Ищу других пользователей рядом..."
-        case .connecting: "Соединяю пользователей..."
-        case .exchangingUsers: "Обмениваю информацию..."
-        case .friendNearby: "Друг рядом и готов слушать"
-        case .waitingForUserConfirmation: "Получение разрешения на обмен историями..."
-        case .exchangingNotes: "Рассказываю истории..."
-        case .completed: "Обмен историями завершен!"
-        case .failed(let error): "Ошибка обмена: \(error.localizedDescription)"
+        case .searching: L10n.syncSearching
+        case .connecting: L10n.syncConnecting
+        case .exchangingUsers: L10n.syncExchangingInfo
+        case .friendNearby: L10n.syncFriendNearby
+        case .waitingForUserConfirmation: L10n.syncWaitingApproval
+        case .exchangingNotes: L10n.syncTellingStories
+        case .completed: L10n.syncCompleted
+        case .failed(let error): L10n.syncError(error.localizedDescription)
         }
     }
     
@@ -125,10 +125,10 @@ enum SyncError: LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .notConnected: "Нет подключения к пользователю."
-        case .userRejected: "Пользователь отклонил обмен."
-        case .cancelled: "Обмен отменен."
-        case .disconnected: "Соединение с пользователем потеряно."
+        case .notConnected: L10n.syncErrorNotConnected
+        case .userRejected: L10n.syncErrorUserRejected
+        case .cancelled: L10n.syncErrorCancelled
+        case .disconnected: L10n.syncErrorDisconnected
         }
     }
 }

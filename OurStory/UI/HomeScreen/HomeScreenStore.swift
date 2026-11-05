@@ -21,6 +21,10 @@ final class HomeScreenStore: BaseStore {
     private var emptyTextByDateDict: [BaseDate: String] = [:]
     private let calendar = Calendar.current
     
+    func clearEmptyTextCache() {
+        emptyTextByDateDict.removeAll()
+    }
+    
     private func emptyTextByDate(for date: Date) -> String {
         let baseDate = BaseDate(date: date)
         if let text = emptyTextByDateDict[baseDate] {

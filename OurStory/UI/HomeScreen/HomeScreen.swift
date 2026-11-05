@@ -10,6 +10,7 @@ import Lottie
 
 struct HomeScreen: View {
     
+    @Environment(LocaleManager.self) private var localeManager
     @State private var store: HomeScreenStore
     @State private var screenBuilder: ScreenBuilder
     @State private var isShowFriendsList: Bool = false
@@ -89,6 +90,9 @@ struct HomeScreen: View {
         }
         .background(.backgroundFill)
         .ignoresSafeArea()
+        .onChange(of: localeManager.currentLanguage) {
+            store.clearEmptyTextCache()
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !isShowFriendsList {
                 HomeScreenToolbar {

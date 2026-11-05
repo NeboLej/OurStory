@@ -19,7 +19,7 @@ struct LogScreen: View {
                         .padding(.horizontal)
                 }
             }
-        }.navigationTitle("Логи")
+        }.navigationTitle(L10n.logs)
             .frame(maxWidth: .infinity)
             .background(.backgroundFill)
     }

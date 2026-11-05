@@ -23,11 +23,11 @@ final class CalendarScreenStore: BaseStore {
     private var selectedNotes: [Note]?
     private var selectedDate: Date?
     
-    let calendar: Calendar = {
+    var calendar: Calendar {
         var c = Calendar.current
-        c.locale = Locale(identifier: "ru_RU")
+        c.locale = L10n.language.locale
         return c
-    }()
+    }
     
     override init(appStore: AppStoreProtocol) {
         super.init(appStore: appStore)

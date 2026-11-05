@@ -38,7 +38,7 @@ struct HelpListScreen: View {
         }
         .scrollContentBackground(.hidden)
         .background(Color.backgroundFill)
-        .navigationTitle("Помощь")
+        .navigationTitle(L10n.help)
         .navigationDestination(for: Int.self) { id in
             if let help = HelpType.helps.first(where: { $0.id == id }) {
                 HelpScreen(help: help)

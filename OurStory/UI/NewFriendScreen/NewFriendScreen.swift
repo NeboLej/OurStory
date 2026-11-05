@@ -35,7 +35,7 @@ struct NewFriendScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("НОВЫЙ ДРУГ")
+                    Text(L10n.newFriend)
                         .font(.mySemiBold(size: 22))
                         .tracking(2)
                         .foregroundColor(.textMulticolor)
@@ -61,7 +61,7 @@ struct NewFriendScreen: View {
                         store.send(.saveNewFriend(name: name, color: selectedColor.toHex()))
                         dismiss()
                     } label: {
-                        Text("СОХРАНИТЬ")
+                        Text(L10n.save)
                             .font(.mySemiBold(size: 14))
                             .tracking(2)
                             .foregroundStyle(.black)
@@ -95,11 +95,11 @@ struct NewFriendScreen: View {
                         .font(.system(size: 14, weight: .medium))
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("СОЗДАТЬ ПРОФИЛЬ ДРУГА")
+                        Text(L10n.createFriendProfile)
                             .font(.mySemiBold(size: 13))
                             .tracking(1.5)
                         
-                        Text("Друг сейчас не рядом")
+                        Text(L10n.friendNotNearby)
                             .font(.myRegular(size: 12))
                             .opacity(0.6)
                     }
@@ -130,11 +130,11 @@ struct NewFriendScreen: View {
                         .font(.system(size: 14, weight: .medium))
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("ПОЛУЧИТЬ ПРОФИЛЬ ДРУГА")
+                        Text(L10n.getFriendProfile)
                             .font(.mySemiBold(size: 13))
                             .tracking(1.5)
                         
-                        Text("Друг рядом — начать синхронизацию")
+                        Text(L10n.friendNearbyStartSync)
                             .font(.myRegular(size: 12))
                             .opacity(0.6)
                     }
@@ -164,12 +164,12 @@ struct NewFriendScreen: View {
     private var manualFormView: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("ИМЯ ПОЛЬЗОВАТЕЛЯ")
+                Text(L10n.usernameLabel)
                     .font(.myMedium(size: 12))
                     .tracking(3)
                     .foregroundColor(.textMulticolor)
                 
-                TextField("Введите имя...", text: $name)
+                TextField(L10n.enterNameShortPlaceholder, text: $name)
                     .font(.myItalic(size: 20))
                     .foregroundColor(.textMulticolor)
                     .tint(.textMulticolor)
@@ -183,7 +183,7 @@ struct NewFriendScreen: View {
             .padding(.bottom, 40)
             
             VStack(alignment: .leading, spacing: 16) {
-                Text("ЦВЕТОВАЯ МЕТКА")
+                Text(L10n.colorLabel)
                     .font(.myMedium(size: 12))
                     .tracking(3)
                     .foregroundColor(.textMulticolor)

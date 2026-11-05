@@ -64,7 +64,7 @@ struct SearchScreen: View {
         .ignoresSafeArea(.keyboard)
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.large)
-        .navigationTitle("Поиск")
+        .navigationTitle(L10n.search)
         .toolbarBackground(.backgroundFill, for: .navigationBar)
         .onAppear {
             withAnimation {
@@ -97,7 +97,7 @@ struct SearchScreen: View {
                     .foregroundStyle(.textMulticolor.opacity(0.5))
                     .font(.system(size: 16))
                 
-                TextField("Поиск историй", text: $searchText)
+                TextField(L10n.searchStories, text: $searchText)
                     .font(.myRegular(size: 16))
                     .foregroundStyle(.textMulticolor)
                     .autocorrectionDisabled()

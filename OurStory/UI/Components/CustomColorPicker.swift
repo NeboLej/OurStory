@@ -35,7 +35,7 @@ struct CustomColorPicker: View {
                 }
             }
             
-            ColorPicker("Другой цвет", selection: $selectedColor, supportsOpacity: false)
+            ColorPicker(L10n.otherColor, selection: $selectedColor, supportsOpacity: false)
                 .labelsHidden()
                 .overlay {
                     Circle()

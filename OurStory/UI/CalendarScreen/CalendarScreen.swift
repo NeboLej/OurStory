@@ -134,7 +134,7 @@ struct CalendarScreen: View {
                 Spacer()
                 
                 if page.totalNotes > 0 {
-                    Text("\(page.activeDays) дня · \(page.totalNotes) истории")
+                    Text(L10n.daysAndStories(page.activeDays, page.totalNotes))
                         .font(.myRegular(size: 11))
                         .foregroundStyle(.textMulticolor.opacity(0.4))
                 }
@@ -245,7 +245,7 @@ struct CalendarScreen: View {
                         .font(.mySemiBold(size: 15))
                         .foregroundStyle(.textMulticolor)
                     
-                    Text("\(notes.count) \(notes.count == 1 ? "запись" : "записей")")
+                    Text(L10n.entriesCount(notes.count))
                         .font(.myRegular(size: 12))
                         .foregroundStyle(.textMulticolor.opacity(0.4))
                 }

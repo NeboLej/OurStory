@@ -56,7 +56,7 @@ struct FriendListScreen: View {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .bold))
                         
-                        Text("ДОБАВИТЬ ДРУГА")
+                        Text(L10n.addFriend)
                             .font(.mySemiBold(size: 14))
                             .tracking(2)
                     }
@@ -78,7 +78,7 @@ struct FriendListScreen: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .navigationTitle("Друзья")
+        .navigationTitle(L10n.friends)
         .navigationBarTitleDisplayMode(.large)
     }
     
@@ -101,17 +101,17 @@ struct FriendListScreen: View {
             
             VStack(spacing: 24) {
                 
-                Text("Добавь друга")
+                Text(L10n.addFriendShort)
                     .font(.myMedium(size: 22))
                     .foregroundStyle(.textMulticolor.opacity(0.8))
                 
-                Text("Упоминай его в своих историях, даже если он ещё не установил приложение")
+                Text(L10n.addFriendHint1)
                     .font(.myRegular(size: 16))
                     .foregroundStyle(.textMulticolor.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                 
-                Text("Вы сможете обменяться воспоминаниями позже, когда будете рядом")
+                Text(L10n.addFriendHint2)
                     .font(.myRegular(size: 16))
                     .foregroundStyle(.textMulticolor.opacity(0.7))
                     .multilineTextAlignment(.center)

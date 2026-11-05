@@ -93,11 +93,11 @@ final class FriendScreenStore: BaseStore {
                 retrySearching()
             case .toAllNotes:
                 if totalNotes.count > 0 {
-                    appStore.send(.toNotesList(title: "Наши с \(friend.name) истории", filter: .byFriend(friend.id)))
+                    appStore.send(.toNotesList(title: L10n.ourStoriesWith(friend.name), filter: .byFriend(friend.id)))
                 }
             case .toUnsentNotes:
                 if unsentNotes.count > 0 {
-                    appStore.send(.toNotesList(title: "Мои нерасказанные истории", filter: .every(noteID: unsentNotes.map(\.id))))
+                    appStore.send(.toNotesList(title: L10n.myUntoldStories, filter: .every(noteID: unsentNotes.map(\.id))))
                 }
             case .dismissUserSuggestion:
                 showUserSuggestion = false
