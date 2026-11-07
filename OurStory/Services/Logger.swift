@@ -14,6 +14,7 @@ final class Logger {
         case cloudKit
         case unowned
         case userDefault
+        case analytics
         
         var text: String {
             switch self {
@@ -21,6 +22,7 @@ final class Logger {
             case .cloudKit: return "☁️"
             case .unowned: return "🧭"
             case .userDefault: return "🥎"
+            case .analytics: return "📊"
             }
         }
     }

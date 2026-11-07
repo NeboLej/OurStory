@@ -27,7 +27,12 @@ class RepositoryFactory: RepositoryFactoryProtocol {
         self.userRepository = UserRepository(dbPool: dbPool)
         self.friendRepository = FriendRepository(dbPool: dbPool)
         self.noteRepository = NoteRepository(dbPool: dbPool)
+        
+        #if DEBUG
+        self.analyticService = MockAnalyticsService()
+        #else
         self.analyticService = AppMetricaAnalyticsService(apiKey: Secrets.metricaKey)
+        #endif
     }
 }
 

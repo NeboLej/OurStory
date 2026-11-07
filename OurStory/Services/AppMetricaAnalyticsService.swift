@@ -56,7 +56,14 @@ final class AppMetricaAnalyticsService: AnalyticsServiceProtocol {
     }
 
     func log(event: AnalyticsEvent) {
+        Logger.log(event.name, location: .analytics, event: .success)
         AppMetrica.reportEvent(name: event.name, parameters: event.parameters, onFailure: nil)
+    }
+}
+
+final class MockAnalyticsService: AnalyticsServiceProtocol {
+    func log(event: AnalyticsEvent) {
+        Logger.log("[MOCK] \(event.name)", location: .analytics, event: .success)
     }
 }
 
