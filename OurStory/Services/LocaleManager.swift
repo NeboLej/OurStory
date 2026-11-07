@@ -8,18 +8,13 @@ import SwiftUI
 enum AppLanguage: String, CaseIterable {
     case russian = "ru"
     case english = "en"
+    case espaniol = "es"
     
     var title: String {
         switch self {
         case .russian: return "Русский"
         case .english: return "English"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .russian: return "r.circle"
-        case .english: return "e.circle"
+        case .espaniol: return "Español"
         }
     }
     

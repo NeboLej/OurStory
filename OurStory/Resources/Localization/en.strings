@@ -1,0 +1,152 @@
+// Common
+"save" = "SAVE";
+"cancel" = "CANCEL";
+"edit" = "EDIT";
+"delete" = "Delete";
+"close" = "CLOSE";
+"continueAction" = "CONTINUE";
+
+// Names / Labels
+"nameLabel" = "NAME";
+"usernameLabel" = "USERNAME";
+"enterNamePlaceholder" = "Enter your name...";
+"enterNameShortPlaceholder" = "Enter name...";
+"colorLabel" = "COLOR TAG";
+"otherColor" = "Other color";
+
+// Settings Screen
+"settings" = "Settings";
+"languageLabel" = "Language";
+"notifications" = "Notifications";
+"icloudSync" = "iCloud Sync";
+"help" = "Help";
+"logs" = "Logs";
+"theme" = "Theme";
+"editProfileTitle" = "EDIT\nPROFILE";
+
+// Theme
+"themeDark" = "Dark";
+"themeLight" = "Light";
+"themeSystem" = "System";
+
+// Toolbar
+"friends" = "Friends";
+"calendar" = "Calendar";
+"search" = "Search";
+
+// Notes
+"newStory" = "NEW STORY";
+"editStory" = "EDIT STORY";
+"storyTitlePlaceholder" = "Story title";
+"textLabel" = "TEXT";
+"charCount" = "%lld chars";
+"storyPlaceholder" = "Start writing your story...";
+"draftRestoredClear" = "Draft restored. Clear?";
+"tagFriend" = "Tag %@?";
+"stories" = "Stories";
+"editAction" = "Edit";
+"tagFriendAction" = "Tag friend";
+"deleteAction" = "Delete";
+
+// Search
+"searchStories" = "Search stories";
+
+// Friends
+"friendsTitle" = "FRIENDS";
+"friendsCount" = "%lld of %lld";
+"noFriendsYet" = "You haven't added any friends yet";
+"newFriend" = "NEW FRIEND";
+"addFriend" = "ADD FRIEND";
+"addFriendShort" = "Add a friend";
+"addFriendHint1" = "Tag them in your stories, even if they haven't installed the app yet";
+"addFriendHint2" = "You can exchange memories later when you're nearby";
+
+// Friend Screen
+"deleteFriendAlertTitle" = "Do you want to delete this friend and all received stories?";
+"deleteFriendAndStories" = "Delete friend and all stories";
+"deleteFriendOnly" = "Delete friend";
+"searchingFriend" = "searching for %@...";
+"friendNearby" = "%@ nearby";
+"wantsToExchange" = "and wants to exchange stories";
+"notFound" = "not found";
+"findFriend" = "FIND %@";
+"sharedStories" = "Shared stories";
+"untoldStories" = "Unsent stories";
+"lastSync" = "Last sync";
+"tellStories" = "SHARE STORIES";
+"friendIsWaiting" = "%@ is waiting";
+"startExchange" = "start story exchange";
+"deleteFriend" = "DELETE FRIEND";
+"suggestion" = "SUGGESTION";
+"friendProfileDiffHint" = "Your friend set a different name and color for their profile";
+"apply" = "APPLY";
+"binding" = "LINKED";
+"friendLinkedTo" = "%@ is linked to %@'s account";
+"unlink" = "UNLINK";
+"ourStoriesWith" = "Our stories with %@";
+"myUntoldStories" = "My unsent stories";
+
+// New Friend Screen
+"createFriendProfile" = "CREATE FRIEND PROFILE";
+"friendNotNearby" = "Friend is not nearby";
+"getFriendProfile" = "GET FRIEND PROFILE";
+"friendNearbyStartSync" = "Friend is nearby — start sync";
+
+// Calendar
+"daysAndStories" = "%lld days · %lld stories";
+"entriesCount.one" = "%lld entry";
+"entriesCount.other" = "%lld entries";
+
+// Sync
+"syncSearching" = "Searching for nearby users...";
+"syncConnecting" = "Connecting users...";
+"syncExchangingInfo" = "Exchanging information...";
+"syncFriendNearby" = "Friend is nearby and ready";
+"syncWaitingApproval" = "Waiting for story exchange approval...";
+"syncTellingStories" = "Sharing stories...";
+"syncCompleted" = "Story exchange completed!";
+"syncError" = "Exchange error: %@";
+"syncErrorNotConnected" = "Not connected to user.";
+"syncErrorUserRejected" = "User rejected the exchange.";
+"syncErrorCancelled" = "Exchange cancelled.";
+"syncErrorDisconnected" = "Connection to user lost.";
+
+// Sync Progress Screen
+"syncSearchingName" = "searching for %@...";
+"syncTelling" = "sharing stories";
+"syncStoriesMet" = "stories have met";
+"syncGreatSharing" = "great that you shared";
+"syncFailed" = "something went wrong";
+"syncWaitingConfirmation" = "waiting for confirmation";
+"syncExchangeWith" = "exchange stories with %@?";
+"syncCancel" = "CANCEL";
+"syncExchange" = "EXCHANGE";
+"syncReceivedStories" = "received stories: %lld";
+"syncViewStories" = "VIEW STORIES";
+"storiesFrom" = "Stories from %@";
+
+// Welcome
+"welcomeTitle" = "Welcome aboard! 🎉";
+"welcomeText" = "%@, this is your space for stories. Save bright moments, tag friends, and share memories when you meet.\n\nYou know that feeling when you're scrolling through your phone gallery and suddenly stumble upon a photo that takes you back to a long-forgotten moment? Memories that seemed lost somewhere deep in your mind suddenly come alive!\n\nThis app was made exactly for that. Save more happy moments, collect them as stories, and revisit them together with friends.";
+
+// TextFactory
+"currentDayTexts" = "How was your day?|So, how did it go?|This day has its own story|What do you want to remember today?|Let's save this day|A few words is already a story|I can already see you remembering this story in a couple of years|Write it down while it's fresh";
+"oldDayTexts" = "Remember this day?|Seems like there's something to recall|What stayed in your memory?|This day still has a chance to become a story|Oh, what happened on this day?|Time to remember something good|It's never too late to write down something important|Something interesting must have happened|Try to go back to that day";
+"futureDayTexts" = "Any plans for this day?|What will this day be like?|Planning something nice?|The story is yet to come ✨|Let the future have a little hint.";
+
+// Help
+"helpExchangeTitle" = "Story Exchange";
+"helpAddFriendTitle" = "Adding a Friend";
+"helpExchangeBlock1" = "**Meet your friend**\nTo share stories you need to *physically* be near your friend.\n\nDon't worry if you couldn't share a story right after writing it. Stories love being remembered a bit later";
+"helpExchangeNote1" = "You don't need to bring phones close together, being within 10-15 meters is enough";
+"helpExchangeWarning1" = "If you bring phones too close — *Apple AirDrop* will activate and you'll exchange contacts, that's not what we need";
+"helpExchangeBlock2" = "Press the data transfer buttons **simultaneously**";
+"helpExchangeNote2" = "You don't need to press at the exact same second, a gap of 8-10 seconds is fine";
+"helpExchangeBlock3" = "**Wait for the story exchange**";
+"helpExchangeNote3" = "If the connection was lost, go back to the friend screen and try exchanging stories again";
+"helpAddBlock1" = "To tag a friend in stories you need to add them to your friends list";
+"helpAddNote1" = "Don't worry, to start writing shared stories your friend doesn't need to be nearby. They don't even need to download the app";
+"helpAddBlock2" = "**If your friend is not nearby** \n\n 1.  Press \"Add Friend\" and select \"Create Friend Profile\"\n 2.  Enter name and choose a color\n 3.  **Great!** From now on you can tag this friend in your stories\n\n 4.  When you meet, simultaneously press \"Share Stories\" in the created profile\n 5.  Wait for the data exchange to complete";
+"helpAddNote2" = "After this, the friend profile you created will be linked to the profile created by your friend";
+"helpAddBlock3" = "**If your friend is nearby** \n\n 1.  Press \"Add Friend\" and select \"Get Friend Profile\"\n 2.  Your friend should also press \"Get Friend Profile\" or \"Share Stories\" if they already created your profile\n 3.  Wait for synchronization\n 4.  **Great!** From now on you can tag this friend in your stories\n";
+"helpAddWarning" = "If the friend wasn't found during search, you can go back and press \"Get Friend Profile\" again";

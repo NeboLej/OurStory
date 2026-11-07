@@ -1,0 +1,152 @@
+// Common
+"save" = "GUARDAR";
+"cancel" = "CANCELAR";
+"edit" = "EDITAR";
+"delete" = "Eliminar";
+"close" = "CERRAR";
+"continueAction" = "CONTINUAR";
+
+// Names / Labels
+"nameLabel" = "NOMBRE";
+"usernameLabel" = "NOMBRE DE USUARIO";
+"enterNamePlaceholder" = "Escribe tu nombre...";
+"enterNameShortPlaceholder" = "Escribe un nombre...";
+"colorLabel" = "ETIQUETA DE COLOR";
+"otherColor" = "Otro color";
+
+// Settings Screen
+"settings" = "Ajustes";
+"languageLabel" = "Idioma";
+"notifications" = "Notificaciones";
+"icloudSync" = "Sincronización con iCloud";
+"help" = "Ayuda";
+"logs" = "Registros";
+"theme" = "Tema";
+"editProfileTitle" = "EDITAR\nPERFIL";
+
+// Theme
+"themeDark" = "Oscuro";
+"themeLight" = "Claro";
+"themeSystem" = "Sistema";
+
+// Toolbar
+"friends" = "Amigos";
+"calendar" = "Calendario";
+"search" = "Buscar";
+
+// Notes
+"newStory" = "NUEVA HISTORIA";
+"editStory" = "EDITAR HISTORIA";
+"storyTitlePlaceholder" = "Título de la historia";
+"textLabel" = "TEXTO";
+"charCount" = "%lld caracteres";
+"storyPlaceholder" = "Empieza a escribir tu historia...";
+"draftRestoredClear" = "Borrador restaurado. ¿Borrar?";
+"tagFriend" = "¿Etiquetar a %@?";
+"stories" = "Historias";
+"editAction" = "Editar";
+"tagFriendAction" = "Etiquetar amigo";
+"deleteAction" = "Eliminar";
+
+// Search
+"searchStories" = "Buscar historias";
+
+// Friends
+"friendsTitle" = "AMIGOS";
+"friendsCount" = "%lld de %lld";
+"noFriendsYet" = "Todavía no has añadido ningún amigo";
+"newFriend" = "NUEVO AMIGO";
+"addFriend" = "AÑADIR AMIGO";
+"addFriendShort" = "Añade un amigo";
+"addFriendHint1" = "Etiquétalos en tus historias, aunque todavía no hayan instalado la app";
+"addFriendHint2" = "Podréis intercambiar recuerdos más tarde, cuando estéis cerca";
+
+// Friend Screen
+"deleteFriendAlertTitle" = "¿Quieres eliminar a este amigo y todas las historias recibidas?";
+"deleteFriendAndStories" = "Eliminar amigo y todas las historias";
+"deleteFriendOnly" = "Eliminar amigo";
+"searchingFriend" = "buscando a %@...";
+"friendNearby" = "%@ está cerca";
+"wantsToExchange" = "y quiere intercambiar historias";
+"notFound" = "no encontrado";
+"findFriend" = "BUSCAR A %@";
+"sharedStories" = "Historias compartidas";
+"untoldStories" = "Historias sin enviar";
+"lastSync" = "Última sincronización";
+"tellStories" = "COMPARTIR HISTORIAS";
+"friendIsWaiting" = "%@ está esperando";
+"startExchange" = "iniciar intercambio de historias";
+"deleteFriend" = "ELIMINAR AMIGO";
+"suggestion" = "SUGERENCIA";
+"friendProfileDiffHint" = "Tu amigo ha puesto otro nombre y otro color en su perfil";
+"apply" = "APLICAR";
+"binding" = "VINCULADO";
+"friendLinkedTo" = "%@ está vinculado a la cuenta de %@";
+"unlink" = "DESVINCULAR";
+"ourStoriesWith" = "Nuestras historias con %@";
+"myUntoldStories" = "Mis historias sin enviar";
+
+// New Friend Screen
+"createFriendProfile" = "CREAR PERFIL DE AMIGO";
+"friendNotNearby" = "Tu amigo no está cerca";
+"getFriendProfile" = "OBTENER PERFIL DE AMIGO";
+"friendNearbyStartSync" = "Tu amigo está cerca — inicia la sincronización";
+
+// Calendar
+"daysAndStories" = "%lld días · %lld historias";
+"entriesCount.one" = "%lld entrada";
+"entriesCount.other" = "%lld entradas";
+
+// Sync
+"syncSearching" = "Buscando usuarios cercanos...";
+"syncConnecting" = "Conectando usuarios...";
+"syncExchangingInfo" = "Intercambiando información...";
+"syncFriendNearby" = "Tu amigo está cerca y listo";
+"syncWaitingApproval" = "Esperando la aprobación del intercambio de historias...";
+"syncTellingStories" = "Compartiendo historias...";
+"syncCompleted" = "¡Intercambio de historias completado!";
+"syncError" = "Error de intercambio: %@";
+"syncErrorNotConnected" = "No conectado con el usuario.";
+"syncErrorUserRejected" = "El usuario rechazó el intercambio.";
+"syncErrorCancelled" = "Intercambio cancelado.";
+"syncErrorDisconnected" = "Se perdió la conexión con el usuario.";
+
+// Sync Progress Screen
+"syncSearchingName" = "buscando a %@...";
+"syncTelling" = "compartiendo historias";
+"syncStoriesMet" = "las historias se han encontrado";
+"syncGreatSharing" = "qué bien que las hayáis compartido";
+"syncFailed" = "algo salió mal";
+"syncWaitingConfirmation" = "esperando confirmación";
+"syncExchangeWith" = "¿intercambiar historias con %@?";
+"syncCancel" = "CANCELAR";
+"syncExchange" = "INTERCAMBIAR";
+"syncReceivedStories" = "historias recibidas: %lld";
+"syncViewStories" = "VER HISTORIAS";
+"storiesFrom" = "Historias de %@";
+
+// Welcome
+"welcomeTitle" = "¡Bienvenido a bordo! 🎉";
+"welcomeText" = "%@, este es tu espacio para las historias. Guarda los momentos especiales, etiqueta a tus amigos y comparte recuerdos cuando os veáis.\n\n¿Conoces esa sensación cuando estás repasando la galería del móvil y de repente te topas con una foto que te devuelve a un momento olvidado hace mucho? ¡Recuerdos que parecían perdidos en lo más profundo de tu mente de repente cobran vida!\n\nEsta app se creó justo para eso. Guarda más momentos felices, reúnelos como historias y revívelos junto a tus amigos.";
+
+// TextFactory
+"currentDayTexts" = "¿Qué tal tu día?|Bueno, ¿cómo ha ido?|Este día tiene su propia historia|¿Qué quieres recordar hoy?|Guardemos este día|Unas pocas palabras ya son una historia|Ya te veo recordando esta historia dentro de un par de años|Escríbelo mientras está fresco";
+"oldDayTexts" = "¿Recuerdas este día?|Parece que hay algo que recordar|¿Qué se te quedó en la memoria?|Este día todavía puede convertirse en una historia|Vaya, ¿qué pasó este día?|Es hora de recordar algo bonito|Nunca es tarde para apuntar algo importante|Seguro que pasó algo interesante|Intenta volver a ese día";
+"futureDayTexts" = "¿Algún plan para este día?|¿Cómo será este día?|¿Planeas algo bonito?|La historia está por llegar ✨|Dale al futuro una pequeña pista.";
+
+// Help
+"helpExchangeTitle" = "Intercambio de historias";
+"helpAddFriendTitle" = "Añadir un amigo";
+"helpExchangeBlock1" = "**Queda con tu amigo**\nPara compartir historias tienes que estar *físicamente* cerca de tu amigo.\n\nNo te preocupes si no pudiste compartir una historia justo después de escribirla. A las historias les encanta que las recuerden un poco más tarde";
+"helpExchangeNote1" = "No hace falta juntar los teléfonos, basta con estar a 10-15 metros";
+"helpExchangeWarning1" = "Si acercas demasiado los teléfonos, se activará *Apple AirDrop* y os intercambiaréis los contactos, y eso no es lo que queremos";
+"helpExchangeBlock2" = "Pulsad los botones de transferencia de datos **a la vez**";
+"helpExchangeNote2" = "No hace falta pulsarlos en el mismo segundo, una diferencia de 8-10 segundos está bien";
+"helpExchangeBlock3" = "**Espera a que se intercambien las historias**";
+"helpExchangeNote3" = "Si se perdió la conexión, vuelve a la pantalla del amigo e intenta intercambiar las historias de nuevo";
+"helpAddBlock1" = "Para etiquetar a un amigo en las historias tienes que añadirlo a tu lista de amigos";
+"helpAddNote1" = "No te preocupes, para empezar a escribir historias compartidas tu amigo no tiene que estar cerca. Ni siquiera tiene que descargar la app";
+"helpAddBlock2" = "**Si tu amigo no está cerca** \n\n 1.  Pulsa \"Añadir amigo\" y selecciona \"Crear perfil de amigo\"\n 2.  Escribe un nombre y elige un color\n 3.  **¡Genial!** A partir de ahora puedes etiquetar a este amigo en tus historias\n\n 4.  Cuando os veáis, pulsad a la vez \"Compartir historias\" en el perfil creado\n 5.  Esperad a que se complete el intercambio de datos";
+"helpAddNote2" = "Después de esto, el perfil de amigo que creaste quedará vinculado al perfil que creó tu amigo";
+"helpAddBlock3" = "**Si tu amigo está cerca** \n\n 1.  Pulsa \"Añadir amigo\" y selecciona \"Obtener perfil de amigo\"\n 2.  Tu amigo también debe pulsar \"Obtener perfil de amigo\" o \"Compartir historias\" si ya creó tu perfil\n 3.  Espera a la sincronización\n 4.  **¡Genial!** A partir de ahora puedes etiquetar a este amigo en tus historias\n";
+"helpAddWarning" = "Si no se encontró al amigo durante la búsqueda, puedes volver y pulsar \"Obtener perfil de amigo\" otra vez";
