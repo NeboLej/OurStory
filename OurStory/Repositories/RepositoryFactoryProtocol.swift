@@ -12,12 +12,14 @@ protocol RepositoryFactoryProtocol {
     var userRepository: UserRepositoryProtocol { get }
     var friendRepository: FriendRepositoryProtocol { get }
     var noteRepository: NoteRepositoryProtocol { get }
+    var analyticService: AnalyticsServiceProtocol { get }
 }
 
 class RepositoryFactory: RepositoryFactoryProtocol {
     let userRepository: UserRepositoryProtocol
     let friendRepository: FriendRepositoryProtocol
     let noteRepository: NoteRepositoryProtocol
+    let analyticService: AnalyticsServiceProtocol
     
     init() {
         let dbPool: DatabasePool = DatabaseManager.shared.dbPool
@@ -25,6 +27,7 @@ class RepositoryFactory: RepositoryFactoryProtocol {
         self.userRepository = UserRepository(dbPool: dbPool)
         self.friendRepository = FriendRepository(dbPool: dbPool)
         self.noteRepository = NoteRepository(dbPool: dbPool)
+        self.analyticService = AppMetricaAnalyticsService(apiKey: Secrets.metricaKey)
     }
 }
 

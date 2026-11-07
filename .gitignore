@@ -93,3 +93,5 @@ build/
 *.dSYM.zip
 
 OurStory/.DS_Store
+
+OurStory/Resources/BaseFile.swift

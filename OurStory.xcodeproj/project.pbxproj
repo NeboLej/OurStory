@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8E1A40F1309F59B400498438 /* AppMetricaCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8E1A40F0309F59B400498438 /* AppMetricaCore */; };
+		8E1A40F3309F59B400498438 /* AppMetricaCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = 8E1A40F2309F59B400498438 /* AppMetricaCrashes */; };
 		8E3E6180307682A300F90716 /* CLAUDE.md in Resources */ = {isa = PBXBuildFile; fileRef = 8E3E617F307682A300F90716 /* CLAUDE.md */; };
 		8E45DC8D3058243500D23317 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 8E45DC8C3058243500D23317 /* GRDB */; };
 		8E8E773D3079201100551CB8 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 8E8E773C3079201100551CB8 /* Lottie */; };
@@ -67,6 +69,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8E45DC8D3058243500D23317 /* GRDB in Frameworks */,
+				8E1A40F3309F59B400498438 /* AppMetricaCrashes in Frameworks */,
+				8E1A40F1309F59B400498438 /* AppMetricaCore in Frameworks */,
 				8E8E773D3079201100551CB8 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -136,6 +140,8 @@
 			packageProductDependencies = (
 				8E45DC8C3058243500D23317 /* GRDB */,
 				8E8E773C3079201100551CB8 /* Lottie */,
+				8E1A40F0309F59B400498438 /* AppMetricaCore */,
+				8E1A40F2309F59B400498438 /* AppMetricaCrashes */,
 			);
 			productName = OurStory;
 			productReference = 8EEEAC633044811A00742298 /* OurStory.app */;
@@ -172,6 +178,7 @@
 			packageReferences = (
 				8E45DC8B3058243500D23317 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
 				8E8E773B3079201100551CB8 /* XCRemoteSwiftPackageReference "lottie-spm" */,
+				8E1A40ED309F59B400498438 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8EEEAC643044811A00742298 /* Products */;
@@ -408,7 +415,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = OurStory/OurStory.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = 955DP87LHM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -445,7 +452,7 @@
 				CODE_SIGN_ENTITLEMENTS = OurStory/OurStory.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = 955DP87LHM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -508,6 +515,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		8E1A40ED309F59B400498438 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/appmetrica/appmetrica-sdk-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
 		8E45DC8B3058243500D23317 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift.git";
@@ -527,6 +542,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8E1A40F0309F59B400498438 /* AppMetricaCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8E1A40ED309F59B400498438 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */;
+			productName = AppMetricaCore;
+		};
+		8E1A40F2309F59B400498438 /* AppMetricaCrashes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8E1A40ED309F59B400498438 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */;
+			productName = AppMetricaCrashes;
+		};
 		8E45DC8C3058243500D23317 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8E45DC8B3058243500D23317 /* XCRemoteSwiftPackageReference "GRDB.swift" */;

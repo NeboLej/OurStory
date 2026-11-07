@@ -97,6 +97,10 @@ final class SyncProgressStore: BaseStore {
             guard let self else { return }
             Logger.log("SyncProgress: received event: \(event.descriptionText)")
             self.mapSyncEventToAnimationPhase(event)
+            
+            if case .failed(let error) = event {
+                self.appStore.analyticEvent(AppEvent.noteSyncFailed)
+            }
         }
         
         syncService.onSyncCompleted = { [weak self] result in

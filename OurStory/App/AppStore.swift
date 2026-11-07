@@ -24,6 +24,7 @@ protocol AppStoreProtocol: AnyObject {
     func notes(for filter: NoteFilter) -> [Note]
     func searchNotes(query: String) -> [Note]
     func syncDownload()
+    func analyticEvent(_ event: AnalyticsEvent)
 }
 
 @MainActor
@@ -64,9 +65,8 @@ final class AppStoreMock: AppStoreProtocol {
         Note.tmpNotes
     }
     
-    func syncDownload() {
-        
-    }
+    func syncDownload() { }
+    func analyticEvent(_ event: any AnalyticsEvent) { }
 }
 
 
@@ -107,6 +107,8 @@ final class AppStore: AppStoreProtocol {
     let noteRepository: NoteRepositoryProtocol
     @ObservationIgnored
     let userDefaultsManager: UserDefaultsManager = UserDefaultsManager()
+    @ObservationIgnored
+    let analyticsService: AnalyticsServiceProtocol
     
     @ObservationIgnored
     var isSyncing = false
@@ -120,6 +122,7 @@ final class AppStore: AppStoreProtocol {
         self.userRepository = repositoryFactory.userRepository
         self.friendsRepository = repositoryFactory.friendRepository
         self.noteRepository = repositoryFactory.noteRepository
+        self.analyticsService = repositoryFactory.analyticService
         
         user = userDefaultsManager.getCurrentUser()
         
@@ -130,6 +133,8 @@ final class AppStore: AppStoreProtocol {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.loadData()
         }
+        
+        analyticEvent(AppEvent.appOpened)
     }
     
     func send(_ action: AppAction) {
@@ -138,6 +143,7 @@ final class AppStore: AppStoreProtocol {
             selectedDate = date
         case .addNewNote(let newNote):
             addNewNote(newNote)
+            analyticEvent(AppEvent.newNote)
         case .editNote(let note):
             if let index = allNotes.firstIndex(where: { $0.id == note.id }) {
                 allNotes[index] = note
@@ -147,8 +153,10 @@ final class AppStore: AppStoreProtocol {
             deleteNote(note)
         case .syncNotes(let notes, let friend):
             syncNotes(notes, friend: friend)
+            analyticsService.log(event: AppEvent.noteSyncSuccess(count: notes.count))
         case .addNewFriend(let friend):
             addNewFriend(friend)
+            analyticEvent(AppEvent.newFriend)
         case .editFriend(let friend):
             editFriend(friend)
         case .deleteFriend(let friend):
@@ -209,11 +217,17 @@ final class AppStore: AppStoreProtocol {
             appCoordinator.navigate(to: .log)
         case .toCalendar:
             appCoordinator.navigate(to: .calendar)
+            analyticEvent(AppEvent.calendarOpened)
         case .toSearch:
             appCoordinator.navigate(to: .search)
         case .toHelpListScreen:
             appCoordinator.navigate(to: .helpList)
+            analyticEvent(AppEvent.helpOpened)
         }
+    }
+    
+    func analyticEvent(_ event: AnalyticsEvent) {
+        analyticsService.log(event: event)
     }
     
     func loadData() {
