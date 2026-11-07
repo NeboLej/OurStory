@@ -17,6 +17,7 @@ struct OurStoryApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var isLaunchCompleted = false
     @State private var themeManager = ThemeManager.shared
+    @State private var localeManager = LocaleManager.shared
     
     init() {
         let repositoryFactory: RepositoryFactoryProtocol = RepositoryFactory()
@@ -41,6 +42,7 @@ struct OurStoryApp: App {
                 }
             }
             .environment(themeManager)
+            .environment(localeManager)
             .preferredColorScheme(themeManager.currentTheme.colorScheme)
         }
     }

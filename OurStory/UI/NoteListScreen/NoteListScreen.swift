@@ -16,7 +16,7 @@ struct NoteListScreen: View {
     var body: some View {
         NoteListContent(store: store, isShowFriendsList: $isShowFriendsList, isShowDate: true)
             .background(.backgroundFill)
-            .navigationTitle(title ?? "Истории")
+            .navigationTitle(title ?? L10n.stories)
             .navigationBarTitleDisplayMode(.automatic)
     }
 }

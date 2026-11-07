@@ -54,7 +54,7 @@ struct FriendScreen: View {
                             selectedColor = Color(hex: store.state.friend.color)
                         }
                     } label: {
-                        Text("ОТМЕНА")
+                        Text(L10n.cancel)
                             .font(.mySemiBold(size: 11))
                             .tracking(1.5)
                             .foregroundStyle(Color.textMulticolor.opacity(0.6))
@@ -78,7 +78,7 @@ struct FriendScreen: View {
                         isEditMode.toggle()
                     }
                 } label: {
-                    Text(isEditMode ? "СОХРАНИТЬ" : "ИЗМЕНИТЬ")
+                    Text(isEditMode ? L10n.save : L10n.edit)
                         .font(.mySemiBold(size: 11))
                         .tracking(1.5)
                         .foregroundStyle(Color.textMulticolor.opacity(0.85))
@@ -103,16 +103,16 @@ struct FriendScreen: View {
         .onDisappear {
             store.send(.stopSearching, animation: nil)
         }
-        .alert("Вы хотите удалить друга и все полученные от него истории?", isPresented: $showDeleteAlert) {
-            Button("Удалить друга и все истории", role: .destructive) {
+        .alert(L10n.deleteFriendAlertTitle, isPresented: $showDeleteAlert) {
+            Button(L10n.deleteFriendAndStories, role: .destructive) {
                 store.send(.deleteFriendWithNotes)
                 dismiss()
             }
-            Button("Удалить друга", role: .destructive) {
+            Button(L10n.deleteFriendOnly, role: .destructive) {
                 store.send(.hideFriend)
                 dismiss()
             }
-            Button("Отмена", role: .cancel) { }
+            Button(L10n.cancel, role: .cancel) { }
         }
 
     }
@@ -126,34 +126,34 @@ struct FriendScreen: View {
             case .idle:
                 EmptyView()
             case .searching:
-                Text("ищу \(store.state.friend.name.lowercased())...")
+                Text(L10n.searchingFriend(store.state.friend.name.lowercased()))
                     .font(.myItalic(size: 13))
                     .foregroundStyle(.textMulticolor.opacity(0.45))
             case .found:
                 VStack(spacing: 2) {
-                    Text("\(store.state.friend.name) рядом")
+                    Text(L10n.friendNearby(store.state.friend.name))
                         .font(.myItalic(size: 14))
                         .foregroundStyle(.textMulticolor.opacity(0.7))
                 }
             case .friendReady:
                 VStack(spacing: 2) {
-                    Text("\(store.state.friend.name) рядом")
+                    Text(L10n.friendNearby(store.state.friend.name))
                         .font(.myItalic(size: 14))
                         .foregroundStyle(.textMulticolor.opacity(0.7))
-                    Text("и хочет обменяться историями")
+                    Text(L10n.wantsToExchange)
                         .font(.myItalic(size: 12))
                         .foregroundStyle(.textMulticolor.opacity(0.6))
                 }
             case .notFound:
                 VStack(spacing: 10) {
-                    Text("не удалось найти")
+                    Text(L10n.notFound)
                         .font(.myItalic(size: 12))
                         .foregroundStyle(.textMulticolor.opacity(0.35))
                     
                     Button {
                         store.send(.retrySearching)
                     } label: {
-                        Text("НАЙТИ \(store.state.friend.name.uppercased())")
+                        Text(L10n.findFriend(store.state.friend.name.uppercased()))
                             .font(.mySemiBold(size: 11))
                             .tracking(1.5)
                             .foregroundStyle(.textMulticolor.opacity(0.7))
@@ -220,7 +220,7 @@ struct FriendScreen: View {
         if let user = store.state.friend.user, store.state.hasUserProfileDifference {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 0) {
-                    Text("ПРЕДЛОЖЕНИЕ")
+                    Text(L10n.suggestion)
                         .font(.mySemiBold(size: 10))
                         .tracking(1.5)
                         .foregroundStyle(.textMulticolor.opacity(0.5))
@@ -237,7 +237,7 @@ struct FriendScreen: View {
                     }
                 }
                 
-                Text("Ваш друг указал другое имя и цвет для своего профиля")
+                Text(L10n.friendProfileDiffHint)
                     .font(.myRegular(size: 13))
                     .foregroundStyle(.textMulticolor.opacity(0.7))
                 
@@ -282,7 +282,7 @@ struct FriendScreen: View {
                     }
                 }
                 
-                VintageSmallButton(title: "ПРИМЕНИТЬ") {
+                VintageSmallButton(title: L10n.apply) {
                     store.send(.applyUserProfile)
                     name = user.name
                     selectedColor = Color(hex: user.color)
@@ -369,15 +369,15 @@ struct FriendScreen: View {
                 .frame(height: 1)
                 .foregroundStyle(.textMulticolor.opacity(0.35))
             
-            statisticElement(title: "Общих историй", value: "\(store.state.allStoriesCount)") {
+            statisticElement(title: L10n.sharedStories, value: "\(store.state.allStoriesCount)") {
                 store.send(.toAllNotes)
             }
             
-            statisticElement(title: "Историй не рассказано", value: "\(store.state.notSeenStoriesCount)") {
+            statisticElement(title: L10n.untoldStories, value: "\(store.state.notSeenStoriesCount)") {
                 store.send(.toUnsentNotes)
             }
             
-            statisticElement(title: "Последняя синхронизация", value: store.state.lastSyncDate?.toReadableDate() ?? "—", onClick: nil)
+            statisticElement(title: L10n.lastSync, value: store.state.lastSyncDate?.toReadableDate() ?? "—", onClick: nil)
         }
     }
     
@@ -386,7 +386,7 @@ struct FriendScreen: View {
     private func editMode() -> some View {
         VStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("РЕДАКТИРОВАТЬ\nПРОФИЛЬ")
+                Text(L10n.editProfileTitle)
                     .font(.mySemiBold(size: 22))
                     .tracking(2)
                     .foregroundColor(.textMulticolor)
@@ -400,12 +400,12 @@ struct FriendScreen: View {
             .padding(.bottom, 40)
             
             VStack(alignment: .leading, spacing: 12) {
-                Text("ИМЯ ПОЛЬЗОВАТЕЛЯ")
+                Text(L10n.usernameLabel)
                     .font(.myMedium(size: 12))
                     .tracking(3)
                     .foregroundColor(.textMulticolor)
                 
-                TextField("Введите имя...", text: $name)
+                TextField(L10n.enterNameShortPlaceholder, text: $name)
                     .font(.myItalic(size: 20))
                     .foregroundColor(.textMulticolor)
                     .tint(.textMulticolor)
@@ -419,7 +419,7 @@ struct FriendScreen: View {
             .padding(.bottom, 40)
             
             VStack(alignment: .leading, spacing: 16) {
-                Text("ЦВЕТОВАЯ МЕТКА")
+                Text(L10n.colorLabel)
                     .font(.myMedium(size: 12))
                     .tracking(3)
                     .foregroundColor(.textMulticolor)
@@ -484,7 +484,7 @@ struct FriendScreen: View {
     private func unlinkBanner(user: User) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("ПРИВЯЗКА")
+                Text(L10n.binding)
                     .font(.mySemiBold(size: 10))
                     .tracking(1.5)
                     .foregroundStyle(.textMulticolor.opacity(0.5))
@@ -502,13 +502,13 @@ struct FriendScreen: View {
                 .buttonStyle(.plain)
             }
             
-            Text("\(store.state.friend.name) привязан к аккаунту \(user.name)")
+            Text(L10n.friendLinkedTo(store.state.friend.name, user.name))
                 .font(.myRegular(size: 13))
                 .foregroundStyle(.textMulticolor.opacity(0.7))
             
             linkUser(user: user)
             
-            VintageSmallButton(title: "ОТВЯЗАТЬ") {
+            VintageSmallButton(title: L10n.unlink) {
                 store.send(.unlinkFriend)
                 isEditMode = false
             }
@@ -529,15 +529,15 @@ struct FriendScreen: View {
             store.send(.syncFriend)
         } label: {
             VStack(spacing: 2) {
-                Text("РАССКАЗАТЬ ИСТОРИИ")
+                Text(L10n.tellStories)
                     .font(.mySemiBold(size: 14))
                     .tracking(2)
                     .foregroundStyle(.black.opacity(isEnabled ? 1 : 0.3))
                 
                 if store.state.searchStatus == .found || store.state.searchStatus == .friendReady {
                     Text(store.state.searchStatus == .friendReady
-                         ? "\(store.state.friend.name) ждёт"
-                         : "начать обмен историями")
+                         ? L10n.friendIsWaiting(store.state.friend.name)
+                         : L10n.startExchange)
                         .font(.myRegular(size: 10))
                         .opacity(store.state.searchStatus == .friendReady ? 0.7 : 0.5)
                         .foregroundStyle(.black)
@@ -566,7 +566,7 @@ struct FriendScreen: View {
             showDeleteAlert = true
         } label: {
             VStack(spacing: 2) {
-                Text("УДАЛИТЬ ДРУГА")
+                Text(L10n.deleteFriend)
                     .font(.mySemiBold(size: 14))
                     .tracking(2)
                     .foregroundStyle(.black)

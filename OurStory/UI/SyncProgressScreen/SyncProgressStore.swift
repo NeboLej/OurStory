@@ -79,7 +79,7 @@ final class SyncProgressStore: BaseStore {
                 try? await Task.sleep(nanoseconds: 300_000_000)
                 guard let self else { return }
                 self.appStore.send(.toNotesList(
-                    title: "Истории от \(friendName)",
+                    title: L10n.storiesFrom(friendName),
                     filter: .every(noteID: newNotes.map(\.id))
                 ))
             }

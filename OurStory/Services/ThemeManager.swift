@@ -20,9 +20,9 @@ enum AppTheme: String, CaseIterable {
     
     var title: String {
         switch self {
-        case .dark: return "Тёмная"
-        case .light: return "Светлая"
-        case .system: return "Системная"
+        case .dark: return L10n.themeDark
+        case .light: return L10n.themeLight
+        case .system: return L10n.themeSystem
         }
     }
     
@@ -30,7 +30,7 @@ enum AppTheme: String, CaseIterable {
         switch self {
         case .dark: return "moon.fill"
         case .light: return "sun.max.fill"
-        case .system: return "gear.fill"
+        case .system: return "gearshape.fill"
         }
     }
 }

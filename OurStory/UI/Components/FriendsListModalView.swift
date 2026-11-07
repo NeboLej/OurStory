@@ -35,11 +35,11 @@ struct FriendsListModalView: View {
             // Header
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("ДРУЗЬЯ")
+                    Text(L10n.friendsTitle)
                         .font(.mySemiBold(size: 13))
                         .tracking(2)
                         .foregroundStyle(.textMulticolor)
-                    Text("\(selectedFriends.count) из \(allFriends.count)")
+                    Text(L10n.friendsCount(selectedFriends.count, allFriends.count))
                         .font(.myRegular(size: 11))
                         .foregroundStyle(.textMulticolor.opacity(0.5))
                 }
@@ -75,7 +75,7 @@ struct FriendsListModalView: View {
             // Friends list
             if allFriends.isEmpty {
                 Spacer()
-                Text("Вы пока не добавили друзей")
+                Text(L10n.noFriendsYet)
                     .font(.myRegular(size: 14))
                     .foregroundStyle(.textMulticolor.opacity(0.4))
                     .frame(maxWidth: .infinity)
@@ -157,7 +157,7 @@ struct FriendsListModalView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "plus")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("НОВЫЙ ДРУГ")
+                    Text(L10n.newFriend)
                         .font(.mySemiBold(size: 11))
                         .tracking(1.5)
                 }

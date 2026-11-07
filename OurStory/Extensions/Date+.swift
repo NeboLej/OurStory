@@ -17,7 +17,7 @@ extension Date {
     
     func toReadable() -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.locale = L10n.language.locale
         formatter.dateFormat = "d MMMM / EEEE"
         
         return formatter.string(from: self)
@@ -25,7 +25,7 @@ extension Date {
     
     func toMonthYearDate() -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.locale = L10n.language.locale
         formatter.dateFormat = "LLLL yyyy"
         
         return formatter.string(from: self).capitalizedFirstLetter
@@ -47,7 +47,7 @@ extension Date {
     
     func toMonth() -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.locale = L10n.language.locale
         formatter.dateFormat = "MMMM"
         
         return formatter.string(from: self)

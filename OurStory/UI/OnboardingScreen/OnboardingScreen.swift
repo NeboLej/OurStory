@@ -41,12 +41,12 @@ struct OnboardingScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("ИМЯ")
+                    Text(L10n.nameLabel)
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)
                     
-                    TextField("Введите ваше имя...", text: $name)
+                    TextField(L10n.enterNamePlaceholder, text: $name)
                         .font(.myItalic(size: 20))
                         .foregroundColor(.textMulticolor)
                         .tint(.textMulticolor)
@@ -63,7 +63,7 @@ struct OnboardingScreen: View {
                 .padding(.bottom, 40)
                 
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("ЦВЕТОВАЯ МЕТКА")
+                    Text(L10n.colorLabel)
                         .font(.myMedium(size: 12))
                         .tracking(3)
                         .foregroundColor(.textMulticolor)
@@ -77,7 +77,7 @@ struct OnboardingScreen: View {
                     store.send(.saveProfile(name: name.trimmingCharacters(in: .whitespaces),
                                             color: selectedColor.toHex()))
                 } label: {
-                    Text("ПРОДОЛЖИТЬ")
+                    Text(L10n.continueAction)
                         .font(.mySemiBold(size: 14))
                         .tracking(2)
                         .foregroundStyle(isSaveDisabled ? Color.textMulticolor.opacity(0.3) : Color.textMulticolor)

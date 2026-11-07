@@ -191,16 +191,16 @@ struct NoteListContent: View {
                 .foregroundStyle(.black.opacity(0.2))
             VStack(alignment: .trailing, spacing: 12) {
                 if note.owner == nil {
-                    noteMenuItem(image: "pencil.and.scribble", text: "Редактировать", action: {
+                    noteMenuItem(image: "pencil.and.scribble", text: L10n.editAction, action: {
                         store.send(.editNote(note))
                     })
-                    noteMenuItem(image: "person.badge.plus", text: "Отметить друга", action: {
+                    noteMenuItem(image: "person.badge.plus", text: L10n.tagFriendAction, action: {
                         withAnimation(.snappy) {
                             isShowFriendsList.toggle()
                         }
                     })
                 }
-                noteMenuItem(image: "trash", text: "Удалить", action: {
+                noteMenuItem(image: "trash", text: L10n.deleteAction, action: {
                     store.send(.deleteNote(note))
                 })
                 Spacer()

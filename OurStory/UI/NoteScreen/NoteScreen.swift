@@ -107,7 +107,7 @@ struct NoteScreen: View {
     private func header() -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
-                Text(store.state.isEditing ? "ИСПРАВИТЬ ИСТОРИЮ" : "НОВАЯ ИСТОРИЯ")
+                Text(store.state.isEditing ? L10n.editStory : L10n.newStory)
                     .font(.mySemiBold(size: 14))
                     .tracking(2)
                     .foregroundStyle(.textMulticolor)
@@ -122,7 +122,7 @@ struct NoteScreen: View {
             Button {
                 saveStory()
             } label: {
-                Text("СОХРАНИТЬ")
+                Text(L10n.save)
                     .font(.mySemiBold(size: 11))
                     .tracking(1.5)
                     .foregroundStyle(canSave ? Color.textMulticolor.opacity(0.85) : Color.textMulticolor.opacity(0.25))
@@ -143,7 +143,7 @@ struct NoteScreen: View {
     private func titleTextField() -> some View {
         HStack {
             TextField("", text: $title,
-                      prompt: Text("Название итории")
+                      prompt: Text(L10n.storyTitlePlaceholder)
                 .font(.myRegular(size: 17))
                 .foregroundStyle(.textMulticolor.opacity(0.32)), axis: .vertical)
             .lineLimit(1...4)
@@ -181,7 +181,7 @@ struct NoteScreen: View {
     @ViewBuilder
     private func storyTextEditor() -> some View {
         HStack {
-            Text("ТЕКСТ")
+            Text(L10n.textLabel)
                 .font(.mySemiBold(size: 11))
                 .tracking(2)
                 .foregroundStyle(.textMulticolor)
@@ -189,7 +189,7 @@ struct NoteScreen: View {
             Spacer()
             
             if !story.isEmpty {
-                Text("\(story.count) знаков")
+                Text(L10n.charCount(story.count))
                     .font(.myRegular(size: 14))
                     .foregroundStyle(.textMulticolor)
             }
@@ -206,7 +206,7 @@ struct NoteScreen: View {
         //            .focused($isTextEditorFocused)
             .overlay(alignment: .topLeading) {
                 if story.isEmpty {
-                    Text("Начните писать свою историю...")
+                    Text(L10n.storyPlaceholder)
                         .font(.myRegular(size: 17))
                         .foregroundStyle(.textMulticolor.opacity(0.32))
                         .padding(.top, 8)
@@ -270,7 +270,7 @@ struct NoteScreen: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.textMulticolor.opacity(0.6))
             
-            Text("Восстановлен черновик. Очистить?")
+            Text(L10n.draftRestoredClear)
                 .font(.myMedium(size: 13))
                 .foregroundStyle(.textMulticolor.opacity(0.85))
         }
@@ -304,7 +304,7 @@ struct NoteScreen: View {
                         .stroke(Color.textMulticolor.opacity(0.15), lineWidth: 0.5)
                 }
             
-            Text("Отметить \(friend.name)?")
+            Text(L10n.tagFriend(friend.name))
                 .font(.myMedium(size: 13))
                 .foregroundStyle(.textMulticolor.opacity(0.85))
             
