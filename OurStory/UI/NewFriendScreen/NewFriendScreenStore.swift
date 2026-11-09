@@ -41,7 +41,7 @@ final class NewFriendScreenStore: BaseStore {
     
     private func startSyncNewFriend() {
         let tempFriend = Friend(name: "—", color: "#AAAAAA")
-        let syncService = SyncService3(profile: appStore.user)
+        let syncService = SyncService(profile: appStore.user)
         
         let config = SyncProgressConfig(
             friend: tempFriend,

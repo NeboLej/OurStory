@@ -33,4 +33,5 @@ enum NavigateAction {
     case toCalendar
     case toSearch
     case toHelpListScreen
+    case toNotificationSettings
 }

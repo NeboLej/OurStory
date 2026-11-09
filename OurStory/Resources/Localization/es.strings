@@ -150,3 +150,16 @@
 "helpAddNote2" = "Después de esto, el perfil de amigo que creaste quedará vinculado al perfil que creó tu amigo";
 "helpAddBlock3" = "**Si tu amigo está cerca** \n\n 1.  Pulsa \"Añadir amigo\" y selecciona \"Obtener perfil de amigo\"\n 2.  Tu amigo también debe pulsar \"Obtener perfil de amigo\" o \"Compartir historias\" si ya creó tu perfil\n 3.  Espera a la sincronización\n 4.  **¡Genial!** A partir de ahora puedes etiquetar a este amigo en tus historias\n";
 "helpAddWarning" = "Si no se encontró al amigo durante la búsqueda, puedes volver y pulsar \"Obtener perfil de amigo\" otra vez";
+
+// Notifications
+"notificationsEnabled" = "Notificaciones";
+"dailyReminderEnabled" = "Recuérdame escribir historias";
+"reminderTime" = "Hora del recordatorio";
+"notificationReminderTitles" = "¿Cómo estuvo tu día? ✨|No olvides guardar este día|Tus historias te están esperando|¿Qué tal si escribes un par de líneas?|Pssssss, ¿te apetece escribir algunas historias?|¡Hurra! ¡Es hora de escribir historias!|";
+"notificationReminderBodies" = "Incluso unas pocas palabras pueden convertirse en un recuerdo que atesorarás más adelante|Las mejores historias se escriben cuando los sentimientos aún están frescos|Dedica un minuto a guardar algo importante|La Biblia tampoco se escribió en un solo día|Seguro que hoy hay algo sobre lo que puedes escribir|Imagina lo bonito que será recordar cómo fue todo dentro de 5 años|Escribamos una carta a nuestro yo del futuro";
+"notificationPromptTitle" = "¿Quieres que te recuerde escribir tus historias?";
+"notificationPromptMessage" = "Puedo recordarte cada día que escribas tus historias. Puedes elegir la hora que más te convenga en los ajustes";
+"enableNotifications" = "ACTIVAR";
+"notNow" = "AHORA NO";
+"notificationDeniedMessage" = "Las notificaciones están desactivadas en los ajustes del sistema. Actívalas para recibir recordatorios.";
+"notificationOpenSettings" = "ABRIR AJUSTES";

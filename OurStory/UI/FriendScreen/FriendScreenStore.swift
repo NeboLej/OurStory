@@ -12,7 +12,7 @@ final class FriendScreenStore: BaseStore {
     
     private var friend: Friend
     
-    private var syncService: SyncService3
+    private var syncService: SyncService
     private var totalNotes: [Note] = []
     private var unsentNotes: [Note] = []
     
@@ -58,7 +58,7 @@ final class FriendScreenStore: BaseStore {
     init(appStore: AppStoreProtocol, friend: Friend, noteRepositpry: NoteRepositoryProtocol) {
         self.friend = friend
         self.noteRepositpry = noteRepositpry
-        self.syncService = SyncService3(profile: appStore.user)
+        self.syncService = SyncService(profile: appStore.user)
         super.init(appStore: appStore)
         
         loadData()

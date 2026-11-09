@@ -10,7 +10,7 @@ import SwiftUI
 enum ScreenType: Identifiable, Hashable {
     
     case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, filter: NoteFilter, isShowFriendsList: Binding<Bool>)
-    case log, onboarding, calendar, search, helpList, help(Help)
+    case log, onboarding, calendar, search, helpList, help(Help), notificationSettings
     case syncProgress(SyncProgressConfig)
     
     var id: String {
@@ -30,6 +30,7 @@ enum ScreenType: Identifiable, Hashable {
         case .helpList: "helpList"
         case .help(let help): "help_\(help.id)"
         case .syncProgress: "syncProgress"
+        case .notificationSettings: "notificationSettings"
         }
     }
     
@@ -54,6 +55,7 @@ enum ScreenType: Identifiable, Hashable {
         case (.help, .help): true
         case (.helpList, .helpList): true
         case (.syncProgress, .syncProgress): true
+        case (.notificationSettings, .notificationSettings): true
         default: false
         }
     }
@@ -117,6 +119,8 @@ final class ScreenBuilder {
         case .help(let help): HelpScreen(help: help)
         case .syncProgress(let config):
             SyncProgressScreen(store: SyncProgressStore(appStore: appStore, config: config))
+        case .notificationSettings:
+            NotificationScreen(store: NotificationScreenStore(appStore: appStore))
         }
     }
     

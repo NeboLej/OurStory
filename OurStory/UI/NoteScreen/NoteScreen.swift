@@ -17,9 +17,13 @@ struct NoteScreen: View {
     @State private var selectedDate = Date()
     @State private var isShowCalendar = false
     @State private var isShowFriendsList = false
+    @State private var isShowNotificationPrompt = false
     
     @Environment(\.dismiss) var dismiss
     @FocusState private var focusedField: Field?
+    
+    private let userDefaultsManager = UserDefaultsManager()
+    private let notificationService = NotificationService.shared
     
     init(store: NoteScreenStore) {
         self.store = store
@@ -99,6 +103,16 @@ struct NoteScreen: View {
         }
         .onAppear {
             focusedField = .story
+        }
+        .alert(L10n.notificationPromptTitle, isPresented: $isShowNotificationPrompt) {
+            Button(L10n.enableNotifications) {
+                enableNotifications()
+            }
+            Button(L10n.notNow, role: .cancel) {
+                dismiss()
+            }
+        } message: {
+            Text(L10n.notificationPromptMessage)
         }
     }
     
@@ -331,7 +345,30 @@ struct NoteScreen: View {
         
         store.send(.saveNote(title: title, text: story))
         focusedField = nil
-        dismiss()
+        
+        if !store.state.isEditing && !userDefaultsManager.isNotificationPromptShown {
+            userDefaultsManager.isNotificationPromptShown = true
+            Task {
+                let status = await notificationService.currentAuthorizationStatus()
+                if status == .notDetermined {
+                    isShowNotificationPrompt = true
+                } else {
+                    dismiss()
+                }
+            }
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func enableNotifications() {
+        Task {
+            let granted = await notificationService.requestPermission()
+            if granted {
+                userDefaultsManager.isNotificationsEnabled = true
+            }
+            dismiss()
+        }
     }
 }
 

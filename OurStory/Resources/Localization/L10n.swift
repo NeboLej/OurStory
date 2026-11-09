@@ -211,4 +211,18 @@ enum L10n {
     static var helpAddNote2: String { str("helpAddNote2") }
     static var helpAddBlock3: String { str("helpAddBlock3") }
     static var helpAddWarning: String { str("helpAddWarning") }
+    
+    // MARK: - Notifications
+    
+    static var notificationsEnabled: String { str("notificationsEnabled") }
+    static var dailyReminderEnabled: String { str("dailyReminderEnabled") }
+    static var reminderTime: String { str("reminderTime") }
+    static var notificationReminderTitles: [String] { arr("notificationReminderTitles") }
+    static var notificationReminderBodies: [String] { arr("notificationReminderBodies") }
+    static var notificationPromptTitle: String { str("notificationPromptTitle") }
+    static var notificationPromptMessage: String { str("notificationPromptMessage") }
+    static var enableNotifications: String { str("enableNotifications") }
+    static var notNow: String { str("notNow") }
+    static var notificationDeniedMessage: String { str("notificationDeniedMessage") }
+    static var notificationOpenSettings: String { str("notificationOpenSettings") }
 }

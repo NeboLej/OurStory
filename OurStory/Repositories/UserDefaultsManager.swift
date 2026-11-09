@@ -22,6 +22,11 @@ class UserDefaultsManager {
         case userName
         case userColor
         case noteDraft
+        case notificationsEnabled
+        case dailyReminderEnabled
+        case dailyReminderHour
+        case dailyReminderMinute
+        case notificationPromptShown
     }
     
     func getCurrentUser() -> User {
@@ -104,6 +109,39 @@ class UserDefaultsManager {
     func clearNoteDraft() {
         db.removeObject(forKey: UserDefaultsKeys.noteDraft.rawValue)
         Logger.log("Draft cleared", location: .userDefault, event: .success)
+    }
+    
+    // MARK: - Notifications
+    
+    var isNotificationsEnabled: Bool {
+        get { db.bool(forKey: UserDefaultsKeys.notificationsEnabled.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.notificationsEnabled.rawValue) }
+    }
+    
+    var isDailyReminderEnabled: Bool {
+        get { db.bool(forKey: UserDefaultsKeys.dailyReminderEnabled.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.dailyReminderEnabled.rawValue) }
+    }
+    
+    var dailyReminderHour: Int {
+        get {
+            let val = db.integer(forKey: UserDefaultsKeys.dailyReminderHour.rawValue)
+            return val == 0 && !db.bool(forKey: "dailyReminderHourSet") ? 21 : val
+        }
+        set {
+            db.set(newValue, forKey: UserDefaultsKeys.dailyReminderHour.rawValue)
+            db.set(true, forKey: "dailyReminderHourSet")
+        }
+    }
+    
+    var dailyReminderMinute: Int {
+        get { db.integer(forKey: UserDefaultsKeys.dailyReminderMinute.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.dailyReminderMinute.rawValue) }
+    }
+    
+    var isNotificationPromptShown: Bool {
+        get { db.bool(forKey: UserDefaultsKeys.notificationPromptShown.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.notificationPromptShown.rawValue) }
     }
     
     private func createNewUser() -> User {

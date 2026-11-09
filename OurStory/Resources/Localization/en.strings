@@ -150,3 +150,16 @@
 "helpAddNote2" = "After this, the friend profile you created will be linked to the profile created by your friend";
 "helpAddBlock3" = "**If your friend is nearby** \n\n 1.  Press \"Add Friend\" and select \"Get Friend Profile\"\n 2.  Your friend should also press \"Get Friend Profile\" or \"Share Stories\" if they already created your profile\n 3.  Wait for synchronization\n 4.  **Great!** From now on you can tag this friend in your stories\n";
 "helpAddWarning" = "If the friend wasn't found during search, you can go back and press \"Get Friend Profile\" again";
+
+// Notifications
+"notificationsEnabled" = "Notifications";
+"dailyReminderEnabled" = "Remind me to write stories";
+"reminderTime" = "Reminder time";
+"notificationReminderTitles" = "How was your day? ✨|Don't forget to save this day|Your stories are waiting for you|How about writing a few lines?|Pssssss, feel like writing some stories?|Yay! It's story time!|";
+"notificationReminderBodies" = "Even a few words can become a memory you'll cherish later|The best stories are written while the feelings are still fresh|Take a minute to save something important|The Bible wasn't written in a day either|I'm sure there's something from today worth writing about|Imagine how wonderful it will be to look back on today in 5 years|Let's write a letter to our future selves";
+"notificationPromptTitle" = "Would you like reminders to write your stories?";
+"notificationPromptMessage" = "I can remind you to write your stories every day. You can choose a convenient time in the settings";
+"enableNotifications" = "ENABLE";
+"notNow" = "NOT NOW";
+"notificationDeniedMessage" = "Notifications are disabled in system settings. Enable them to receive reminders.";
+"notificationOpenSettings" = "OPEN SETTINGS";

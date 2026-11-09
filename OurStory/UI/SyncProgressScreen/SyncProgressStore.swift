@@ -13,7 +13,7 @@ final class SyncProgressStore: BaseStore {
     private let friend: Friend
     private let unsentNotes: [Note]
     private let noteRepository: NoteRepositoryProtocol
-    private let syncService: SyncService3
+    private let syncService: SyncService
     private let isDiscoveryActive: Bool
     private let isNewFriend: Bool
     

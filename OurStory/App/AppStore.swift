@@ -223,6 +223,8 @@ final class AppStore: AppStoreProtocol {
         case .toHelpListScreen:
             appCoordinator.navigate(to: .helpList)
             analyticEvent(AppEvent.helpOpened)
+        case .toNotificationSettings:
+            appCoordinator.navigate(to: .notificationSettings)
         }
     }
     

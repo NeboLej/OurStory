@@ -57,7 +57,7 @@ struct SyncCompletedResult {
 final class SyncProgressConfig: @unchecked Sendable {
     let friend: Friend
     let unsentNotes: [Note]
-    let syncService: SyncService3
+    let syncService: SyncService
     let isDiscoveryActive: Bool
     let isNewFriend: Bool
     let noteRepository: NoteRepositoryProtocol
@@ -65,7 +65,7 @@ final class SyncProgressConfig: @unchecked Sendable {
     
     init(friend: Friend,
          unsentNotes: [Note],
-         syncService: SyncService3,
+         syncService: SyncService,
          isDiscoveryActive: Bool,
          isNewFriend: Bool = false,
          noteRepository: NoteRepositoryProtocol,

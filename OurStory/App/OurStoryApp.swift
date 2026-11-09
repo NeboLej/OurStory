@@ -68,11 +68,13 @@ struct OurStoryApp: App {
         .task {
             // Initial sync on first launch (onChange doesn't fire for the initial scenePhase value)
             appStore.syncDownloadAndUpload()
+            NotificationService.shared.rescheduleIfNeeded()
         }
         .onChange(of: scenePhase, { oldValue, newValue in
             switch newValue {
             case .active:
                 appStore.syncDownloadAndUpload()
+                NotificationService.shared.rescheduleIfNeeded()
             case .background:
                 guard !appStore.isSyncing else { break }
                 let backgroundTask = UIApplication.shared.beginBackgroundTask()

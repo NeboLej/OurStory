@@ -94,7 +94,7 @@ struct SettingScreen: View {
             themeSection()
             
             settingsRow(icon: "bell", title: L10n.notifications) {
-                // Заглушка
+                store.send(.toNotificationSettings)
             }
             
             settingsRow(icon: "icloud.and.arrow.down", title: L10n.icloudSync) {

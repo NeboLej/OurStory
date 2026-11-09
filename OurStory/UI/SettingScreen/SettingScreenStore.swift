@@ -27,6 +27,8 @@ final class SettingScreenStore: BaseStore {
                 appStore.send(.toLogs)
             case .toHelpListScreen:
                 appStore.send(.toHelpListScreen)
+            case .toNotificationSettings:
+                appStore.send(.toNotificationSettings)
             }
         }
     }

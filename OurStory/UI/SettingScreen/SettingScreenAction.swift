@@ -13,4 +13,5 @@ enum SettingScreenAction {
     case toLogScreen
     case syncFromCloud
     case toHelpListScreen
+    case toNotificationSettings
 }

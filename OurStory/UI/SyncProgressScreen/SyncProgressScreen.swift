@@ -392,7 +392,7 @@ struct SyncProgressScreen: View {
         SyncProgressConfig(
             friend: Friend(name: "София", color: "F16C6C"),
             unsentNotes: [],
-            syncService: SyncService3(profile: User(name: "Test", color: "33eedd")),
+            syncService: SyncService(profile: User(name: "Test", color: "33eedd")),
             isDiscoveryActive: false,
             noteRepository: RepositoryFactory().noteRepository,
             onSyncFinished: nil

@@ -1,5 +1,5 @@
 //
-//  SyncService3.swift
+//  SyncService.swift
 //  OurStory
 //
 //  Network.framework-based peer-to-peer sync.
@@ -85,9 +85,9 @@ private class SyncFramer: NWProtocolFramerImplementation {
     }
 }
 
-// MARK: - SyncService3
+// MARK: - SyncService
 
-final class SyncService3 {
+final class SyncService {
     
     private let profile: User
     private var session: Sync3Session?
