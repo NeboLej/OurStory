@@ -127,7 +127,7 @@ final class ScreenBuilder {
     @ViewBuilder
     func getComponent(type: ComponentType) -> some View {
         switch type {
-        case .horizontalCalendar: HorizontalCalendar(store: HorizontalCalendarStore(appStore: appStore))
+        case .horizontalCalendar: WeekCalendarView(appStore: appStore)
         case .notesList(filter: let filter, isShowDate: let isShowDate, isShowFriendsList: let isShowFriendsList):
             NoteListContent(store: NoteListScreenStore(appStore: appStore, filter: filter),
                             isShowFriendsList: isShowFriendsList,

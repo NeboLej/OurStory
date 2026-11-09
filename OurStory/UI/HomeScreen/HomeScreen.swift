@@ -26,6 +26,7 @@ struct HomeScreen: View {
                 .frame(height: 70)
                 .foregroundStyle(Color.myPrimary)
             screenBuilder.getComponent(type: .horizontalCalendar)
+//                .frame(height: 120)
                 .overlay(alignment: .topTrailing) {
                     HStack {
                         if store.state.isSyncing {
@@ -90,6 +91,14 @@ struct HomeScreen: View {
         }
         .background(.backgroundFill)
         .ignoresSafeArea()
+        .gesture(
+            DragGesture(minimumDistance: 40)
+                .onEnded { value in
+                    let horizontal = value.translation.width
+                    guard abs(horizontal) > abs(value.translation.height) else { return }
+                    store.send(.swipeDate(days: horizontal < 0 ? 1 : -1))
+                }
+        )
         .onChange(of: localeManager.currentLanguage) {
             store.clearEmptyTextCache()
         }
@@ -127,4 +136,6 @@ struct HomeScreen: View {
 
 #Preview {
     ScreenBuilder.previewBuilder.getScreen(type: .home)
+        .environment(LocaleManager.shared)
+        .environment(ThemeManager.shared)
 }

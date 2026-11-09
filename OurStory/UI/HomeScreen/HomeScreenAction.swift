@@ -13,4 +13,5 @@ enum HomeScreenAction {
     case toSettings
     case toCalendar
     case toSearch
+    case swipeDate(days: Int)
 }

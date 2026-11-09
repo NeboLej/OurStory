@@ -44,6 +44,9 @@ final class HomeScreenStore: BaseStore {
             case .toSettings: appStore.send(.toSettings)
             case .toCalendar: appStore.send(.toCalendar)
             case .toSearch: appStore.send(.toSearch)
+            case .swipeDate(let days):
+                let newDate = calendar.date(byAdding: .day, value: days, to: appStore.selectedDate) ?? appStore.selectedDate
+                appStore.send(.selectedDate(newDate))
             }
         }
     }
