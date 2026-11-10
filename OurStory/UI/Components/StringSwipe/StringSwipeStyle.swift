@@ -9,6 +9,7 @@ struct StringSwipeStyle {
 
     var color: Color = .myPrimary
     var lineWidth: CGFloat = 1
+    var fillColor: Color? = Color.myPrimary.opacity(0.15)
     var maxBend: CGFloat = 60
     var resistance: CGFloat = 120
     var commitAnimation: Animation = .interpolatingSpring(stiffness: 320, damping: 16)

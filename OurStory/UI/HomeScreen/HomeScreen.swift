@@ -14,6 +14,7 @@ struct HomeScreen: View {
     @State private var store: HomeScreenStore
     @State private var screenBuilder: ScreenBuilder
     @State private var isShowFriendsList: Bool = false
+    @State private var notesTransitionEdge: Edge?
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
@@ -49,6 +50,7 @@ struct HomeScreen: View {
             
             if !store.state.selectedNotes.isEmpty {
                 notesView(date: store.state.selectedDate)
+                    .transition(notesTransition)
 //                    .id(store.state.selectedNotes)
             } else {
                 VStack(alignment: .center, spacing: 0) {
@@ -88,12 +90,21 @@ struct HomeScreen: View {
                 .padding(.bottom, 80)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 42)
+                .transition(.opacity.animation(.easeOut(duration: 0.15)))
             }
         }
         .background(.backgroundFill)
         .ignoresSafeArea()
         .stringSwipe(edges: .horizontal) { edge in
-            store.send(.swipeDate(days: edge == .trailing ? 1 : -1))
+            // The outgoing view keeps the transition from its last render,
+            // so apply the edge first and change the date on the next run loop.
+            notesTransitionEdge = edge
+            Task { @MainActor in
+                store.send(.swipeDate(days: edge == .trailing ? 1 : -1))
+            }
+        }
+        .onChange(of: store.state.selectedDate) {
+            notesTransitionEdge = nil
         }
         .onChange(of: localeManager.currentLanguage) {
             store.clearEmptyTextCache()
@@ -123,10 +134,27 @@ struct HomeScreen: View {
                 .padding(.leading, 12)
                 .padding(.top, 16)
             
-            screenBuilder.getComponent(type: .notesList(filter: .byDate(BaseDate(date: date)), isShowDate: false, isShowFriendsList: $isShowFriendsList))
-                .id(date)
+            ZStack {
+                screenBuilder.getComponent(type: .notesList(filter: .byDate(BaseDate(date: date)), isShowDate: false, isShowFriendsList: $isShowFriendsList))
+                    .id(date)
+                    .transition(notesTransition)
+            }
         }
         .padding(.bottom, 80)
+    }
+
+    private var notesTransition: AnyTransition {
+        guard let edge = notesTransitionEdge else { return .opacity }
+        let opposite: Edge = switch edge {
+        case .leading: .trailing
+        case .trailing: .leading
+        case .top: .bottom
+        case .bottom: .top
+        }
+        return .asymmetric(
+            insertion: .move(edge: edge).combined(with: .opacity),
+            removal: .move(edge: opposite).combined(with: .opacity)
+        )
     }
 }
 

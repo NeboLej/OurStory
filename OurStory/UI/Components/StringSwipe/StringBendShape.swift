@@ -11,6 +11,8 @@ struct StringBendShape: Shape {
     var edge: Edge
     var bend: CGFloat
     var anchor: CGFloat
+    /// Closes the path along the edge, producing the area between the string and the edge (for fills).
+    var closesAlongEdge = false
 
     var animatableData: AnimatablePair<CGFloat, CGFloat> {
         get { AnimatablePair(bend, anchor) }
@@ -38,6 +40,9 @@ struct StringBendShape: Shape {
             control1: point(along: peak + rightSpread * 0.5, depth: bend, in: rect),
             control2: point(along: length - rightSpread, depth: 0, in: rect)
         )
+        if closesAlongEdge {
+            path.closeSubpath()
+        }
         return path
     }
 

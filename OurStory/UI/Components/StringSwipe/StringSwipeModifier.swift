@@ -26,9 +26,15 @@ struct StringSwipeModifier: ViewModifier {
         content
             .overlay {
                 if !reduceMotion, let edge = pull.edge {
-                    StringBendShape(edge: edge, bend: pull.bend, anchor: pull.anchor)
-                        .stroke(style.color, style: StrokeStyle(lineWidth: style.lineWidth, lineCap: .round))
-                        .opacity(min(max(pull.bend / 6, 0), 1))
+                    ZStack {
+                        if let fillColor = style.fillColor {
+                            StringBendShape(edge: edge, bend: pull.bend, anchor: pull.anchor, closesAlongEdge: true)
+                                .fill(fillColor)
+                        }
+                        StringBendShape(edge: edge, bend: pull.bend, anchor: pull.anchor)
+                            .stroke(style.color, style: StrokeStyle(lineWidth: style.lineWidth, lineCap: .round))
+                    }
+                    .opacity(min(max(pull.bend / 6, 0), 1))
                         .allowsHitTesting(false)
                         .ignoresSafeArea()
                 }
