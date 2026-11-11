@@ -18,6 +18,7 @@ struct StringSwipeModifier: ViewModifier {
     @State private var excludedFrames: [CGRect] = []
     @State private var isIgnoringCurrentDrag = false
     @GestureState private var isDragging = false
+    @State private var commitFeedback = UIImpactFeedbackGenerator(style: .light)
 
     private static let flickVelocity: CGFloat = 500
     private static let flickMinDistance: CGFloat = 20
@@ -43,7 +44,6 @@ struct StringSwipeModifier: ViewModifier {
             .simultaneousGesture(dragGesture)
             .coordinateSpace(.named(StringSwipeCoordinateSpace.name))
             .onPreferenceChange(StringSwipeExclusionKey.self) { excludedFrames = $0 }
-            .sensoryFeedback(.impact(weight: .light), trigger: pull.isPastThreshold) { _, isPast in isPast }
             .onChange(of: isDragging) { _, dragging in
                 guard !dragging else { return }
                 isIgnoringCurrentDrag = false
@@ -56,6 +56,7 @@ struct StringSwipeModifier: ViewModifier {
             .updating($isDragging) { _, state, _ in state = true }
             .onChanged { value in
                 if lockedAxis == nil {
+                    commitFeedback.prepare()
                     isIgnoringCurrentDrag = excludedFrames.contains { $0.contains(value.startLocation) }
                 }
                 guard !isIgnoringCurrentDrag else {
@@ -122,6 +123,7 @@ struct StringSwipeModifier: ViewModifier {
     private func release(commit: Bool) {
         lockedAxis = nil
         if commit, let edge = pull.edge {
+            commitFeedback.impactOccurred()
             onCommit(edge)
         }
         pull.distance = 0
