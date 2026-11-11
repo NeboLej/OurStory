@@ -20,6 +20,12 @@ struct CalendarScreen: View {
     @State private var panelDragStartCoeficient: CGFloat?
     @State private var isShowFriendsList = false
     
+    @State private var scrollPhase: ScrollPhase = .idle
+    @State private var reachedEdges: Edge.Set = []
+    @State private var swipeEdges: Edge.Set = []
+    @State private var isPrependingMonths = false
+    @State private var prependAnchorMonthID: Int?
+    
     @State private var panelHeightCoeficient: CGFloat = 0.58
     private let minPanelHeight: CGFloat = 0.58
     private let maxPanelHeight: CGFloat = 0.92
@@ -56,11 +62,23 @@ struct CalendarScreen: View {
                             }
                             .padding(.bottom, hasSelectedNotes ? panelHeight + 8 : 8)
                         }
-                        .onChange(of: store.state.monthPages.count) {
-                            if let last = store.state.monthPages.last {
-                                proxy.scrollTo(last.id, anchor: .bottom)
+                        .onScrollGeometryChange(for: ScrollGeometry.self, of: { $0 }) { oldGeometry, newGeometry in
+                            let edges = reachedEdges(in: newGeometry)
+                            reachedEdges = edges
+                            if scrollPhase == .idle {
+                                swipeEdges = edges
+                            }
+                            keepPrependAnchor(oldGeometry.contentSize.height, newGeometry.contentSize.height, proxy: proxy)
+                        }
+                        .onScrollPhaseChange { _, newPhase in
+                            scrollPhase = newPhase
+                            // Edges are captured only at rest, so a drag that starts mid-list can't trigger loading.
+                            if newPhase == .idle {
+                                swipeEdges = reachedEdges
+                                finishPrependingWhenSettled()
                             }
                         }
+                        .stringSwipe(edges: swipeEdges, onCommit: loadMonths(from:))
                         .onChange(of: store.state.selectedDate) { oldDate, newDate in
                             guard let newDate else { return }
                             let panelWillAppear = oldDate == nil
@@ -107,6 +125,55 @@ struct CalendarScreen: View {
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .ignoresSafeArea(edges: .bottom)
+    }
+    
+    private func reachedEdges(in geometry: ScrollGeometry) -> Edge.Set {
+        let tolerance: CGFloat = 1
+        var edges: Edge.Set = []
+        if geometry.visibleRect.minY <= tolerance {
+            edges.insert(.top)
+        }
+        if geometry.visibleRect.maxY >= geometry.contentSize.height - tolerance {
+            edges.insert(.bottom)
+        }
+        return edges
+    }
+    
+    private func loadMonths(from edge: Edge) {
+        switch edge {
+        case .top:
+            // Prepending is only possible at the top edge, so the former first month is pinned to the top.
+            prependAnchorMonthID = store.state.monthPages.first?.id
+            isPrependingMonths = true
+            store.send(.loadPreviousMonths, animation: nil)
+            if scrollPhase == .idle {
+                finishPrependingWhenSettled()
+            }
+        case .bottom:
+            store.send(.loadNextMonths, animation: .easeOut(duration: 0.3))
+        case .leading, .trailing:
+            break
+        }
+    }
+    
+    /// Lazy rows above report estimated heights, so the position is restored by id on every size change while prepending.
+    private func keepPrependAnchor(_ oldHeight: CGFloat, _ newHeight: CGFloat, proxy: ScrollViewProxy) {
+        guard isPrependingMonths, oldHeight != newHeight, let prependAnchorMonthID else { return }
+        proxy.scrollTo(prependAnchorMonthID, anchor: .top)
+        // The geometry callback doesn't report the offset change made from inside it.
+        reachedEdges.remove(.top)
+        swipeEdges.remove(.top)
+    }
+    
+    private func finishPrependingWhenSettled() {
+        guard isPrependingMonths else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            if scrollPhase == .idle {
+                isPrependingMonths = false
+                prependAnchorMonthID = nil
+            }
+        }
     }
     
     private func weekdayHeader() -> some View {
