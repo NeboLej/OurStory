@@ -10,4 +10,6 @@ import Foundation
 enum CalendarScreenAction {
     case selectDate(Date)
     case closeNotePanel
+    case loadPreviousMonths
+    case loadNextMonths
 }

@@ -23,6 +23,8 @@ final class CalendarScreenStore: BaseStore {
     private var selectedNotes: [Note]?
     private var selectedDate: Date?
     
+    private static let monthsBatchSize = 6
+    
     var calendar: Calendar {
         var c = Calendar.current
         c.locale = L10n.language.locale
@@ -43,88 +45,104 @@ final class CalendarScreenStore: BaseStore {
             case .closeNotePanel:
                 selectedNotes = nil
                 selectedDate = nil
+            case .loadPreviousMonths:
+                appendMonths(forward: false)
+            case .loadNextMonths:
+                appendMonths(forward: true)
             }
         }
     }
     
     private func buildPages() -> [CalendarViewMonthData] {
-        let today = Date.now
-        var pages: [CalendarViewMonthData] = []
-        
         let allDates = noteMap.keys.compactMap { Calendar.current.date(from: DateComponents(year: $0.year, month: $0.month, day: $0.day)) }
-        let monthStarts = monthRange(from: allDates, today: today)
+        return monthRange(from: allDates, today: .now).compactMap(buildPage)
+    }
+    
+    private func appendMonths(forward: Bool) {
+        let boundary = forward ? monthPages.last?.month : monthPages.first?.month
+        guard let boundary else { return }
         
-        for monthStart in monthStarts {
-            guard let range = calendar.range(of: .day, in: .month, for: monthStart) else { continue }
-            
-            var cells: [CalendarViewCellData] = []
-            var totalNotes = 0
-            var activeDays = 0
-            var cellIndex = 0
-            
-            let year = calendar.component(.year, from: monthStart)
-            let month = calendar.component(.month, from: monthStart)
-            
-            // Leading placeholders
-            if let firstDay = calendar.date(from: DateComponents(year: year, month: month, day: range.lowerBound)) {
-                let wd = calendar.component(.weekday, from: firstDay)
-                let offset = wd == 1 ? 6 : wd - 2
-                for _ in 0..<offset {
-                    cells.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], dots: [], noteCount: 0))
-                    cellIndex += 1
-                }
-            }
-            
-            for day in range {
-                guard let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
-                
-                let notes = noteMap[BaseDate(date: dayDate)]
-                let colors = extractBorderColors(from: notes)
-                let dots = extractDots(from: notes)
-                let noteCount = notes?.count ?? 0
-                
-                if noteCount > 0 {
-                    totalNotes += noteCount
-                    activeDays += 1
-                }
-                
-                cells.append(CalendarViewCellData(id: cellIndex,
-                                        day: day,
-                                        date: dayDate,
-                                        dayNumber: day,
-                                        isToday: calendar.isDateInToday(dayDate),
-                                        colors: colors,
-                                        dots: dots,
-                                        noteCount: noteCount))
+        let offsets = forward ? Array(1...Self.monthsBatchSize) : Array((-Self.monthsBatchSize)...(-1))
+        let newPages = offsets
+            .compactMap { calendar.date(byAdding: .month, value: $0, to: boundary) }
+            .compactMap(buildPage)
+        
+        if forward {
+            monthPages.append(contentsOf: newPages)
+        } else {
+            monthPages.insert(contentsOf: newPages, at: 0)
+        }
+    }
+    
+    private func buildPage(for monthStart: Date) -> CalendarViewMonthData? {
+        guard let range = calendar.range(of: .day, in: .month, for: monthStart) else { return nil }
+        
+        var cells: [CalendarViewCellData] = []
+        var totalNotes = 0
+        var activeDays = 0
+        var cellIndex = 0
+        
+        let year = calendar.component(.year, from: monthStart)
+        let month = calendar.component(.month, from: monthStart)
+        
+        // Leading placeholders
+        if let firstDay = calendar.date(from: DateComponents(year: year, month: month, day: range.lowerBound)) {
+            let wd = calendar.component(.weekday, from: firstDay)
+            let offset = wd == 1 ? 6 : wd - 2
+            for _ in 0..<offset {
+                cells.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], dots: [], noteCount: 0))
                 cellIndex += 1
             }
+        }
+        
+        for day in range {
+            guard let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
             
-            // Split into weeks of 7
-            var weeks: [[CalendarViewCellData]] = []
-            var week: [CalendarViewCellData] = []
-            for cell in cells {
-                week.append(cell)
-                if week.count == 7 {
-                    weeks.append(week)
-                    week = []
-                }
+            let notes = noteMap[BaseDate(date: dayDate)]
+            let colors = extractBorderColors(from: notes)
+            let dots = extractDots(from: notes)
+            let noteCount = notes?.count ?? 0
+            
+            if noteCount > 0 {
+                totalNotes += noteCount
+                activeDays += 1
             }
-            if !week.isEmpty {
-                while week.count < 7 {
-                    week.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], dots: [], noteCount: 0))
-                    cellIndex += 1
-                }
+            
+            cells.append(CalendarViewCellData(id: cellIndex,
+                                    day: day,
+                                    date: dayDate,
+                                    dayNumber: day,
+                                    isToday: calendar.isDateInToday(dayDate),
+                                    colors: colors,
+                                    dots: dots,
+                                    noteCount: noteCount))
+            cellIndex += 1
+        }
+        
+        // Split into weeks of 7
+        var weeks: [[CalendarViewCellData]] = []
+        var week: [CalendarViewCellData] = []
+        for cell in cells {
+            week.append(cell)
+            if week.count == 7 {
                 weeks.append(week)
+                week = []
             }
-            
-            pages.append(CalendarViewMonthData(id: pages.count,
+        }
+        if !week.isEmpty {
+            while week.count < 7 {
+                week.append(CalendarViewCellData(id: cellIndex, day: -1, date: .distantPast, dayNumber: 0, isToday: false, colors: [], dots: [], noteCount: 0))
+                cellIndex += 1
+            }
+            weeks.append(week)
+        }
+        
+        // Month-based id stays stable when pages are prepended.
+        return CalendarViewMonthData(id: year * 12 + month,
                                      month: monthStart,
                                      weeks: weeks,
                                      totalNotes: totalNotes,
-                                     activeDays: activeDays))
-        }
-        
-        return pages
+                                     activeDays: activeDays)
     }
     
     private func monthRange(from dates: [Date], today: Date) -> [Date] {

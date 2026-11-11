@@ -20,6 +20,15 @@ struct CalendarScreen: View {
     @State private var panelDragStartCoeficient: CGFloat?
     @State private var isShowFriendsList = false
     
+    @State private var scrollPhase: ScrollPhase = .idle
+    @State private var reachedEdges: Edge.Set = []
+    @State private var swipeEdges: Edge.Set = []
+    @State private var isPrependingMonths = false
+    @State private var prependAnchorMonthID: Int?
+    @State private var monthHeights: [Int: CGFloat] = [:]
+    @State private var viewportHeight: CGFloat = 0
+    private let prependRevealHeight: CGFloat = 100
+    
     @State private var panelHeightCoeficient: CGFloat = 0.58
     private let minPanelHeight: CGFloat = 0.58
     private let maxPanelHeight: CGFloat = 0.92
@@ -50,17 +59,32 @@ struct CalendarScreen: View {
                             LazyVStack(spacing: 24) {
                                 ForEach(store.state.monthPages) { page in
                                     monthSection(page)
+                                        .onGeometryChange(for: CGFloat.self, of: \.size.height) { monthHeights[page.id] = $0 }
                                         .id(page.id)
                                 }
                                 .padding(.horizontal, 8)
                             }
                             .padding(.bottom, hasSelectedNotes ? panelHeight + 8 : 8)
                         }
-                        .onChange(of: store.state.monthPages.count) {
-                            if let last = store.state.monthPages.last {
-                                proxy.scrollTo(last.id, anchor: .bottom)
+                        .onScrollGeometryChange(for: ScrollGeometry.self, of: { $0 }) { oldGeometry, newGeometry in
+                            let edges = reachedEdges(in: newGeometry)
+                            reachedEdges = edges
+                            viewportHeight = newGeometry.containerSize.height
+                            if scrollPhase == .idle {
+                                swipeEdges = edges
+                            } else {
+                                swipeEdges.formIntersection(edges)
+                            }
+                            keepPrependAnchor(oldGeometry.contentSize.height, newGeometry.contentSize.height, proxy: proxy)
+                        }
+                        .onScrollPhaseChange { _, newPhase in
+                            scrollPhase = newPhase
+                            if newPhase == .idle {
+                                swipeEdges = reachedEdges
+                                finishPrependingWhenSettled(proxy: proxy)
                             }
                         }
+                        .stringSwipe(edges: swipeEdges) { loadMonths(from: $0, proxy: proxy) }
                         .onChange(of: store.state.selectedDate) { oldDate, newDate in
                             guard let newDate else { return }
                             let panelWillAppear = oldDate == nil
@@ -107,6 +131,64 @@ struct CalendarScreen: View {
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .ignoresSafeArea(edges: .bottom)
+    }
+    
+    private func reachedEdges(in geometry: ScrollGeometry) -> Edge.Set {
+        let tolerance: CGFloat = 1
+        var edges: Edge.Set = []
+        if geometry.visibleRect.minY <= tolerance {
+            edges.insert(.top)
+        }
+        if geometry.visibleRect.maxY >= geometry.contentSize.height - tolerance {
+            edges.insert(.bottom)
+        }
+        return edges
+    }
+    
+    private func loadMonths(from edge: Edge, proxy: ScrollViewProxy) {
+        guard reachedEdges.contains(Edge.Set(edge)), !isPrependingMonths else { return }
+        switch edge {
+        case .top:
+            prependAnchorMonthID = store.state.monthPages.first?.id
+            isPrependingMonths = true
+            store.send(.loadPreviousMonths, animation: nil)
+            if scrollPhase == .idle {
+                finishPrependingWhenSettled(proxy: proxy)
+            }
+        case .bottom:
+            store.send(.loadNextMonths, animation: .easeOut(duration: 0.3))
+        case .leading, .trailing:
+            break
+        }
+    }
+    
+    
+    private func keepPrependAnchor(_ oldHeight: CGFloat, _ newHeight: CGFloat, proxy: ScrollViewProxy) {
+        guard isPrependingMonths, oldHeight != newHeight, let prependAnchorMonthID else { return }
+        proxy.scrollTo(prependAnchorMonthID, anchor: .top)
+        reachedEdges.remove(.top)
+        swipeEdges.remove(.top)
+    }
+    
+    private func finishPrependingWhenSettled(proxy: ScrollViewProxy) {
+        guard isPrependingMonths else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard scrollPhase == .idle, isPrependingMonths else { return }
+            isPrependingMonths = false
+            if let prependAnchorMonthID {
+                revealPrependedMonth(above: prependAnchorMonthID, proxy: proxy)
+            }
+            prependAnchorMonthID = nil
+        }
+    }
+    
+    private func revealPrependedMonth(above monthID: Int, proxy: ScrollViewProxy) {
+        guard let rowHeight = monthHeights[monthID], viewportHeight > rowHeight else { return }
+        let unitY = min(prependRevealHeight / (viewportHeight - rowHeight), 1)
+        withAnimation(.easeInOut(duration: 0.35)) {
+            proxy.scrollTo(monthID, anchor: UnitPoint(x: 0.5, y: unitY))
+        }
     }
     
     private func weekdayHeader() -> some View {
