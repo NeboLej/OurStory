@@ -25,6 +25,18 @@ protocol NoteRepositoryProtocol {
 
 final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
     
+    /// GRDB can't include `noteFriends` alongside `friends` (through `noteFriends`), so sent links are fetched separately.
+    private func makeNotes(_ rows: [NoteWithFriends], db: Database) throws -> [Note] {
+        let noteIDs = rows.map(\.note.id)
+        let sentLinks = try NoteFriend
+            .filter(noteIDs.contains(Column("noteID")))
+            .filter(Column("isSent") == true)
+            .fetchAll(db)
+        let syncedByNote = Dictionary(grouping: sentLinks, by: \.noteId)
+            .mapValues { Set($0.map(\.friendId)) }
+        return rows.map { Note(from: $0, syncedFriendIDs: syncedByNote[$0.note.id] ?? []) }
+    }
+    
     func addNote(_ note: Note) async {
         do {
             try await dbPool.write { db in
@@ -80,7 +92,7 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                 let request = NoteModelGRDB.including(all: NoteModelGRDB.friends.including(optional: FriendModelGRDB.user))
                     .including(optional: NoteModelGRDB.owner.including(optional: FriendModelGRDB.user))
                 let results = try NoteWithFriends.fetchAll(db, request)
-                return results.map { Note(from: $0) }
+                return try makeNotes(results, db: db)
             }
         } catch {
             fatalError()
@@ -99,7 +111,7 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                     .including(all: NoteModelGRDB.friends)
 
                 let notes = try NoteWithFriends.fetchAll(db, request)
-                return notes.map { Note(from: $0) }
+                return try makeNotes(notes, db: db)
             }
         } catch {
             Logger.log("getNotes error", location: .GRDB, event: .error(error))
@@ -120,7 +132,7 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                     .including(all: NoteModelGRDB.friends)
 
                 let notes = try NoteWithFriends.fetchAll(db, request)
-                return notes.map { Note(from: $0) }
+                return try makeNotes(notes, db: db)
             }
         } catch {
             Logger.log("getUnsentNotes error", location: .GRDB, event: .error(error))
@@ -151,11 +163,8 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
                 // Объединяем и убираем дубликаты по id
                 let allNotes = myNotes + ownerNotes
                 var seen = Set<UUID>()
-                return allNotes.compactMap { noteWithFriends -> Note? in
-                    let note = Note(from: noteWithFriends)
-                    guard seen.insert(note.id).inserted else { return nil }
-                    return note
-                }
+                let uniqueNotes = allNotes.filter { seen.insert($0.note.id).inserted }
+                return try makeNotes(uniqueNotes, db: db)
             }
         } catch {
             Logger.log("getTotalNotes error", location: .GRDB, event: .error(error))

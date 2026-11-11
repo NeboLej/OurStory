@@ -118,7 +118,7 @@ struct NoteListContent: View {
                             store.send(.selectFriendsNote(note))
                         }
                     } label: {
-                        friendsIndicatorView(note.friends)
+                        friendsIndicatorView(note)
                             .transition(.scale(scale: 0.1).combined(with: .opacity))
                             .frame(width: store.showFriendsNote == note ? 0 : store.showMenuNote == note ? 4 : 16)
                             .padding(.vertical, store.showMenuNote == note ? 8 : 0)
@@ -133,7 +133,7 @@ struct NoteListContent: View {
                             Group {
                                 if store.showFriendsNote == note {
                                     VStack {
-                                        friendsList(friends: note.friends)
+                                        friendsList(note: note)
                                             .transition(.scale(scale: 0.95).combined(with: .opacity))
                                         Rectangle()
                                             .opacity(0.001)
@@ -158,8 +158,19 @@ struct NoteListContent: View {
                         Text(note.text)
                             .font(.myRegular(size: 16))
                             .foregroundStyle(.textMulticolor)
+                        
+                        if note.isSyncedWithAllFriends {
+                            if store.showMenuNote == note {
+                                Spacer(minLength: 0)
+                            }
+                            syncedIndicator
+                                .padding(.top, 8)
+                                .padding(.bottom, store.showMenuNote == note ? 8 : 0)
+                        }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: store.showMenuNote == note ? .infinity : nil, alignment: .topLeading)
                     .padding(.horizontal, 16)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         withAnimation(.snappy) {
                             if store.showMenuNote == note {
@@ -231,18 +242,16 @@ struct NoteListContent: View {
     }
     
     @ViewBuilder
-    private func friendsList(friends: [Friend]) -> some View {
+    private func friendsList(note: Note) -> some View {
         VStack(spacing: 0) {
-            ForEach(friends) { friend in
+            ForEach(note.friends) { friend in
                 Button {
                     withAnimation(.snappy) {
                         store.send(.selectFriendsNote(nil))
                     }
                 } label: {
                     HStack {
-                        Circle()
-                            .foregroundStyle(Color(hex: friend.color))
-                            .frame(height: 20)
+                        friendSyncCircle(color: Color(hex: friend.color), isSynced: note.isSynced(with: friend))
                         Text(friend.name)
                             .font(.myRegular(size: 14))
                             .foregroundStyle(.textMulticolor)
@@ -257,12 +266,27 @@ struct NoteListContent: View {
         .padding(.vertical, 8)
     }
     
+    private var syncedIndicator: some View {
+        HStack {
+            Spacer()
+            Image(systemName: "checkmark")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Color.myPrimary)
+        }
+    }
+    
+    private func friendSyncCircle(color: Color, isSynced: Bool) -> some View {
+        Circle()
+            .fill(isSynced ? color : .clear)
+            .strokeBorder(color, lineWidth: 2)
+            .frame(width: 20, height: 20)
+    }
+    
     @ViewBuilder
-    private func friendsIndicatorView(_ friends: [Friend]) -> some View {
-        let colors = friends.map { Color(hex: $0.color) }
+    private func friendsIndicatorView(_ note: Note) -> some View {
+        let colors = note.friends.map { Color(hex: $0.color) }
         Rectangle()
             .fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))
-//            .frame(width: 16)
     }
     
     private func friendNoteView(_ note: Note) -> some View {

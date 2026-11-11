@@ -11,6 +11,7 @@ enum AppAction {
     case selectedDate(Date)
     case addNewNote(Note)
     case syncNotes([SyncNote], Friend)
+    case markNotesSynced(noteIDs: [UUID], friendID: UUID)
     case editNote(Note)
     case deleteNote(Note)
     case addNewFriend(Friend)

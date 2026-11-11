@@ -124,6 +124,7 @@ final class SyncProgressStore: BaseStore {
         Task {
             await noteRepository.updateSentStatus(noteIDs: sentNoteIDs, friendID: friend.id, isSent: true)
         }
+        appStore.send(.markNotesSynced(noteIDs: sentNoteIDs, friendID: friend.id))
         
         let updatedFriend: Friend
         if isNewFriend {

@@ -154,6 +154,8 @@ final class AppStore: AppStoreProtocol {
         case .syncNotes(let notes, let friend):
             syncNotes(notes, friend: friend)
             analyticsService.log(event: AppEvent.noteSyncSuccess(count: notes.count))
+        case .markNotesSynced(let noteIDs, let friendID):
+            markNotesSynced(noteIDs: noteIDs, friendID: friendID)
         case .addNewFriend(let friend):
             addNewFriend(friend)
             analyticEvent(AppEvent.newFriend)

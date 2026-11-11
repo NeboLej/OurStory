@@ -37,6 +37,11 @@ extension AppStore {
         }
     }
     
+    func markNotesSynced(noteIDs: [UUID], friendID: UUID) {
+        let ids = Set(noteIDs)
+        allNotes = allNotes.map { ids.contains($0.id) ? $0.markedSynced(with: friendID) : $0 }
+    }
+    
     func updateNote(_ note: Note) {
         Task {
             await noteRepository.updateNote(note)
