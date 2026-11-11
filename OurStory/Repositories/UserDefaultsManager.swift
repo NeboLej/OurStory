@@ -27,6 +27,7 @@ class UserDefaultsManager {
         case dailyReminderHour
         case dailyReminderMinute
         case notificationPromptShown
+        case cloudProfileChecked
     }
     
     func getCurrentUser() -> User {
@@ -76,6 +77,13 @@ class UserDefaultsManager {
         Logger.log("Edit user (restore)", location: .userDefault, event: .success)
         
         return User(id: id, name: name, color: color)
+    }
+    
+    /// Cleared on reinstall. Until a successful cloud download has checked for an existing profile,
+    /// the local profile must not be uploaded, or it would shadow the one being restored.
+    var isCloudProfileChecked: Bool {
+        get { db.bool(forKey: UserDefaultsKeys.cloudProfileChecked.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.cloudProfileChecked.rawValue) }
     }
     
     // MARK: - Note Draft

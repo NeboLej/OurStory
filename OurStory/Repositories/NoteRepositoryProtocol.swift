@@ -177,10 +177,9 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
         do {
             try await dbPool.write { db in
                 let placeholders = noteIDs.map { _ in "?" }.joined(separator: ",")
-                let now = Date().timeIntervalSinceReferenceDate
                 try db.execute(
                     sql: "UPDATE noteFriend SET isSent = ?, updatedDate = ? WHERE friendID = ? AND noteID IN (\(placeholders))",
-                    arguments: StatementArguments([isSent.databaseValue, now.databaseValue, friendID.databaseValue] + noteIDs.map { $0.databaseValue })
+                    arguments: StatementArguments([isSent.databaseValue, Date().databaseValue, friendID.databaseValue] + noteIDs.map { $0.databaseValue })
                 )
                 Logger.log("updateSentStatus isSent=\(isSent)", location: .GRDB, event: .success)
             }
@@ -192,10 +191,9 @@ final class NoteRepository: BaseRepository, NoteRepositoryProtocol {
     func resetSentStatus(noteID: UUID) async {
         do {
             try await dbPool.write { db in
-                let now = Date().timeIntervalSinceReferenceDate
                 try db.execute(
                     sql: "UPDATE noteFriend SET isSent = 0, updatedDate = ? WHERE noteID = ?",
-                    arguments: [now, noteID]
+                    arguments: [Date(), noteID]
                 )
                 Logger.log("resetSentStatus", location: .GRDB, event: .success)
             }

@@ -149,7 +149,7 @@ final class CloudKitService {
             let allRecords = changes.recordsByType
             
             Logger.log("downloadAll: downloadProfile...", location: .cloudKit, event: .processing)
-            try await downloadProfile(from: allRecords["CD_Profile"] ?? [])
+            try await downloadProfile(from: allRecords["CD_Profile"] ?? [], isFullFetch: savedToken == nil)
             Logger.log("downloadAll: downloadUsers...", location: .cloudKit, event: .processing)
             try await downloadUsers(from: filterDeleted(allRecords["CD_User"] ?? []))
             Logger.log("downloadAll: downloadFriends...", location: .cloudKit, event: .processing)

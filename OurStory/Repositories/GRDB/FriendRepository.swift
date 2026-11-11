@@ -61,7 +61,7 @@ final class FriendRepository: BaseRepository, FriendRepositoryProtocol {
             try await dbPool.write { db in
                 try db.execute(
                     sql: "UPDATE friend SET isHidden = 1, updatedDate = ? WHERE id = ?",
-                    arguments: [Date().timeIntervalSinceReferenceDate, friend.id]
+                    arguments: [Date(), friend.id]
                 )
                 Logger.log("hide friend \(friend.name)", location: .GRDB, event: .success)
             }

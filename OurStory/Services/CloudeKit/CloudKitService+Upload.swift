@@ -15,6 +15,11 @@ extension CloudKitService {
         let userDefaults = UserDefaultsManager()
         let user = userDefaults.getCurrentUser()
         
+        guard userDefaults.isCloudProfileChecked, !user.name.isEmpty, !user.color.isEmpty else {
+            Logger.log("Skip profile upload: cloud profile not checked yet or profile is empty", location: .cloudKit, event: .processing)
+            return
+        }
+        
         let recordID = CKRecord.ID(recordName: "profile_\(user.id.uuidString)", zoneID: zoneID)
         let record = CKRecord(recordType: "CD_Profile", recordID: recordID)
         record["userID"] = user.id.uuidString as NSString

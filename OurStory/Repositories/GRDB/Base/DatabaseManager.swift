@@ -124,6 +124,17 @@ final class DatabaseManager {
                 t.add(column: "dataValue", .blob)
             }
         }
+
+        // Migration 8: Raw-SQL updates used to store updatedDate as REAL (timeIntervalSinceReferenceDate)
+        // while GRDB stores Date as TEXT. SQLite orders REAL before TEXT, so such rows were never
+        // picked up by delta upload (`updatedDate > lastUpload`). Bump them so the next sync uploads them.
+        for table in ["user", "friend", "note", "noteFriend"] {
+            guard try db.tableExists(table) else { continue }
+            try db.execute(
+                sql: "UPDATE \(table) SET updatedDate = ? WHERE typeof(updatedDate) IN ('real', 'integer')",
+                arguments: [Date()]
+            )
+        }
     }
     
     

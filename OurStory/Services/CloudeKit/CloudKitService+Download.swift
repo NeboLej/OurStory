@@ -56,26 +56,33 @@ extension CloudKitService {
     
     // MARK: - Download Profile
     
-    func downloadProfile(from records: [CKRecord]) async throws {
-        guard let cloudRecord = records.first else { return }
-        
-        let cloudName = cloudRecord["name"] as? String ?? ""
-        let cloudColor = cloudRecord["color"] as? String ?? ""
-        let cloudUserIDStr = cloudRecord["userID"] as? String
-        let cloudUserID = cloudUserIDStr.flatMap { UUID(uuidString: $0) }
-        
+    /// - Parameter isFullFetch: `true` when no change token was stored (fresh install / reinstall).
+    func downloadProfile(from records: [CKRecord], isFullFetch: Bool) async throws {
         let userDefaults = UserDefaultsManager()
+        defer { userDefaults.isCloudProfileChecked = true }
+        
+        // Every install used to create its own `profile_<uuid>` record, some with empty fields — pick the latest filled one.
+        let cloudRecord = records
+            .filter { !(($0["name"] as? String) ?? "").isEmpty && !(($0["color"] as? String) ?? "").isEmpty }
+            .max { ($0["updatedDate"] as? Date ?? .distantPast) < ($1["updatedDate"] as? Date ?? .distantPast) }
+        guard let cloudRecord,
+              let cloudName = cloudRecord["name"] as? String,
+              let cloudColor = cloudRecord["color"] as? String else { return }
+        let cloudUserID = (cloudRecord["userID"] as? String).flatMap { UUID(uuidString: $0) }
+        
         let localUser = userDefaults.getCurrentUser()
         
-        // Reinstall scenario: local user has empty name but cloud has data
-        if localUser.name.isEmpty && !cloudName.isEmpty {
-            if let cloudID = cloudUserID {
-                _ = userDefaults.restoreUser(id: cloudID, name: cloudName, color: cloudColor)
-            } else {
-                _ = userDefaults.editUser(name: cloudName, color: cloudColor)
-            }
-            Logger.log("Restored profile from cloud", location: .cloudKit, event: .success)
+        // Reinstall: either onboarding isn't completed yet, or it was completed before the first
+        // successful download (e.g. iCloud was temporarily unavailable at launch).
+        let isFirstCheckAfterInstall = !userDefaults.isCloudProfileChecked && isFullFetch
+        guard localUser.name.isEmpty || isFirstCheckAfterInstall else { return }
+        
+        if let cloudUserID {
+            _ = userDefaults.restoreUser(id: cloudUserID, name: cloudName, color: cloudColor)
+        } else {
+            _ = userDefaults.restoreUser(id: localUser.id, name: cloudName, color: cloudColor)
         }
+        Logger.log("Restored profile from cloud", location: .cloudKit, event: .success)
     }
     
     // MARK: - Download Users

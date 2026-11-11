@@ -131,6 +131,9 @@ extension AppStore {
             await MainActor.run {
                 // Re-read user from UserDefaults (may have been restored from iCloud)
                 user = userDefaultsManager.getCurrentUser()
+                if !user.name.isEmpty, !user.color.isEmpty, appCoordinator.fullScreenCover == .onboarding {
+                    appCoordinator.fullScreenCover = nil
+                }
                 loadData()
             }
             await cloudKitService.uploadAll()
