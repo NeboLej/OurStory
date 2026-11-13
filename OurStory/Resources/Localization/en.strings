@@ -159,7 +159,7 @@
 "notificationReminderBodies" = "Even a few words can become a memory you'll cherish later|The best stories are written while the feelings are still fresh|Take a minute to save something important|The Bible wasn't written in a day either|I'm sure there's something from today worth writing about|Imagine how wonderful it will be to look back on today in 5 years|Let's write a letter to our future selves";
 "notificationPromptTitle" = "Would you like reminders to write your stories?";
 "notificationPromptMessage" = "I can remind you to write your stories every day. You can choose a convenient time in the settings";
-"enableNotifications" = "ENABLE";
-"notNow" = "NOT NOW";
+"enableNotifications" = "Enable";
+"notNow" = "Not now";
 "notificationDeniedMessage" = "Notifications are disabled in system settings. Enable them to receive reminders.";
 "notificationOpenSettings" = "OPEN SETTINGS";

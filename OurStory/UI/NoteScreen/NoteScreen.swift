@@ -366,6 +366,10 @@ struct NoteScreen: View {
             let granted = await notificationService.requestPermission()
             if granted {
                 userDefaultsManager.isNotificationsEnabled = true
+                userDefaultsManager.isDailyReminderEnabled = true
+                userDefaultsManager.dailyReminderHour = 21
+                userDefaultsManager.dailyReminderMinute = 0
+                notificationService.scheduleDailyReminder(hour: 21, minute: 0)
             }
             dismiss()
         }

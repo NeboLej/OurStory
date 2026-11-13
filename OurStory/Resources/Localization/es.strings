@@ -159,7 +159,7 @@
 "notificationReminderBodies" = "Incluso unas pocas palabras pueden convertirse en un recuerdo que atesorarás más adelante|Las mejores historias se escriben cuando los sentimientos aún están frescos|Dedica un minuto a guardar algo importante|La Biblia tampoco se escribió en un solo día|Seguro que hoy hay algo sobre lo que puedes escribir|Imagina lo bonito que será recordar cómo fue todo dentro de 5 años|Escribamos una carta a nuestro yo del futuro";
 "notificationPromptTitle" = "¿Quieres que te recuerde escribir tus historias?";
 "notificationPromptMessage" = "Puedo recordarte cada día que escribas tus historias. Puedes elegir la hora que más te convenga en los ajustes";
-"enableNotifications" = "ACTIVAR";
-"notNow" = "AHORA NO";
+"enableNotifications" = "Activar";
+"notNow" = "Ahora no";
 "notificationDeniedMessage" = "Las notificaciones están desactivadas en los ajustes del sistema. Actívalas para recibir recordatorios.";
 "notificationOpenSettings" = "ABRIR AJUSTES";
