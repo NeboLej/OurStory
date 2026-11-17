@@ -67,13 +67,18 @@ extension AppStore {
     }
     
     func editFriend(_ friend: Friend) {
+        if let index = allFriends.firstIndex(where: { $0.id == friend.id }) {
+            allFriends[index] = friend
+        } else {
+            allFriends.append(friend)
+        }
+        allNotes = allNotes.map { $0.replacingFriend(friend) }
+
         Task {
             if let user = friend.user {
                 await userRepository.addNewUser(user)
             }
             await friendsRepository.editFriend(friend)
-            allFriends.removeAll { $0.id == friend.id }
-            allFriends.append(friend)
         }
     }
     

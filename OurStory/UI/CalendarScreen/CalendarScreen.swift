@@ -85,6 +85,10 @@ struct CalendarScreen: View {
                             }
                         }
                         .stringSwipe(edges: swipeEdges) { loadMonths(from: $0, proxy: proxy) }
+                        .onAppear {
+                            guard let id = store.currentMonthPageID else { return }
+                            proxy.scrollTo(id, anchor: .top)
+                        }
                         .onChange(of: store.state.selectedDate) { oldDate, newDate in
                             guard let newDate else { return }
                             let panelWillAppear = oldDate == nil
@@ -245,30 +249,34 @@ struct CalendarScreen: View {
     
     // MARK: - Day Cell
     
-    private let baseCellColor = Color(.tertiarySystemFill)
-    private let activeCellColor = Color(.tertiarySystemFill)
+    private let baseCellColor = Color(hex: "767680").opacity(0.3)//Color(.tertiarySystemFill)
+    private let activeCellColor = Color(hex: "767680").opacity(0.3)//Color(.tertiarySystemFill)
     
     private func dayCell(_ cell: CalendarViewCellData) -> some View {
         let isSelected = store.state.selectedDate.map { store.calendar.isDate($0, inSameDayAs: cell.date) } ?? false
+        let isDotsTinted = isSelected
         let hasContent = !cell.colors.isEmpty
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let fillColor: Color = if isSelected {
+            .myPrimary
+        } else if cell.isToday {
+            .myAccentColor1
+        } else {
+            hasContent ? activeCellColor : baseCellColor
+        }
         
         return ZStack {
-            shape.fill(hasContent ? activeCellColor : baseCellColor)
+            shape.fill(fillColor)
             
             if cell.colors.count >= 2 {
                 shape
                     .strokeBorder(AngularGradient(gradient: Gradient(stops: angularStops(for: cell.colors)),
-                                                  center: .center ), lineWidth: 1)
-                    .padding(1)
+                                                  center: .center ), lineWidth: 1.5)
+//                    .padding(0.5)
             } else if let color = cell.colors.first {
                 shape
-                    .strokeBorder(color, lineWidth: 1)
-                    .padding(1)
-            }
-            
-            if isSelected {
-                shape.fill(Color.myPrimary)
+                    .strokeBorder(color, lineWidth: 1.5)
+//                    .padding(0.5)
             }
             
             // Content
@@ -276,7 +284,7 @@ struct CalendarScreen: View {
                 Text("\(cell.dayNumber)")
                     .font(.myMedium(size: 12))
                     .foregroundStyle(
-                        isSelected ? .black :
+                        (isSelected || cell.isToday) ? .black :
                             (hasContent ? Color.primary : Color.textMulticolor.opacity(0.6))
                     )
                 
@@ -285,22 +293,17 @@ struct CalendarScreen: View {
                         ForEach(Array(cell.dots.prefix(5).enumerated()), id: \.offset) { _, dot in
                             if dot.style == .fill {
                                 Circle()
-                                    .fill(isSelected ? Color.black.opacity(0.7) : dot.color)
+                                    .fill(isDotsTinted ? Color.black.opacity(0.7) : dot.color)
                                     .frame(width: 4, height: 4)
                             } else {
                                 Circle()
-                                    .stroke(isSelected ? Color.black.opacity(0.7) : dot.color, lineWidth: 0.5)
+                                    .stroke(isDotsTinted ? Color.black.opacity(0.7) : dot.color, lineWidth: 0.5)
                                     .frame(width: 4, height: 4)
                             }
 
                         }
                     }
                 }
-            }
-            
-            // Today ring
-            if cell.isToday && !isSelected {
-                shape.strokeBorder(Color.myPrimary, lineWidth: 2)
             }
         }
         .frame(maxWidth: .infinity)

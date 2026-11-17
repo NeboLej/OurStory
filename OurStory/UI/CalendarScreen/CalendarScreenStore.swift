@@ -25,6 +25,13 @@ final class CalendarScreenStore: BaseStore {
     
     private static let monthsBatchSize = 6
     
+    var currentMonthPageID: Int? {
+        let comps = calendar.dateComponents([.year, .month], from: .now)
+        guard let year = comps.year, let month = comps.month else { return nil }
+        let targetID = year * 12 + month
+        return monthPages.min { abs($0.id - targetID) < abs($1.id - targetID) }?.id
+    }
+    
     var calendar: Calendar {
         var c = Calendar.current
         c.locale = L10n.language.locale
@@ -146,14 +153,14 @@ final class CalendarScreenStore: BaseStore {
     }
     
     private func monthRange(from dates: [Date], today: Date) -> [Date] {
-        guard let earliest = dates.min() else {
+        guard let earliest = dates.min(), let latest = dates.max() else {
             // No stories — show current month only
             let comps = calendar.dateComponents([.year, .month], from: today)
             return [calendar.date(from: comps)].compactMap { $0 }
         }
         
         let startComps = calendar.dateComponents([.year, .month], from: earliest)
-        let endComps = calendar.dateComponents([.year, .month], from: today)
+        let endComps = calendar.dateComponents([.year, .month], from: latest)
         
         guard var cursor = calendar.date(from: startComps),
               let end = calendar.date(from: endComps) else { return [] }

@@ -55,6 +55,21 @@ struct Note: Identifiable, Equatable, Hashable {
         Note(id: id, title: title, date: date, text: text, friends: friends, owner: owner, syncedFriendIDs: syncedFriendIDs.union([friendID]))
     }
     
+    func replacingFriend(_ friend: Friend) -> Self {
+        let isOwner = owner?.id == friend.id
+        let isTagged = friends.contains { $0.id == friend.id }
+        guard isOwner || isTagged else { return self }
+        return Note(
+            id: id,
+            title: title,
+            date: date,
+            text: text,
+            friends: friends.map { $0.id == friend.id ? friend : $0 },
+            owner: isOwner ? friend : owner,
+            syncedFriendIDs: syncedFriendIDs
+        )
+    }
+
     /// Any edit recreates noteFriend links with `isSent = false`, so sync status is reset.
     func copy(title: String? = nil, date: Date? = nil, text: String? = nil, friends: [Friend]? = nil) -> Self {
         Note(id: self.id, title: title ?? self.title, date: date ?? self.date, text: text ?? self.text, friends: friends ?? self.friends, owner: self.owner)
