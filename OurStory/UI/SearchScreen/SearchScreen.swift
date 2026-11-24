@@ -32,8 +32,9 @@ struct SearchScreen: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            screenBuilder.getComponent(type: .notesList(filter: .bySearch(searchText), isShowDate: true, isShowFriendsList: $isShowFriendsList))
-                .id(searchText)
+            let noteIDs = store.state.noteIDs
+            screenBuilder.getComponent(type: .notesList(filter: .ranked(noteIDs: noteIDs), isShowDate: true, isShowFriendsList: $isShowFriendsList))
+                .id(noteIDs)
                 .onScrollPhaseChange { _, newPhase in
                     if newPhase == .interacting {
                         isSearchFocused = false

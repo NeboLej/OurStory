@@ -161,6 +161,19 @@ final class FriendScreenStore: BaseStore {
         setupSyncCallbacks()
         syncService.startDiscovery(friend: friend, notes: unsentNotes)
         startSearchTimeout()
+        
+        #if DEBUG
+        // TEMPORARY: fake a nearby friend for App Store screenshots
+        if ProcessInfo.processInfo.arguments.contains(PromoDataSeeder.launchArgument) {
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(1))
+                self?.searchTimeoutTask?.cancel()
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    self?.searchStatus = .friendReady
+                }
+            }
+        }
+        #endif
     }
     
     private func retrySearching() {

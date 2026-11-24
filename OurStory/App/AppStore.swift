@@ -22,7 +22,6 @@ protocol AppStoreProtocol: AnyObject {
     func send(_ action: AppAction)
     func send(_ action: NavigateAction)
     func notes(for filter: NoteFilter) -> [Note]
-    func searchNotes(query: String) -> [Note]
     func syncDownload()
     func analyticEvent(_ event: AnalyticsEvent)
 }
@@ -58,10 +57,6 @@ final class AppStoreMock: AppStoreProtocol {
     }
     
     func notes(for filter: NoteFilter) -> [Note] {
-        Note.tmpNotes
-    }
-    
-    func searchNotes(query: String) -> [Note] {
         Note.tmpNotes
     }
     
@@ -181,13 +176,14 @@ final class AppStore: AppStoreProtocol {
             return allNotes
                 .filter { $0.friends.contains(where: { $0.id == friendID }) || $0.owner?.id == friendID }
                 .sorted { $0.date > $1.date }
-        case .bySearch(let query):
-            guard query.count >= 3 else { return [] }
-            return searchNotes(query: query)
         case .every(noteID: let noteIDs):
+            let idSet = Set(noteIDs)
             return allNotes
-                .filter { noteIDs.contains($0.id) }
+                .filter { idSet.contains($0.id) }
                 .sorted { $0.date > $1.date }
+        case .ranked(noteIDs: let noteIDs):
+            let notesByID = Dictionary(allNotes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            return noteIDs.compactMap { notesByID[$0] }
         }
     }
     

@@ -41,7 +41,18 @@ enum L10n {
     }
     
     private static func plural(_ base: String, count: Int) -> String {
-        String(format: str("\(base).\(count == 1 ? "one" : "other")"), count)
+        let key = "\(base).\(pluralCategory(count))"
+        let format = strings[key] ?? str("\(base).other")
+        return String(format: format, count)
+    }
+    
+    private static func pluralCategory(_ count: Int) -> String {
+        guard language == .russian else { return count == 1 ? "one" : "other" }
+        let mod10 = count % 10
+        let mod100 = count % 100
+        if mod10 == 1 && mod100 != 11 { return "one" }
+        if (2...4).contains(mod10) && !(12...14).contains(mod100) { return "few" }
+        return "other"
     }
     
     // MARK: - Common
@@ -150,7 +161,7 @@ enum L10n {
     
     // MARK: - Calendar
     
-    static func daysAndStories(_ days: Int, _ notes: Int) -> String { str("daysAndStories", days, notes) }
+    static func daysAndStories(_ days: Int, _ notes: Int) -> String { "\(plural("daysCount", count: days)) · \(plural("storiesCount", count: notes))" }
     static func entriesCount(_ count: Int) -> String { plural("entriesCount", count: count) }
     
     // MARK: - Sync

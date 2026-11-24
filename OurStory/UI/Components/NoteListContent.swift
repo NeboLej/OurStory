@@ -35,7 +35,7 @@ struct NoteListContent: View {
     private var noteList: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(store.state.groupedNotes, id: \.date) { group in
+                ForEach(store.state.groupedNotes) { group in
                     if isShowDate {
                         Text(group.date.toReadable())
                             .font(.myMedium(size: 14))

@@ -20,6 +20,9 @@ struct OurStoryApp: App {
     @State private var localeManager = LocaleManager.shared
     
     init() {
+        #if DEBUG
+        PromoDataSeeder.seedIfRequested()
+        #endif
         let repositoryFactory: RepositoryFactoryProtocol = RepositoryFactory()
         let appStore = AppStore(repositoryFactory: repositoryFactory)
         screenBuilder = ScreenBuilder(appStore: appStore, repositoryFactory: repositoryFactory)

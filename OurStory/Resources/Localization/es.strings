@@ -93,7 +93,10 @@
 "friendNearbyStartSync" = "Tu amigo está cerca — inicia la sincronización";
 
 // Calendar
-"daysAndStories" = "%lld días · %lld historias";
+"daysCount.one" = "%lld día";
+"daysCount.other" = "%lld días";
+"storiesCount.one" = "%lld historia";
+"storiesCount.other" = "%lld historias";
 "entriesCount.one" = "%lld entrada";
 "entriesCount.other" = "%lld entradas";
 

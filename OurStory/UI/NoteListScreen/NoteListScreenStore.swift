@@ -23,7 +23,7 @@ final class NoteListScreenStore: BaseStore {
     }
     
     var state: NoteListScreenState {
-        NoteListScreenState(notes: notes, allFriends: appStore.allFriends)
+        NoteListScreenState(notes: notes, allFriends: appStore.allFriends, preservesOrder: filter.preservesOrder)
     }
     
     init(appStore: AppStoreProtocol, filter: NoteFilter) {

@@ -93,8 +93,14 @@
 "friendNearbyStartSync" = "Друг рядом — начать синхронизацию";
 
 // Calendar
-"daysAndStories" = "%lld дня · %lld истории";
+"daysCount.one" = "%lld день";
+"daysCount.few" = "%lld дня";
+"daysCount.other" = "%lld дней";
+"storiesCount.one" = "%lld история";
+"storiesCount.few" = "%lld истории";
+"storiesCount.other" = "%lld историй";
 "entriesCount.one" = "%lld запись";
+"entriesCount.few" = "%lld записи";
 "entriesCount.other" = "%lld записей";
 
 // Sync
