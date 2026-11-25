@@ -23,7 +23,7 @@ final class SyncProgressStore: BaseStore {
     
     private var syncPhase: SyncPhase = .idle
     private var newNoteCount: Int = 0
-    private var newNotes: [Note] = []
+    private var newNoteIDs: [UUID] = []
     
     // MARK: - Internal
     
@@ -73,14 +73,15 @@ final class SyncProgressStore: BaseStore {
             appStore.appCoordinator.fullScreenCover = nil
             
         case .toNewNotes:
-            appStore.appCoordinator.fullScreenCover = nil
+            let appStore = appStore
             let friendName = friend.name
-            Task { @MainActor [weak self] in
+            let noteIDs = newNoteIDs
+            appStore.appCoordinator.fullScreenCover = nil
+            Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 300_000_000)
-                guard let self else { return }
-                self.appStore.send(.toNotesList(
+                appStore.send(.toNotesList(
                     title: L10n.storiesFrom(friendName),
-                    filter: .every(noteID: newNotes.map(\.id))
+                    filter: .every(noteID: noteIDs)
                 ))
             }
         }
@@ -91,6 +92,7 @@ final class SyncProgressStore: BaseStore {
     func startSync() {
         guard syncPhase == .idle else { return }
         newNoteCount = 0
+        newNoteIDs = []
         syncPhase = .searching
         
         syncService.onStateChanged = { [weak self] event in
@@ -140,6 +142,7 @@ final class SyncProgressStore: BaseStore {
             appStore.send(.editFriend(updatedFriend))
         }
         appStore.send(.syncNotes(result.notes, updatedFriend))
+        newNoteIDs = result.notes.map(\.id)
         newNoteCount = result.notes.count
         
         onSyncFinished?(SyncCompletedResult(
