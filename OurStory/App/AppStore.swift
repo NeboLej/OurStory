@@ -16,6 +16,9 @@ protocol AppStoreProtocol: AnyObject {
     var user: User { get }
     var notesByDate: [BaseDate: [Note]] { get }
     var cloudSyncState: CloudSyncState { get }
+    var cloudLastSuccessDate: Date? { get }
+    var cloudLastAttemptSucceeded: Bool { get }
+    var cloudHasAttempt: Bool { get }
     
     var appCoordinator: AppCoordinator { get }
     
@@ -23,6 +26,9 @@ protocol AppStoreProtocol: AnyObject {
     func send(_ action: NavigateAction)
     func notes(for filter: NoteFilter) -> [Note]
     func syncDownload()
+    func syncUpload()
+    func syncDownloadAndUpload(force: Bool)
+    func restoreBackup(_ backup: DatabaseBackup, policy: BackupConflictPolicy?) async throws
     func analyticEvent(_ event: AnalyticsEvent)
 }
 
@@ -45,6 +51,9 @@ final class AppStoreMock: AppStoreProtocol {
     var notesByDate: [BaseDate : [Note]] = [:]
     
     var cloudSyncState: CloudSyncState = .completed
+    var cloudLastSuccessDate: Date? = nil
+    var cloudLastAttemptSucceeded = false
+    var cloudHasAttempt = false
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     
@@ -61,6 +70,9 @@ final class AppStoreMock: AppStoreProtocol {
     }
     
     func syncDownload() { }
+    func syncUpload() { }
+    func syncDownloadAndUpload(force: Bool) { }
+    func restoreBackup(_ backup: DatabaseBackup, policy: BackupConflictPolicy?) async throws { }
     func analyticEvent(_ event: any AnalyticsEvent) { }
 }
 
@@ -91,6 +103,9 @@ final class AppStore: AppStoreProtocol {
     
     var appCoordinator: AppCoordinator = AppCoordinator()
     var cloudSyncState: CloudSyncState = .idle
+    private(set) var cloudLastSuccessDate: Date?
+    private(set) var cloudLastAttemptSucceeded = false
+    private(set) var cloudHasAttempt = false
     
     @ObservationIgnored
     let cloudKitService = CloudKitService.shared
@@ -120,9 +135,29 @@ final class AppStore: AppStoreProtocol {
         self.analyticsService = repositoryFactory.analyticService
         
         user = userDefaultsManager.getCurrentUser()
+        cloudLastSuccessDate = userDefaultsManager.cloudLastSuccessDate
+        cloudLastAttemptSucceeded = userDefaultsManager.cloudLastAttemptSucceeded
+        cloudHasAttempt = userDefaultsManager.cloudHasAttempt
         
         cloudKitService.onStateChange = { [weak self] state in
-            self?.cloudSyncState = state
+            guard let self else { return }
+            self.cloudSyncState = state
+            switch state {
+            case .completed:
+                self.cloudLastSuccessDate = Date()
+                self.cloudLastAttemptSucceeded = true
+                self.cloudHasAttempt = true
+                self.userDefaultsManager.cloudLastSuccessDate = self.cloudLastSuccessDate
+                self.userDefaultsManager.cloudLastAttemptSucceeded = true
+                self.userDefaultsManager.cloudHasAttempt = true
+            case .error:
+                self.cloudLastAttemptSucceeded = false
+                self.cloudHasAttempt = true
+                self.userDefaultsManager.cloudLastAttemptSucceeded = false
+                self.userDefaultsManager.cloudHasAttempt = true
+            default:
+                break
+            }
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -223,6 +258,8 @@ final class AppStore: AppStoreProtocol {
             analyticEvent(AppEvent.helpOpened)
         case .toNotificationSettings:
             appCoordinator.navigate(to: .notificationSettings)
+        case .toCloudBackups:
+            appCoordinator.navigate(to: .cloudBackups)
         }
     }
     

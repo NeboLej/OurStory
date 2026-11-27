@@ -11,16 +11,19 @@ import SwiftUI
 final class HomeScreenStore: BaseStore {
     
     var state: HomeScreenState {
-        let isSyncing = appStore.cloudSyncState == .uploading || appStore.cloudSyncState == .downloading
         let currentDate = appStore.selectedDate
         let notes = appStore.currentNotes
 //        let hasNotes = notes != nil && !notes.isEmpty
-        return HomeScreenState(selectedNotes: notes, selectedDate: currentDate, isSyncing: isSyncing, emptyStateText: emptyTextByDate(for: currentDate))
+        return HomeScreenState(selectedNotes: notes, selectedDate: currentDate, cloudSyncState: appStore.cloudSyncState, emptyStateText: emptyTextByDate(for: currentDate))
     }
     
     private var emptyTextByDateDict: [BaseDate: String] = [:]
     private let calendar = Calendar.current
     
+    func retryCloudSync() {
+        appStore.syncUpload()
+    }
+
     func clearEmptyTextCache() {
         emptyTextByDateDict.removeAll()
     }

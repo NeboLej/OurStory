@@ -97,8 +97,8 @@ struct SettingScreen: View {
                 store.send(.toNotificationSettings)
             }
             
-            settingsRow(icon: "icloud.and.arrow.down", title: L10n.icloudSync) {
-                store.send(.syncFromCloud)
+            settingsRow(icon: "icloud.and.arrow.down", title: L10n.cloudAndBackups) {
+                store.send(.toCloudBackups)
             }
             
             settingsRow(icon: "questionmark.circle", title: L10n.help) {

@@ -15,6 +15,12 @@ enum L10n {
     }
     
     private static var strings: [String: String] = loadStrings(for: language)
+    static var cloudSyncFailed: String { str("cloudSyncFailed") }
+    static var cloudSyncRetry: String { str("cloudSyncRetry") }
+    static var cloudSyncLater: String { str("cloudSyncLater") }
+    static var cloudSyncMessage: String { str("cloudSyncMessage") }
+    static var cloudSyncStorageFull: String { str("cloudSyncStorageFull") }
+
     // MARK: - Loading
     
     private static func loadStrings(for lang: AppLanguage) -> [String: String] {
@@ -79,6 +85,33 @@ enum L10n {
     static var languageLabel: String { str("languageLabel") }
     static var notifications: String { str("notifications") }
     static var icloudSync: String { str("icloudSync") }
+    static var cloudAndBackups: String { str("cloudAndBackups") }
+    static var backupError: String { str("backupError") }
+    static var backupLastSync: String { str("backupLastSync") }
+    static var backupNoSync: String { str("backupNoSync") }
+    static var backupRetrySync: String { str("backupRetrySync") }
+    static var backupSyncing: String { str("backupSyncing") }
+    static var backupSyncFailed: String { str("backupSyncFailed") }
+    static var backupSyncSucceeded: String { str("backupSyncSucceeded") }
+    static var backupNoStatus: String { str("backupNoStatus") }
+    static var backupsTitle: String { str("backupsTitle") }
+    static var backupDescription: String { str("backupDescription") }
+    static var backupCreate: String { str("backupCreate") }
+    static var backupImport: String { str("backupImport") }
+    static var backupImportSuccessTitle: String { str("backupImportSuccessTitle") }
+    static var backupImportSuccessMessage: String { str("backupImportSuccessMessage") }
+    static var backupEmpty: String { str("backupEmpty") }
+    static var backupStories: String { str("backupStories") }
+    static var backupFriends: String { str("backupFriends") }
+    static var backupDownload: String { str("backupDownload") }
+    static var backupRestore: String { str("backupRestore") }
+    static var restoreConflicts: String { str("restoreConflicts") }
+    static var restoreReplace: String { str("restoreReplace") }
+    static var restoreSkip: String { str("restoreSkip") }
+    static var restoreConflictDescription: String { str("restoreConflictDescription") }
+    static var restoreComplete: String { str("restoreComplete") }
+    static var restoreInvalid: String { str("restoreInvalid") }
+    static var restoreSyncBusy: String { str("restoreSyncBusy") }
     static var help: String { str("help") }
     static var logs: String { str("logs") }
     static var theme: String { str("theme") }

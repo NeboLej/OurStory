@@ -21,8 +21,8 @@ final class SettingScreenStore: BaseStore {
                 appStore.send(.editProfile(name: name, color: color))
             case .toEditProfile:
                 appStore.send(.toEditProfile)
-            case .syncFromCloud:
-                appStore.syncDownload()
+            case .toCloudBackups:
+                appStore.send(.toCloudBackups)
             case .toLogScreen:
                 appStore.send(.toLogs)
             case .toHelpListScreen:

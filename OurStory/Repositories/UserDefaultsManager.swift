@@ -28,6 +28,9 @@ class UserDefaultsManager {
         case dailyReminderMinute
         case notificationPromptShown
         case cloudProfileChecked
+        case cloudLastSuccessDate
+        case cloudLastAttemptSucceeded
+        case cloudHasAttempt
     }
     
     func getCurrentUser() -> User {
@@ -86,6 +89,24 @@ class UserDefaultsManager {
         set { db.set(newValue, forKey: UserDefaultsKeys.cloudProfileChecked.rawValue) }
     }
     
+    var cloudLastSuccessDate: Date? {
+        get {
+            let timestamp = db.double(forKey: UserDefaultsKeys.cloudLastSuccessDate.rawValue)
+            return timestamp > 0 ? Date(timeIntervalSince1970: timestamp) : nil
+        }
+        set { db.set(newValue?.timeIntervalSince1970 ?? 0, forKey: UserDefaultsKeys.cloudLastSuccessDate.rawValue) }
+    }
+
+    var cloudLastAttemptSucceeded: Bool {
+        get { db.bool(forKey: UserDefaultsKeys.cloudLastAttemptSucceeded.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.cloudLastAttemptSucceeded.rawValue) }
+    }
+
+    var cloudHasAttempt: Bool {
+        get { db.bool(forKey: UserDefaultsKeys.cloudHasAttempt.rawValue) }
+        set { db.set(newValue, forKey: UserDefaultsKeys.cloudHasAttempt.rawValue) }
+    }
+
     // MARK: - Note Draft
     
     struct NoteDraft: Codable {

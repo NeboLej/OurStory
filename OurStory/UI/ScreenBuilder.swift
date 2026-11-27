@@ -12,6 +12,7 @@ enum ScreenType: Identifiable, Hashable {
     case home, note(Note?), friendList, friend(Friend), newFriend, setting, editProfile, notes(title: String?, filter: NoteFilter, isShowFriendsList: Binding<Bool>)
     case log, onboarding, calendar, search, helpList, help(Help), notificationSettings
     case syncProgress(SyncProgressConfig)
+    case cloudBackups
     
     var id: String {
         switch self {
@@ -31,6 +32,7 @@ enum ScreenType: Identifiable, Hashable {
         case .help(let help): "help_\(help.id)"
         case .syncProgress: "syncProgress"
         case .notificationSettings: "notificationSettings"
+        case .cloudBackups: "cloudBackups"
         }
     }
     
@@ -56,6 +58,7 @@ enum ScreenType: Identifiable, Hashable {
         case (.helpList, .helpList): true
         case (.syncProgress, .syncProgress): true
         case (.notificationSettings, .notificationSettings): true
+        case (.cloudBackups, .cloudBackups): true
         default: false
         }
     }
@@ -121,6 +124,8 @@ final class ScreenBuilder {
             SyncProgressScreen(store: SyncProgressStore(appStore: appStore, config: config))
         case .notificationSettings:
             NotificationScreen(store: NotificationScreenStore(appStore: appStore))
+        case .cloudBackups:
+            CloudBackupScreen(store: CloudBackupScreenStore(appStore: appStore))
         }
     }
     

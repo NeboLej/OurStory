@@ -15,6 +15,7 @@ struct HomeScreen: View {
     @State private var screenBuilder: ScreenBuilder
     @State private var isShowFriendsList: Bool = false
     @State private var notesTransitionEdge: Edge?
+    @State private var showCloudError = false
     
     init(store: HomeScreenStore, screenBuilder: ScreenBuilder) {
         self.store = store
@@ -31,8 +32,22 @@ struct HomeScreen: View {
 //                .frame(height: 120)
                 .overlay(alignment: .topTrailing) {
                     HStack {
-                        if store.state.isSyncing {
+                        switch store.state.cloudSyncState {
+                        case .uploading, .downloading:
                             CloudSyncIndicator()
+                        case .error:
+                            Button {
+                                showCloudError = true
+                            } label: {
+                                Image(systemName: "icloud.slash.fill")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundStyle(.orange)
+                                    .padding(8)
+                                    .background(.orange.opacity(0.12), in: Capsule())
+                            }
+                            .accessibilityLabel(L10n.cloudSyncFailed)
+                        case .idle, .completed:
+                            EmptyView()
                         }
                         
                         Button {
@@ -45,7 +60,7 @@ struct HomeScreen: View {
                     .padding(.trailing, 12)
                     .transition(.opacity)
                 }
-                .animation(.easeInOut(duration: 0.3), value: store.state.isSyncing)
+                .animation(.easeInOut(duration: 0.3), value: store.state.cloudSyncState)
                 .padding(.top, 16)
             
             if !store.state.selectedNotes.isEmpty {
@@ -92,6 +107,12 @@ struct HomeScreen: View {
                 .padding(.horizontal, 42)
                 .transition(.opacity.animation(.easeOut(duration: 0.15)))
             }
+        }
+        .alert(L10n.cloudSyncFailed, isPresented: $showCloudError) {
+            Button(L10n.cloudSyncRetry) { store.retryCloudSync() }
+            Button(L10n.cloudSyncLater, role: .cancel) { }
+        } message: {
+            Text(store.state.cloudSyncState == .error(.storageFull) ? L10n.cloudSyncStorageFull : L10n.cloudSyncMessage)
         }
         .background(.backgroundFill)
         .ignoresSafeArea()

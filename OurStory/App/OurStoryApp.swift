@@ -72,20 +72,32 @@ struct OurStoryApp: App {
             // Initial sync on first launch (onChange doesn't fire for the initial scenePhase value)
             appStore.syncDownloadAndUpload()
             NotificationService.shared.rescheduleIfNeeded()
+            do {
+                try await BackupService.shared.createIfNeeded()
+            } catch {
+                Logger.log("Automatic backup failed: \(error)", location: .GRDB, event: .error(error))
+            }
         }
         .onChange(of: scenePhase, { oldValue, newValue in
             switch newValue {
             case .active:
                 appStore.syncDownloadAndUpload()
                 NotificationService.shared.rescheduleIfNeeded()
+                Task {
+                    do {
+                        try await BackupService.shared.createIfNeeded()
+                    } catch {
+                        Logger.log("Automatic backup failed: \(error)", location: .GRDB, event: .error(error))
+                    }
+                }
             case .background:
                 guard !appStore.isSyncing else { break }
                 let backgroundTask = UIApplication.shared.beginBackgroundTask()
+                appStore.isSyncing = true
                 Task {
                     await appStore.cloudKitService.uploadAll()
-                    await MainActor.run {
-                        UIApplication.shared.endBackgroundTask(backgroundTask)
-                    }
+                    appStore.isSyncing = false
+                    UIApplication.shared.endBackgroundTask(backgroundTask)
                 }
             default:
                 break

@@ -110,17 +110,21 @@ extension AppStore {
     // MARK: - Cloud Sync
     
     func syncUpload() {
+        guard !isSyncing else { return }
+        isSyncing = true
         Task {
             await cloudKitService.uploadAll()
+            isSyncing = false
         }
     }
     
     func syncDownload() {
+        guard !isSyncing else { return }
+        isSyncing = true
         Task {
             await cloudKitService.downloadAll()
-            await MainActor.run {
-                loadData()
-            }
+            loadData()
+            isSyncing = false
         }
     }
     
@@ -133,6 +137,11 @@ extension AppStore {
         lastSyncDate = Date()
         Task {
             await cloudKitService.downloadAll()
+            if case .error = cloudSyncState {
+                isSyncing = false
+                checkOnboardingNeeded()
+                return
+            }
             await MainActor.run {
                 // Re-read user from UserDefaults (may have been restored from iCloud)
                 user = userDefaultsManager.getCurrentUser()
@@ -149,6 +158,15 @@ extension AppStore {
         }
     }
     
+    func restoreBackup(_ backup: DatabaseBackup, policy: BackupConflictPolicy?) async throws {
+        guard !isSyncing else { throw BackupRestoreError.syncInProgress }
+        isSyncing = true
+        defer { isSyncing = false }
+        try await BackupService.shared.restore(backup, policy: policy)
+        loadData()
+        await cloudKitService.uploadAll()
+    }
+
     func checkOnboardingNeeded() {
         if user.name.isEmpty || user.color.isEmpty {
             appCoordinator.fullScreenCover = .onboarding

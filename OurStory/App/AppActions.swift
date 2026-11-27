@@ -35,4 +35,5 @@ enum NavigateAction {
     case toSearch
     case toHelpListScreen
     case toNotificationSettings
+    case toCloudBackups
 }

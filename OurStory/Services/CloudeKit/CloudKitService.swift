@@ -7,11 +7,30 @@ import Foundation
 import CloudKit
 import GRDB
 
+enum CloudSyncFailure: Equatable {
+    case storageFull
+    case other(String)
+
+    init(_ error: Error) {
+        if Self.isStorageFull(error) {
+            self = .storageFull
+        } else {
+            self = .other(error.localizedDescription)
+        }
+    }
+
+    private static func isStorageFull(_ error: Error) -> Bool {
+        guard let cloudError = error as? CKError else { return false }
+        if cloudError.code == .quotaExceeded { return true }
+        return cloudError.partialErrorsByItemID?.values.contains { isStorageFull($0) } ?? false
+    }
+}
+
 enum CloudSyncState: Equatable {
     case idle
     case uploading
     case downloading
-    case error(String)
+    case error(CloudSyncFailure)
     case completed
 }
 
@@ -61,6 +80,7 @@ final class CloudKitService {
     func uploadAll() async { 
         guard await checkiCloudAvailability() else {
             Logger.log("iCloud not available, skipping upload", location: .cloudKit, event: .processing)
+            await MainActor.run { onStateChange?(.error(.other(""))) }
             return
         }
         
@@ -88,7 +108,7 @@ final class CloudKitService {
             await MainActor.run { onStateChange?(.completed) }
         } catch {
             Logger.log("CloudKit upload failed: \(error)", location: .cloudKit, event: .error(error))
-            await MainActor.run { onStateChange?(.error(error.localizedDescription)) }
+            await MainActor.run { onStateChange?(.error(CloudSyncFailure(error))) }
         }
     }
     
@@ -175,7 +195,7 @@ final class CloudKitService {
             await MainActor.run { onStateChange?(.completed) }
         } catch {
             Logger.log("CloudKit download failed: \(error)", location: .cloudKit, event: .error(error))
-            await MainActor.run { onStateChange?(.error(error.localizedDescription)) }
+            await MainActor.run { onStateChange?(.error(CloudSyncFailure(error))) }
         }
     }
     
@@ -245,11 +265,16 @@ final class CloudKitService {
                 atomically: false
             )
             
+            var saveError: Error?
             for (recordID, result) in saveResults {
                 if case .failure(let error) = result {
                     Logger.log("Failed to save record \(recordID.recordName): \(error)", location: .cloudKit, event: .error(error))
+                    if saveError == nil || CloudSyncFailure(error) == .storageFull {
+                        saveError = error
+                    }
                 }
             }
+            if let saveError { throw saveError }
         }
     }
     

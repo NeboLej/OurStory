@@ -11,13 +11,13 @@ struct HomeScreenState {
     
     var selectedNotes: [Note]
     var selectedDate: Date
-    var isSyncing: Bool
+    var cloudSyncState: CloudSyncState
     var emptyStateText: String
     
-    init(selectedNotes: [Note], selectedDate: Date, isSyncing: Bool, emptyStateText: String) {
+    init(selectedNotes: [Note], selectedDate: Date, cloudSyncState: CloudSyncState, emptyStateText: String) {
         self.selectedNotes = selectedNotes
         self.selectedDate = selectedDate
-        self.isSyncing = isSyncing
+        self.cloudSyncState = cloudSyncState
         self.emptyStateText = emptyStateText
     }
 }
