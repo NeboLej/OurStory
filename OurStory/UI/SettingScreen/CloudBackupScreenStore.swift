@@ -44,6 +44,9 @@ final class CloudBackupScreenStore: BaseStore {
             switch action {
             case .load:
                 Task { await loadBackups() }
+                if let url = appStore.takePendingBackupImport() {
+                    send(.importFile(url), animation: nil)
+                }
             case .retrySync:
                 appStore.syncDownloadAndUpload(force: true)
             case .createBackup:

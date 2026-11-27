@@ -44,6 +44,10 @@ struct OurStoryApp: App {
                     }
                 }
             }
+            .onOpenURL { url in
+                isLaunchCompleted = true
+                appStore.openBackup(url)
+            }
             .environment(themeManager)
             .environment(localeManager)
             .preferredColorScheme(themeManager.currentTheme.colorScheme)

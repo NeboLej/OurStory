@@ -58,7 +58,7 @@ actor BackupService {
 
     func list() throws -> [DatabaseBackup] {
         try FileManager.default.contentsOfDirectory(at: directory(), includingPropertiesForKeys: [.creationDateKey])
-            .filter { $0.pathExtension == "sqlite" }
+            .filter { $0.pathExtension.lowercased() == "ourstory" }
             .map { url in
                 let date = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
                 return DatabaseBackup(url: url, date: date)
@@ -188,12 +188,15 @@ actor BackupService {
     }
 
     func importBackup(from sourceURL: URL) throws {
+        guard sourceURL.pathExtension.lowercased() == "ourstory" else {
+            throw BackupRestoreError.invalidBackup
+        }
         let accessGranted = sourceURL.startAccessingSecurityScopedResource()
         defer { if accessGranted { sourceURL.stopAccessingSecurityScopedResource() } }
 
         let directoryURL = try directory()
         let stagingURL = directoryURL.appendingPathComponent(".import-\(UUID().uuidString)")
-        let destinationURL = directoryURL.appendingPathComponent("OurStory-\(UUID().uuidString).sqlite")
+        let destinationURL = directoryURL.appendingPathComponent("OurStory-\(UUID().uuidString).ourstory")
         defer { try? FileManager.default.removeItem(at: stagingURL) }
 
         var coordinationError: NSError?
@@ -227,7 +230,7 @@ actor BackupService {
     }
 
     func create() throws {
-        let url = try directory().appendingPathComponent("OurStory-\(UUID().uuidString).sqlite")
+        let url = try directory().appendingPathComponent("OurStory-\(UUID().uuidString).ourstory")
         do {
             let destination = try DatabaseQueue(path: url.path)
             try dbPool.backup(to: destination)

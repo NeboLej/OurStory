@@ -35,7 +35,7 @@ struct CloudBackupScreen: View {
         .fileImporter(isPresented: Binding(
             get: { store.state.showImporter },
             set: { if !$0 { store.send(.dismissImporter) } }
-        ), allowedContentTypes: [.item]) { result in
+        ), allowedContentTypes: [.ourStoryBackup]) { result in
             switch result {
             case .success(let url): store.send(.importFile(url))
             case .failure(let error): store.send(.importFailed(error.localizedDescription))

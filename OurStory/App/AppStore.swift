@@ -28,6 +28,7 @@ protocol AppStoreProtocol: AnyObject {
     func syncDownload()
     func syncUpload()
     func syncDownloadAndUpload(force: Bool)
+    func takePendingBackupImport() -> URL?
     func restoreBackup(_ backup: DatabaseBackup, policy: BackupConflictPolicy?) async throws
     func analyticEvent(_ event: AnalyticsEvent)
 }
@@ -72,6 +73,7 @@ final class AppStoreMock: AppStoreProtocol {
     func syncDownload() { }
     func syncUpload() { }
     func syncDownloadAndUpload(force: Bool) { }
+    func takePendingBackupImport() -> URL? { nil }
     func restoreBackup(_ backup: DatabaseBackup, policy: BackupConflictPolicy?) async throws { }
     func analyticEvent(_ event: any AnalyticsEvent) { }
 }
@@ -102,6 +104,7 @@ final class AppStore: AppStoreProtocol {
     }
     
     var appCoordinator: AppCoordinator = AppCoordinator()
+    private var pendingBackupImportURL: URL?
     var cloudSyncState: CloudSyncState = .idle
     private(set) var cloudLastSuccessDate: Date?
     private(set) var cloudLastAttemptSucceeded = false
@@ -263,6 +266,17 @@ final class AppStore: AppStoreProtocol {
         }
     }
     
+    func openBackup(_ url: URL) {
+        guard url.isFileURL, url.pathExtension.lowercased() == "ourstory" else { return }
+        pendingBackupImportURL = url
+        appCoordinator.navigate(to: .cloudBackups)
+    }
+
+    func takePendingBackupImport() -> URL? {
+        defer { pendingBackupImportURL = nil }
+        return pendingBackupImportURL
+    }
+
     func analyticEvent(_ event: AnalyticsEvent) {
         analyticsService.log(event: event)
     }
